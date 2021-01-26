@@ -7,6 +7,7 @@
 package org.gridsuite.ds.server.service;
 
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.dynamicsimulation.DynamicModelsSupplier;
 import com.powsybl.dynamicsimulation.DynamicSimulation;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.DynamicSimulationResult;
@@ -17,7 +18,6 @@ import com.powsybl.dynawo.DynawoProvider;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.repository.DynamicSimulationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +31,9 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -57,6 +58,8 @@ public class DynamicSimulationWorkerService {
 
     private final DynamicSimulationResultPublisherService resultPublisherService;
 
+    private FileSystem fileSystem = FileSystems.getDefault();
+
     public DynamicSimulationWorkerService(NetworkStoreService networkStoreService,
                                           DynamicSimulationRepository dynamicSimulationRepository,
                                           DynamicSimulationResultPublisherService resultPublisherService) {
@@ -73,11 +76,16 @@ public class DynamicSimulationWorkerService {
 
         Network network = getNetwork(context.getNetworkUuid());
         List<DynamicModelGroovyExtension> extensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynawoProvider.NAME);
-        GroovyDynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(Paths.get(context.getDynamicModelFileName().toString()), extensions);
+        GroovyDynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(fileSystem.getPath(context.getDynamicModelFileName().toString()), extensions);
         DynamicSimulationParameters parameters = new DynamicSimulationParameters(context.getStartTime(), context.getStopTime());
-        CompletableFuture<DynamicSimulationResult> result = DynamicSimulation.runAsync(network, dynamicModelsSupplier, parameters);
+        CompletableFuture<DynamicSimulationResult> result = runAsync(network, dynamicModelsSupplier, parameters);
         return Mono.fromCompletionStage(result);
+    }
 
+    public CompletableFuture<DynamicSimulationResult> runAsync(Network network,
+                                                        DynamicModelsSupplier dynamicModelsSupplier,
+                                                        DynamicSimulationParameters dynamicSimulationParameters) {
+        return DynamicSimulation.runAsync(network, dynamicModelsSupplier, dynamicSimulationParameters);
     }
 
     private Network getNetwork(UUID networkUuid) {
@@ -95,13 +103,12 @@ public class DynamicSimulationWorkerService {
                     DynamicSimulationResultContext resultContext = DynamicSimulationResultContext.fromMessage(message);
 
                     return run(resultContext.getRunContext())
-                            .flatMap(result -> dynamicSimulationRepository.insertResult(resultContext.getResultUuid(), result.isOk())
-                                    .then(dynamicSimulationRepository.insertStatus(resultContext.getResultUuid(), DynamicSimulationStatus.COMPLETED.name())))
+                            .flatMap(result -> dynamicSimulationRepository.updateResult(resultContext.getResultUuid(), result.isOk()))
                             .doOnSuccess(unused -> {
                                 resultPublisherService.publish(resultContext.getResultUuid());
                                 LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
                                 try {
-                                    Files.deleteIfExists(Paths.get(resultContext.getRunContext().dynamicModelFileName.toString()));
+                                    Files.deleteIfExists(fileSystem.getPath(resultContext.getRunContext().getDynamicModelFileName().toString()));
                                 } catch (IOException e) {
                                     throw new UncheckedIOException(e);
                                 }
@@ -110,6 +117,10 @@ public class DynamicSimulationWorkerService {
                 })
                 .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable))
                 .subscribe();
+    }
+
+    public void setFileSystem(FileSystem fs) {
+        this.fileSystem = fs;
     }
 }
 

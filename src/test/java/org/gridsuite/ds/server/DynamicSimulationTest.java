@@ -6,18 +6,57 @@
  */
 package org.gridsuite.ds.server;
 
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
+import com.powsybl.commons.datasource.ReadOnlyDataSource;
+import com.powsybl.commons.datasource.ResourceDataSource;
+import com.powsybl.commons.datasource.ResourceSet;
+import com.powsybl.dynamicsimulation.*;
+import com.powsybl.iidm.import_.Importers;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.network.store.client.NetworkStoreService;
+import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
+import org.gridsuite.ds.server.service.DynamicSimulationService;
+import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.r2dbc.core.DatabaseClient;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.messaging.Message;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.config.EnableWebFlux;
+import org.springframework.web.reactive.function.BodyInserters;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -26,17 +65,139 @@ import org.springframework.web.reactive.config.EnableWebFlux;
 @AutoConfigureWebTestClient
 @EnableWebFlux
 @SpringBootTest
-@ContextHierarchy({@ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class})})
-public class DynamicSimulationTest extends AbstractEmbeddedCassandraSetup {
+@ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class})
+public class DynamicSimulationTest {
 
     @Autowired
     private WebTestClient webTestClient;
 
     @Autowired
+    private DatabaseClient databaseClient;
+
+    @Autowired
+    private DynamicSimulationService dynamicSimulationService;
+
+    @Autowired
     private OutputDestination output;
 
-    @Test
-    public void test() throws Exception {
-    }
-}
+    @Autowired
+    private InputDestination input;
 
+    @MockBean
+    private NetworkStoreService networkStoreClient;
+
+    @SpyBean
+    private DynamicSimulationWorkerService dynamicSimulationWorkerService;
+
+    private FileSystem fileSystem;
+
+    private static final String NETWORK_UUID_STRING = "11111111-0000-0000-0000-000000000000";
+    private static final String TEST_FILE = "IEEE14.iidm";
+    private static final boolean RESULT = true;
+
+    @Before
+    public void init() throws IOException {
+        MockitoAnnotations.initMocks(this);
+
+        //initialize in memory FS
+        fileSystem = Jimfs.newFileSystem(Configuration.unix());
+        dynamicSimulationService.setFileSystem(fileSystem);
+        dynamicSimulationWorkerService.setFileSystem(fileSystem);
+
+        // Init schema
+        File schemaFile = new File(getClass().getClassLoader().getResource("result.sql").getFile());
+        databaseClient.execute(Files.readString(Path.of(schemaFile.toURI()))).fetch().first().block();
+
+        ReadOnlyDataSource dataSource = new ResourceDataSource("IEEE14",
+                new ResourceSet("", TEST_FILE));
+        Network network = Importers.importData("XIIDM", dataSource, null);
+        given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_STRING))).willReturn(network);
+
+        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(RESULT, "")))
+                .when(dynamicSimulationWorkerService).runAsync(any(), any(), any());
+
+    }
+
+    private static MockMultipartFile createMockMultipartFile(String fileName) throws IOException {
+        try (InputStream inputStream = DynamicSimulationTest.class.getResourceAsStream("/" + fileName)) {
+            return new MockMultipartFile("file", fileName, MediaType.TEXT_PLAIN_VALUE, inputStream);
+        }
+    }
+
+    @Test
+    public void test() {
+
+        ClassPathResource dynamicModel = new ClassPathResource("dynamicModels.groovy");
+
+        MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
+        bodyBuilder.part("dynamicModel", dynamicModel)
+                .filename("dynamicModels.groovy");
+
+        //run the dynamic simulation
+        EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
+                .uri("/v1/networks/{networkUuid}/run?startTime=0&stopTime=100", NETWORK_UUID_STRING)
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(UUID.class)
+                .returnResult();
+
+        UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
+
+        Message<byte[]> messageSwitch = output.receive(1000, "ds.run.destination");
+        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get("resultUuid").toString()));
+
+        //get the calculation status
+        EntityExchangeResult<String> entityExchangeResult2 = webTestClient.get()
+                .uri("/v1/results/{resultUuid}/status", runUuid)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .returnResult();
+
+        //depending on the execution speed it can be both
+        assertTrue(DynamicSimulationStatus.COMPLETED.name().equals(entityExchangeResult2.getResponseBody())
+                || DynamicSimulationStatus.RUNNING.name().equals(entityExchangeResult2.getResponseBody()));
+
+        //get the status of a non existing simulation and expect a not found
+        webTestClient.get()
+                .uri("/v1/results/{resultUuid}/status", UUID.randomUUID())
+                .exchange()
+                .expectStatus().isNotFound();
+
+        //get the results of a non existing simulation and expect a not found
+        webTestClient.get()
+                .uri("/v1/results/{resultUuid}", UUID.randomUUID())
+                .exchange()
+                .expectStatus().isNotFound();
+
+        //get the results of the calculation and expect to get true since the calculation is complete
+        webTestClient.get()
+                .uri("/v1/results/{resultUuid}", runUuid)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(boolean.class)
+                .isEqualTo(RESULT);
+
+        //delete a result and expect ok
+        webTestClient.delete()
+                .uri("/v1/results/{resultUuid}", runUuid)
+                .exchange()
+                .expectStatus().isOk();
+
+        //try to get the removed result and except a not found
+        webTestClient.get()
+                .uri("/v1/results/{resultUuid}", runUuid)
+                .exchange()
+                .expectStatus().isNotFound();
+
+        //delete all results and except ok
+        webTestClient.delete()
+                .uri("/v1/results")
+                .exchange()
+                .expectStatus().isOk();
+
+    }
+
+}

@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.*;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -46,7 +46,7 @@ public class DynamicSimulationController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
-    @GetMapping(value = "/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/results/{resultUuid}", produces = TEXT_PLAIN_VALUE)
     @Operation(summary = "Get a dynamic simulation result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result"),
             @ApiResponse(responseCode = "404", description = "Security analysis result has not been found")})
@@ -56,15 +56,17 @@ public class DynamicSimulationController {
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
-    @GetMapping(value = "/results/{resultUuid}/status", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/results/{resultUuid}/status", produces = TEXT_PLAIN_VALUE)
     @Operation(summary = "Get the dynamic simulation status from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation status")})
-    public ResponseEntity<Mono<String>> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation status"),
+            @ApiResponse(responseCode = "404", description = "Security analysis status has not been found")})
+    public Mono<ResponseEntity<String>> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         Mono<String> result = dynamicSimulationService.getStatus(resultUuid);
-        return ResponseEntity.ok().body(result);
+        return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping(value = "/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/results/{resultUuid}")
     @Operation(summary = "Delete a security analysis result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The security analysis result has been deleted")})
     public ResponseEntity<Mono<Void>> deleteResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {

@@ -20,7 +20,7 @@ public class DynamicSimulationRunContext {
 
     private int stopTime;
 
-    UUID dynamicModelFileName;
+    private UUID dynamicModelFileName;
 
     public DynamicSimulationRunContext(UUID networkUuid, int startTime, int stopTime, UUID dynamicModelFileName) {
         this.networkUuid = Objects.requireNonNull(networkUuid);

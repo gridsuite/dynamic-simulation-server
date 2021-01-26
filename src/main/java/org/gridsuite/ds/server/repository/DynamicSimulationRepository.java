@@ -6,10 +6,10 @@
  */
 package org.gridsuite.ds.server.repository;
 
+import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;
@@ -23,61 +23,45 @@ public class DynamicSimulationRepository {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamicSimulationRepository.class);
 
-    private final GlobalStatusRepository globalStatusRepository;
-
     private final ResultRepository resultRepository;
 
-    public DynamicSimulationRepository(GlobalStatusRepository globalStatusRepository, ResultRepository resultRepository) {
-        this.globalStatusRepository = globalStatusRepository;
+    public DynamicSimulationRepository(ResultRepository resultRepository) {
         this.resultRepository = resultRepository;
     }
 
-    private static GlobalStatusEntity toEntity(UUID resultUuid, String status) {
-        return new GlobalStatusEntity(resultUuid, status);
+    private static ResultEntity toEntity(UUID resultUuid, Boolean result, String status) {
+        return new ResultEntity(resultUuid, result, status);
     }
 
-    private static ResultEntity toEntity(UUID resultUuid, Boolean result) {
-        return new ResultEntity(resultUuid, result);
-    }
-
-    public Mono<Void> insertStatus(UUID resultUuid, String status) {
-        Objects.requireNonNull(resultUuid);
-        return globalStatusRepository.insert(toEntity(resultUuid, status))
-                .then();
+    public Mono<ResultEntity> insertStatus(String status) {
+        return resultRepository.save(new ResultEntity(null, null, status, true));
     }
 
     public Mono<String> findStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return globalStatusRepository.findByResultUuid(resultUuid).map(GlobalStatusEntity::getStatus);
+        return resultRepository.findById(resultUuid).map(ResultEntity::getStatus);
     }
 
-    public Mono<Void> insertResult(UUID resultUuid, Boolean result) {
+    public Mono<Void> updateResult(UUID resultUuid, Boolean result) {
         Objects.requireNonNull(resultUuid);
-        return resultRepository.insert(toEntity(resultUuid, result))
+        return resultRepository.save(toEntity(resultUuid, result, DynamicSimulationStatus.COMPLETED.name()))
                 .then();
     }
 
     public Mono<Boolean> findResult(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return resultRepository.findByResultUuid(resultUuid).map(ResultEntity::getResult);
+        return resultRepository.findById(resultUuid).map(ResultEntity::getResult);
     }
 
     public Mono<Void> delete(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        Mono<Void> v1 = globalStatusRepository.deleteByResultUuid(resultUuid);
-        Mono<Void> v2 = resultRepository.deleteByResultUuid(resultUuid);
-
-        return Flux.concat(v1, v2)
-                .then()
+        return resultRepository.deleteById(resultUuid).then()
                 .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable));
     }
 
     public Mono<Void> deleteAll() {
-        Mono<Void> v1 = globalStatusRepository.deleteAll();
-        Mono<Void> v2 = resultRepository.deleteAll();
-        return Flux.concat(v1, v2)
-                .then()
-                .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable));
+        Mono<Void> v1 = resultRepository.deleteAll();
+        return v1.then().doOnError(throwable -> LOGGER.error(throwable.toString(), throwable));
     }
 
 }

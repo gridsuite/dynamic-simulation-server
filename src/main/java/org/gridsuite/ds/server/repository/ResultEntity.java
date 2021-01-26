@@ -9,8 +9,12 @@ package org.gridsuite.ds.server.repository;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.cassandra.core.mapping.PrimaryKey;
-import org.springframework.data.cassandra.core.mapping.Table;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.io.Serializable;
 import java.util.UUID;
@@ -20,12 +24,36 @@ import java.util.UUID;
  */
 @Getter
 @Setter
-@AllArgsConstructor
 @Table("result")
-public class ResultEntity implements Serializable {
+@AllArgsConstructor
+public class ResultEntity implements Serializable, Persistable<UUID> {
 
-    @PrimaryKey
-    private UUID resultUuid;
+    @PersistenceConstructor
+    public ResultEntity(UUID id, Boolean result, String status) {
+        this.id = id;
+        this.result = result;
+        this.status = status;
+        this.newElement = false;
+    }
 
+    @Id
+    @Column("resultUuid")
+    private UUID id;
+
+    @Column("result")
     private Boolean result;
+
+    @Column("status")
+    private String status;
+
+    @Transient
+    private boolean newElement;
+
+    @Override
+    public boolean isNew() {
+        if (newElement && id == null) {
+            id = UUID.randomUUID();
+        }
+        return newElement;
+    }
 }
