@@ -14,19 +14,22 @@ import java.util.UUID;
  */
 public class DynamicSimulationRunContext {
 
-    private UUID networkUuid;
+    private final UUID networkUuid;
 
-    private int startTime;
+    private final int startTime;
 
-    private int stopTime;
+    private final int stopTime;
 
-    private UUID dynamicModelFileName;
+    private final String dynamicModelFileName;
 
-    public DynamicSimulationRunContext(UUID networkUuid, int startTime, int stopTime, UUID dynamicModelFileName) {
+    private final String dynamicModelContent;
+
+    public DynamicSimulationRunContext(UUID networkUuid, int startTime, int stopTime, String dynamicModelContent, String dynamicModelFileName) {
         this.networkUuid = Objects.requireNonNull(networkUuid);
         this.startTime = startTime;
         this.stopTime = stopTime;
-        this.dynamicModelFileName = dynamicModelFileName;
+        this.dynamicModelContent = Objects.requireNonNull(dynamicModelContent);
+        this.dynamicModelFileName = Objects.requireNonNull(dynamicModelFileName);
     }
 
     public UUID getNetworkUuid() {
@@ -41,8 +44,12 @@ public class DynamicSimulationRunContext {
         return stopTime;
     }
 
-    public UUID getDynamicModelFileName() {
+    public String getDynamicModelFileName() {
         return dynamicModelFileName;
+    }
+
+    public String getDynamicModelContent() {
+        return dynamicModelContent;
     }
 }
 

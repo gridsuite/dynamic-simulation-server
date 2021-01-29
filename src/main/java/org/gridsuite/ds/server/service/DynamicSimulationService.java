@@ -12,12 +12,13 @@ import org.gridsuite.ds.server.repository.DynamicSimulationRepository;
 import org.gridsuite.ds.server.repository.ResultEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 import reactor.core.publisher.Mono;
 
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -35,8 +36,6 @@ public class DynamicSimulationService {
 
     private final DynamicSimulationRunPublisherService runPublisherService;
 
-    private FileSystem fileSystem = FileSystems.getDefault();
-
     public DynamicSimulationService(DynamicSimulationRepository dynamicSimulationRepository,
                                     DynamicSimulationRunPublisherService runPublisherService) {
         this.dynamicSimulationRepository = Objects.requireNonNull(dynamicSimulationRepository);
@@ -44,14 +43,21 @@ public class DynamicSimulationService {
     }
 
     public Mono<UUID> runAndSaveResult(UUID networkUuid, int startTime, int stopTime, FilePart dynamicModel) {
-        UUID dynamicModelFileName = UUID.randomUUID();
-        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, startTime, stopTime, dynamicModelFileName);
-        // update status to running status and store the dynamicModel file
-        return dynamicModel.transferTo(fileSystem.getPath(dynamicModelFileName.toString())).then(setStatus(DynamicSimulationStatus.RUNNING.name())
-                .flatMap(resultEntity ->
-                        Mono.fromRunnable(() -> runPublisherService.publish(new DynamicSimulationResultContext(resultEntity.getId(), runContext)))
-                        .thenReturn(resultEntity.getId()))
-        );
+
+        Mono<byte[]> fileBytes;
+        fileBytes = dynamicModel.content().collectList().flatMap(all -> Mono.fromCallable(() ->
+                StreamUtils.copyToByteArray(new DefaultDataBufferFactory().join(all).asInputStream())));
+
+        return fileBytes.flatMap(bytes -> {
+            String fileContent = new String(bytes, StandardCharsets.UTF_8);
+            DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, startTime, stopTime, fileContent, UUID.randomUUID().toString());
+            // update status to running status and store the dynamicModel file
+            return setStatus(DynamicSimulationStatus.RUNNING.name())
+                    .flatMap(resultEntity ->
+                            Mono.fromRunnable(() -> runPublisherService.publish(new DynamicSimulationResultContext(resultEntity.getId(), runContext)))
+                                    .thenReturn(resultEntity.getId())
+                    );
+        });
     }
 
     public Mono<String> getStatus(UUID resultUuid) {
@@ -72,9 +78,5 @@ public class DynamicSimulationService {
 
     public Mono<Void> deleteResults() {
         return dynamicSimulationRepository.deleteAll();
-    }
-
-    public void setFileSystem(FileSystem fs) {
-        this.fileSystem = fs;
     }
 }

@@ -8,11 +8,6 @@
     <root level="info">
         <appender-ref ref="STDOUT"/>
     </root>
-    <!--
-        suppress the following logs at the end of the tests:
-            ERROR com.datastax.driver.core.ControlConnection - [Control connection] Cannot connect to any host, scheduling retry in 1000 milliseconds
-    -->
-    <logger name="com.datastax.driver.core.ControlConnection" level="off"/>
 
     <!--
         suppress the following logs at the end of the tests:
@@ -39,17 +34,10 @@ java.io.IOException: Connexion ré-initialisée par le correspondant
     -->
     <logger name="io.netty.channel.AbstractChannelHandlerContext" level="error"/>
 
-
     <!--
         suppress unreadable huge logs..
     -->
     <logger name="org.springframework.test" level="warn"/>
     <logger name="org.springframework.boot.test" level="warn"/>
-    <logger name="com.datastax.driver.core" level="warn"/>
-
-    <!--
-        suppress forked cassandra stdout output
-    -->
-    <logger name="com.github.nosan.embedded.cassandra.api.Cassandra" level="warn"/>
 
 </configuration>

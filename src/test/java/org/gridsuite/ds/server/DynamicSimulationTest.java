@@ -16,7 +16,6 @@ import com.powsybl.iidm.import_.Importers;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
-import org.gridsuite.ds.server.service.DynamicSimulationService;
 import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
 import org.junit.Before;
 import org.junit.Test;
@@ -75,9 +74,6 @@ public class DynamicSimulationTest {
     private DatabaseClient databaseClient;
 
     @Autowired
-    private DynamicSimulationService dynamicSimulationService;
-
-    @Autowired
     private OutputDestination output;
 
     @Autowired
@@ -101,7 +97,6 @@ public class DynamicSimulationTest {
 
         //initialize in memory FS
         fileSystem = Jimfs.newFileSystem(Configuration.unix());
-        dynamicSimulationService.setFileSystem(fileSystem);
         dynamicSimulationWorkerService.setFileSystem(fileSystem);
 
         // Init schema
@@ -197,7 +192,6 @@ public class DynamicSimulationTest {
                 .uri("/v1/results")
                 .exchange()
                 .expectStatus().isOk();
-
     }
 
 }

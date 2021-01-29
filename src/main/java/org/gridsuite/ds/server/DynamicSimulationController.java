@@ -39,24 +39,24 @@ public class DynamicSimulationController {
     @Operation(summary = "run the dynamic simulation")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "")})
     public ResponseEntity<Mono<UUID>> run(@PathVariable("networkUuid") UUID networkUuid,
-                                       @RequestParam("stopTime") int stopTime,
-                                       @DefaultValue("0") @RequestParam("startTime") int startGame,
-                                       @RequestPart("dynamicModel") FilePart dynamicModel) {
-        Mono<UUID> resultUuid = dynamicSimulationService.runAndSaveResult(networkUuid, startGame, stopTime, dynamicModel);
+                                          @DefaultValue("0") @RequestParam("startTime") int startTime,
+                                          @RequestParam("stopTime") int stopTime,
+                                          @RequestPart("dynamicModel") FilePart dynamicModel) {
+        Mono<UUID> resultUuid = dynamicSimulationService.runAndSaveResult(networkUuid, startTime, stopTime, dynamicModel);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
-    @GetMapping(value = "/results/{resultUuid}", produces = TEXT_PLAIN_VALUE)
+    @GetMapping(value = "/results/{resultUuid}", produces = "application/json")
     @Operation(summary = "Get a dynamic simulation result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result"),
-            @ApiResponse(responseCode = "404", description = "Security analysis result has not been found")})
+            @ApiResponse(responseCode = "404", description = "Dynamic simulation result has not been found")})
     public Mono<ResponseEntity<Boolean>> getResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         Mono<Boolean> result = dynamicSimulationService.getResult(resultUuid);
         return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
-    @GetMapping(value = "/results/{resultUuid}/status", produces = TEXT_PLAIN_VALUE)
+    @GetMapping(value = "/results/{resultUuid}/status", produces = "application/json")
     @Operation(summary = "Get the dynamic simulation status from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation status"),
             @ApiResponse(responseCode = "404", description = "Security analysis status has not been found")})

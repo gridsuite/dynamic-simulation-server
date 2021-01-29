@@ -18,6 +18,7 @@ import com.powsybl.dynawo.DynawoProvider;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
+import lombok.SneakyThrows;
 import org.gridsuite.ds.server.repository.DynamicSimulationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +32,11 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -68,18 +71,23 @@ public class DynamicSimulationWorkerService {
         this.resultPublisherService = resultPublisherService;
     }
 
+    @SneakyThrows
     public Mono<DynamicSimulationResult> run(DynamicSimulationRunContext context) {
         Objects.requireNonNull(context);
 
-        LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {}",
-                context.getNetworkUuid(), context.getStartTime(), context.getStopTime());
-
+        LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {}, modelContent: {}, modelName: {}",
+                context.getNetworkUuid(), context.getStartTime(), context.getStopTime(), context.getDynamicModelContent(), context.getDynamicModelFileName());
+        Path path = fileSystem.getPath(context.getDynamicModelFileName());
+        try {
+            Files.writeString(path, context.getDynamicModelContent(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
         Network network = getNetwork(context.getNetworkUuid());
         List<DynamicModelGroovyExtension> extensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynawoProvider.NAME);
-        GroovyDynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(fileSystem.getPath(context.getDynamicModelFileName().toString()), extensions);
+        GroovyDynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(fileSystem.getPath(context.getDynamicModelFileName()), extensions);
         DynamicSimulationParameters parameters = new DynamicSimulationParameters(context.getStartTime(), context.getStopTime());
-        CompletableFuture<DynamicSimulationResult> result = runAsync(network, dynamicModelsSupplier, parameters);
-        return Mono.fromCompletionStage(result);
+        return Mono.fromCompletionStage(runAsync(network, dynamicModelsSupplier, parameters));
     }
 
     public CompletableFuture<DynamicSimulationResult> runAsync(Network network,
@@ -108,7 +116,7 @@ public class DynamicSimulationWorkerService {
                                 resultPublisherService.publish(resultContext.getResultUuid());
                                 LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
                                 try {
-                                    Files.deleteIfExists(fileSystem.getPath(resultContext.getRunContext().getDynamicModelFileName().toString()));
+                                    Files.deleteIfExists(fileSystem.getPath(resultContext.getRunContext().getDynamicModelFileName()));
                                 } catch (IOException e) {
                                     throw new UncheckedIOException(e);
                                 }
