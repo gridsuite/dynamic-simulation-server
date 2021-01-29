@@ -27,7 +27,7 @@ jobs:
         uses: actions/checkout@v1
         with:
           repository: powsybl/powsybl-core
-          ref: refs/heads/master
+          ref: cc3a4fc67
 
       - name: Build and install powsybl core with Maven
         run: mvn --batch-mode -DskipTests=true --file ../powsybl-core/pom.xml install
@@ -36,11 +36,10 @@ jobs:
         uses: actions/checkout@v1
         with:
           repository: powsybl/powsybl-dynawo
-          ref: refs/heads/master
+          ref: 60025b77
 
       - name: Build and install powsybl dynawo with Maven
         run: mvn --batch-mode -DskipTests=true --file ../powsybl-dynawo/pom.xml install
-
 
       - name: Checkout sources
         uses: actions/checkout@v1
