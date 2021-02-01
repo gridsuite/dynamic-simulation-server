@@ -8,8 +8,8 @@ package org.gridsuite.ds.server.service;
 
 import com.powsybl.network.store.client.NetworkStoreService;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
-import org.gridsuite.ds.server.repository.DynamicSimulationRepository;
 import org.gridsuite.ds.server.repository.ResultEntity;
+import org.gridsuite.ds.server.repository.ResultRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
@@ -22,6 +22,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.UUID;
 
+import static io.swagger.v3.oas.integration.StringOpenApiConfigurationLoader.LOGGER;
+
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
@@ -32,13 +34,13 @@ public class DynamicSimulationService {
     @Autowired
     private NetworkStoreService networkStoreService;
 
-    private final DynamicSimulationRepository dynamicSimulationRepository;
+    private final ResultRepository resultRepository;
 
     private final DynamicSimulationRunPublisherService runPublisherService;
 
-    public DynamicSimulationService(DynamicSimulationRepository dynamicSimulationRepository,
+    public DynamicSimulationService(ResultRepository resultRepository,
                                     DynamicSimulationRunPublisherService runPublisherService) {
-        this.dynamicSimulationRepository = Objects.requireNonNull(dynamicSimulationRepository);
+        this.resultRepository = Objects.requireNonNull(resultRepository);
         this.runPublisherService = Objects.requireNonNull(runPublisherService);
     }
 
@@ -52,7 +54,7 @@ public class DynamicSimulationService {
             String fileContent = new String(bytes, StandardCharsets.UTF_8);
             DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, startTime, stopTime, fileContent, UUID.randomUUID().toString());
             // update status to running status and store the dynamicModel file
-            return setStatus(DynamicSimulationStatus.RUNNING.name())
+            return insertStatus(DynamicSimulationStatus.RUNNING.name())
                     .flatMap(resultEntity ->
                             Mono.fromRunnable(() -> runPublisherService.publish(new DynamicSimulationResultContext(resultEntity.getId(), runContext)))
                                     .thenReturn(resultEntity.getId())
@@ -60,23 +62,29 @@ public class DynamicSimulationService {
         });
     }
 
-    public Mono<String> getStatus(UUID resultUuid) {
-        return dynamicSimulationRepository.findStatus(resultUuid);
-    }
-
-    public Mono<ResultEntity> setStatus(String status) {
-        return dynamicSimulationRepository.insertStatus(status);
+    public Mono<ResultEntity> insertStatus(String status) {
+        return resultRepository.save(new ResultEntity(null, null, status, true));
     }
 
     public Mono<Boolean> getResult(UUID resultUuid) {
-        return dynamicSimulationRepository.findResult(resultUuid);
+        Objects.requireNonNull(resultUuid);
+        return resultRepository.findById(resultUuid).map(ResultEntity::getResult);
+    }
+
+    public Mono<String> getStatus(UUID resultUuid) {
+        Objects.requireNonNull(resultUuid);
+        return resultRepository.findById(resultUuid).map(ResultEntity::getStatus);
     }
 
     public Mono<Void> deleteResult(UUID resultUuid) {
-        return dynamicSimulationRepository.delete(resultUuid);
+        Objects.requireNonNull(resultUuid);
+        return resultRepository.deleteById(resultUuid).then()
+                .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable));
     }
 
     public Mono<Void> deleteResults() {
-        return dynamicSimulationRepository.deleteAll();
+        Mono<Void> v1 = resultRepository.deleteAll();
+        return v1.then().doOnError(throwable -> LOGGER.error(throwable.toString(), throwable));
     }
+
 }

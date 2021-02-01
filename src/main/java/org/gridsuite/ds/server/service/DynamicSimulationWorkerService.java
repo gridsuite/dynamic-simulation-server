@@ -18,8 +18,9 @@ import com.powsybl.dynawo.DynawoProvider;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import lombok.SneakyThrows;
-import org.gridsuite.ds.server.repository.DynamicSimulationRepository;
+import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
+import org.gridsuite.ds.server.repository.ResultEntity;
+import org.gridsuite.ds.server.repository.ResultRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -55,7 +56,7 @@ public class DynamicSimulationWorkerService {
     private static final String CATEGORY_BROKER_INPUT = DynamicSimulationWorkerService.class.getName()
             + ".input-broker-messages";
 
-    private final DynamicSimulationRepository dynamicSimulationRepository;
+    private final ResultRepository resultRepository;
 
     private final NetworkStoreService networkStoreService;
 
@@ -64,20 +65,21 @@ public class DynamicSimulationWorkerService {
     private FileSystem fileSystem = FileSystems.getDefault();
 
     public DynamicSimulationWorkerService(NetworkStoreService networkStoreService,
-                                          DynamicSimulationRepository dynamicSimulationRepository,
+                                          ResultRepository resultRepository,
                                           DynamicSimulationResultPublisherService resultPublisherService) {
         this.networkStoreService = networkStoreService;
-        this.dynamicSimulationRepository = dynamicSimulationRepository;
+        this.resultRepository = resultRepository;
         this.resultPublisherService = resultPublisherService;
     }
 
-    @SneakyThrows
     public Mono<DynamicSimulationResult> run(DynamicSimulationRunContext context) {
         Objects.requireNonNull(context);
 
         LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {}, modelContent: {}, modelName: {}",
                 context.getNetworkUuid(), context.getStartTime(), context.getStopTime(), context.getDynamicModelContent(), context.getDynamicModelFileName());
         Path path = fileSystem.getPath(context.getDynamicModelFileName());
+
+        //FIXME when switching to powsybl 4.1.0 do not use a file anymore
         try {
             Files.writeString(path, context.getDynamicModelContent(), StandardCharsets.UTF_8);
         } catch (IOException e) {
@@ -85,6 +87,7 @@ public class DynamicSimulationWorkerService {
         }
         Network network = getNetwork(context.getNetworkUuid());
         List<DynamicModelGroovyExtension> extensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynawoProvider.NAME);
+        //FIXME when switching to powsybl 4.1.0 do not use a file anymore
         GroovyDynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(fileSystem.getPath(context.getDynamicModelFileName()), extensions);
         DynamicSimulationParameters parameters = new DynamicSimulationParameters(context.getStartTime(), context.getStopTime());
         return Mono.fromCompletionStage(runAsync(network, dynamicModelsSupplier, parameters));
@@ -111,7 +114,7 @@ public class DynamicSimulationWorkerService {
                     DynamicSimulationResultContext resultContext = DynamicSimulationResultContext.fromMessage(message);
 
                     return run(resultContext.getRunContext())
-                            .flatMap(result -> dynamicSimulationRepository.updateResult(resultContext.getResultUuid(), result.isOk()))
+                            .flatMap(result -> updateResult(resultContext.getResultUuid(), result.isOk()))
                             .doOnSuccess(unused -> {
                                 resultPublisherService.publish(resultContext.getResultUuid());
                                 LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
@@ -125,6 +128,16 @@ public class DynamicSimulationWorkerService {
                 })
                 .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable))
                 .subscribe();
+    }
+
+    public Mono<Void> updateResult(UUID resultUuid, Boolean result) {
+        Objects.requireNonNull(resultUuid);
+        return resultRepository.save(toEntity(resultUuid, result, DynamicSimulationStatus.COMPLETED.name()))
+                .then();
+    }
+
+    private static ResultEntity toEntity(UUID resultUuid, Boolean result, String status) {
+        return new ResultEntity(resultUuid, result, status);
     }
 
     public void setFileSystem(FileSystem fs) {

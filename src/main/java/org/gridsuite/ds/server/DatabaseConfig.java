@@ -11,7 +11,7 @@ import io.r2dbc.h2.H2ConnectionFactory;
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
 import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import io.r2dbc.spi.ConnectionFactory;
-import org.gridsuite.ds.server.repository.DynamicSimulationRepository;
+import org.gridsuite.ds.server.repository.ResultRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +27,7 @@ import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 @Configuration
 @PropertySource(value = {"classpath:database.properties"})
 @PropertySource(value = {"file:/config/database.properties"}, ignoreResourceNotFound = true)
-@EnableR2dbcRepositories(basePackageClasses = {DynamicSimulationRepository.class})
+@EnableR2dbcRepositories(basePackageClasses = {ResultRepository.class})
 public class DatabaseConfig extends AbstractR2dbcConfiguration {
 
     @Autowired
