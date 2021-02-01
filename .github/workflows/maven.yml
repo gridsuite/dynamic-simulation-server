@@ -21,7 +21,7 @@ jobs:
           ref: refs/heads/master
 
       - name: Build and install network store client with Maven
-        run: mvn --batch-mode -Pclient --file ../powsybl-network-store/pom.xml install
+        run: mvn --batch-mode -Pclient -DskipTests=true --file ../powsybl-network-store/pom.xml install
 
       - name: Checkout powsybl core sources
         uses: actions/checkout@v1
@@ -30,7 +30,7 @@ jobs:
           ref: 8efff2802
 
       - name: Build and install powsybl core with Maven
-        run: mvn --batch-mode --file ../powsybl-core/pom.xml install
+        run: mvn --batch-mode -DskipTests=true --file ../powsybl-core/pom.xml install
 
       - name: Checkout powsybl dynawo sources
         uses: actions/checkout@v1
@@ -39,7 +39,7 @@ jobs:
           ref: 60025b77
 
       - name: Build and install powsybl dynawo with Maven
-        run: mvn --batch-mode --file ../powsybl-dynawo/pom.xml install
+        run: mvn --batch-mode -DskipTests=true --file ../powsybl-dynawo/pom.xml install
 
       - name: Checkout sources
         uses: actions/checkout@v1
@@ -49,7 +49,7 @@ jobs:
 
       - name: Run SonarCloud analysis
         run: >
-          mvn --batch-mode sonar:sonar
+          mvn --batch-mode -DskipTests sonar:sonar
           -Dsonar.host.url=https://sonarcloud.io
           -Dsonar.organization=gridsuite
           -Dsonar.projectKey=org.gridsuite:dynamic-simulation-server
@@ -60,7 +60,7 @@ jobs:
       - name: Build Docker image
         if: github.ref == 'refs/heads/master'
         run: >
-          mvn --batch-mode deploy -Dmaven.install.skip -Dmaven.deploy.skip -Dpowsybl.docker.deploy
+          mvn --batch-mode deploy -DskipTests -Dmaven.install.skip -Dmaven.deploy.skip -Dpowsybl.docker.deploy
           -Djib.httpTimeout=60000
           -Djib.to.image=docker.io/gridsuite/dynamic-simulation-server
           -Djib.to.auth.username=gridsuiteci
