@@ -1,0 +1,24 @@
+server :
+  port : 5032
+
+spring:
+  rabbitmq:
+    addresses: localhost
+    port: 5672
+
+  cloud:
+    function:
+      definition: consumeRun;publishResult;publishRun
+    stream:
+      bindings:
+        consumeRun-in-0:
+          destination: ds.run
+          group: dsGroup
+        publishResult-out-0:
+          destination: ds.result
+        publishRun-out-0:
+          destination: ds.run
+
+network-store-server:
+  preloading-strategy: COLLECTION
+  base-uri: http://localhost:8080/
