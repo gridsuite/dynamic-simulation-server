@@ -59,7 +59,7 @@ public class DynamicSimulationController {
     @GetMapping(value = "/results/{resultUuid}/status", produces = "application/json")
     @Operation(summary = "Get the dynamic simulation status from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation status"),
-            @ApiResponse(responseCode = "404", description = "Security analysis status has not been found")})
+            @ApiResponse(responseCode = "404", description = "Dynamic simulation status has not been found")})
     public Mono<ResponseEntity<String>> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         Mono<String> result = dynamicSimulationService.getStatus(resultUuid);
         return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
@@ -67,16 +67,16 @@ public class DynamicSimulationController {
     }
 
     @DeleteMapping(value = "/results/{resultUuid}")
-    @Operation(summary = "Delete a security analysis result from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The security analysis result has been deleted")})
+    @Operation(summary = "Delete a dynamic simulation result from the database")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result has been deleted")})
     public ResponseEntity<Mono<Void>> deleteResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         Mono<Void> result = dynamicSimulationService.deleteResult(resultUuid);
         return ResponseEntity.ok().body(result);
     }
 
     @DeleteMapping(value = "/results", produces = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Delete all security analysis results from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All security analysis results have been deleted")})
+    @Operation(summary = "Delete all dynamic simulation results from the database")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All dynamic simulation results have been deleted")})
     public ResponseEntity<Mono<Void>> deleteResults() {
         Mono<Void> result = dynamicSimulationService.deleteResults();
         return ResponseEntity.ok().body(result);

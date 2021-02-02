@@ -51,7 +51,7 @@ public class DatabaseConfig extends AbstractR2dbcConfiguration {
                     .password(env.getRequiredProperty("password"))
                     .build());
         } else {
-            return null;
+            throw new DynamicSimulationException(DynamicSimulationException.Type.DATABASE_DRIVER_NOT_FOUND);
         }
     }
 }

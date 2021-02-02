@@ -21,7 +21,7 @@ public class DynamicSimulationSwaggerConfig {
     public OpenAPI createOpenApi() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Dynamic-Simulation-Server API")
+                        .title("Dynamic Simulation Server API")
                         .description("This is the documentation of the Dynamic-Simulation REST API")
                         .version(DynamicSimulationApi.API_VERSION));
     }

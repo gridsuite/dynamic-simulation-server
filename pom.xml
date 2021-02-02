@@ -50,8 +50,6 @@
         <jib.from.image>gridsuite/java-dynawo</jib.from.image>
 
         <h2database.version>1.4.200</h2database.version>
-        <mock.web.server.version>4.6.0</mock.web.server.version>
-        <powsybl-core.version>3.8.0</powsybl-core.version>
         <powsybl-dynawo.version>1.0.0-SNAPSHOT</powsybl-dynawo.version>
         <powsybl-network-store-client.version>1.0.0-SNAPSHOT</powsybl-network-store-client.version>
         <r2dbc-h2.version>0.8.4.RELEASE</r2dbc-h2.version>
@@ -119,7 +117,6 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-iidm-impl</artifactId>
-            <version>${powsybl-core.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -153,7 +150,6 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynamic-simulation-api</artifactId>
-            <version>${powsybl-core.version}</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
@@ -163,7 +159,6 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynamic-simulation-dsl</artifactId>
-            <version>${powsybl-core.version}</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
@@ -179,7 +174,6 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-config-classic</artifactId>
-            <version>${powsybl-core.version}</version>
             <scope>runtime</scope>
         </dependency>
         <!-- Test dependencies -->
