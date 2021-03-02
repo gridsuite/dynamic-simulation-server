@@ -50,9 +50,8 @@ public class DynamicSimulationResultContext {
         UUID networkUuid = UUID.fromString(getNonNullHeader(headers, "networkUuid"));
         int startTime = Integer.parseInt(getNonNullHeader(headers, "startTime"));
         int stopTIme = Integer.parseInt(getNonNullHeader(headers, "stopTime"));
-        String dynamicModelContent = getNonNullHeader(headers, "dynamicModelContent");
-        String dynamicModelFileName = getNonNullHeader(headers, "dynamicModelFileName");
-        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, startTime, stopTIme, dynamicModelContent, dynamicModelFileName);
+        byte[] dynamicModelContent = (byte[]) headers.get("dynamicModelContent");
+        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, startTime, stopTIme, dynamicModelContent);
         return new DynamicSimulationResultContext(resultUuid, runContext);
     }
 
@@ -63,7 +62,6 @@ public class DynamicSimulationResultContext {
                 .setHeader("startTime", String.valueOf(runContext.getStartTime()))
                 .setHeader("stopTime", String.valueOf(runContext.getStopTime()))
                 .setHeader("dynamicModelContent", runContext.getDynamicModelContent())
-                .setHeader("dynamicModelFileName", runContext.getDynamicModelFileName())
                 .build();
     }
 

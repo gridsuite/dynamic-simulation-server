@@ -15,6 +15,7 @@ import com.powsybl.dynamicsimulation.*;
 import com.powsybl.iidm.import_.Importers;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.timeseries.*;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
 import org.junit.Before;
@@ -48,6 +49,8 @@ import java.io.InputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -108,7 +111,19 @@ public class DynamicSimulationTest {
         Network network = Importers.importData("XIIDM", dataSource, null);
         given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_STRING))).willReturn(network);
 
-        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(RESULT, "")))
+        Map <String, TimeSeries> curves = new HashMap<>();
+        TimeSeriesIndex index = new IrregularTimeSeriesIndex(new long[] {32, 64, 128, 256});
+        curves.put("NETWORK__BUS____2-BUS____5-1_AC_iSide2", TimeSeries.createDouble("NETWORK__BUS____2-BUS____5-1_AC_iSide2", index, 333.847331, 333.847321, 333.847300, 333.847259));
+        curves.put("NETWORK__BUS____1_TN_Upu_value", TimeSeries.createDouble("NETWORK__BUS____1_TN_Upu_value", index, 1.059970, 1.059970, 1.059970, 1.059970));
+
+        index = new IrregularTimeSeriesIndex(new long[] {102479, 102479, 102479, 104396});
+        StringTimeSeries timeLine = TimeSeries.createString("TimeLine", index,
+                "CLA_2_5 - CLA : order to change topology",
+                "_BUS____2-BUS____5-1_AC - LINE : opening both sides",
+                "CLA_2_5 - CLA : order to change topology",
+                "CLA_2_4 - CLA : arming by over-current constraint");
+
+        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(RESULT, "", curves, timeLine)))
                 .when(dynamicSimulationWorkerService).runAsync(any(), any(), any());
 
     }
