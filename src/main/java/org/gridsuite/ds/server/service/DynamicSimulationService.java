@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 import reactor.core.publisher.Mono;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -51,8 +50,7 @@ public class DynamicSimulationService {
                 StreamUtils.copyToByteArray(new DefaultDataBufferFactory().join(all).asInputStream())));
 
         return fileBytes.flatMap(bytes -> {
-            String fileContent = new String(bytes, StandardCharsets.UTF_8);
-            DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, startTime, stopTime, fileContent, UUID.randomUUID().toString());
+            DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, startTime, stopTime, bytes);
             // update status to running status and store the dynamicModel file
             return insertStatus(DynamicSimulationStatus.RUNNING.name())
                     .flatMap(resultEntity ->

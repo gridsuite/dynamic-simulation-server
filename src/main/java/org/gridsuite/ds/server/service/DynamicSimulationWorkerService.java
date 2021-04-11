@@ -31,13 +31,9 @@ import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
+import java.io.ByteArrayInputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -74,28 +70,18 @@ public class DynamicSimulationWorkerService {
 
     public Mono<DynamicSimulationResult> run(DynamicSimulationRunContext context) {
         Objects.requireNonNull(context);
+        LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {},", context.getNetworkUuid(), context.getStartTime(), context.getStopTime());
 
-        LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {}, modelContent: {}, modelName: {}",
-                context.getNetworkUuid(), context.getStartTime(), context.getStopTime(), context.getDynamicModelContent(), context.getDynamicModelFileName());
-        Path path = fileSystem.getPath(context.getDynamicModelFileName());
-
-        //FIXME when switching to powsybl 4.1.0 do not use a file anymore
-        try {
-            Files.writeString(path, context.getDynamicModelContent(), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
         Network network = getNetwork(context.getNetworkUuid());
         List<DynamicModelGroovyExtension> extensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynawoProvider.NAME);
-        //FIXME when switching to powsybl 4.1.0 do not use a file anymore
-        GroovyDynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(fileSystem.getPath(context.getDynamicModelFileName()), extensions);
+        GroovyDynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(new ByteArrayInputStream(context.getDynamicModelContent()), extensions);
         DynamicSimulationParameters parameters = new DynamicSimulationParameters(context.getStartTime(), context.getStopTime());
         return Mono.fromCompletionStage(runAsync(network, dynamicModelsSupplier, parameters));
     }
 
     public CompletableFuture<DynamicSimulationResult> runAsync(Network network,
-                                                        DynamicModelsSupplier dynamicModelsSupplier,
-                                                        DynamicSimulationParameters dynamicSimulationParameters) {
+                                                               DynamicModelsSupplier dynamicModelsSupplier,
+                                                               DynamicSimulationParameters dynamicSimulationParameters) {
         return DynamicSimulation.runAsync(network, dynamicModelsSupplier, dynamicSimulationParameters);
     }
 
@@ -118,12 +104,6 @@ public class DynamicSimulationWorkerService {
                             .doOnSuccess(unused -> {
                                 resultPublisherService.publish(resultContext.getResultUuid());
                                 LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
-                                try {
-                                    Files.deleteIfExists(fileSystem.getPath(resultContext.getRunContext().getDynamicModelFileName()));
-                                } catch (IOException e) {
-                                    throw new UncheckedIOException(e);
-                                }
-
                             });
                 })
                 .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable))
