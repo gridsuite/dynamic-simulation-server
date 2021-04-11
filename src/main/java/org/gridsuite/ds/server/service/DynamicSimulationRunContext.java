@@ -20,16 +20,13 @@ public class DynamicSimulationRunContext {
 
     private final int stopTime;
 
-    private final String dynamicModelFileName;
+    private final byte[] dynamicModelContent;
 
-    private final String dynamicModelContent;
-
-    public DynamicSimulationRunContext(UUID networkUuid, int startTime, int stopTime, String dynamicModelContent, String dynamicModelFileName) {
+    public DynamicSimulationRunContext(UUID networkUuid, int startTime, int stopTime, byte[] dynamicModelContent) {
         this.networkUuid = Objects.requireNonNull(networkUuid);
         this.startTime = startTime;
         this.stopTime = stopTime;
-        this.dynamicModelContent = Objects.requireNonNull(dynamicModelContent);
-        this.dynamicModelFileName = Objects.requireNonNull(dynamicModelFileName);
+        this.dynamicModelContent = dynamicModelContent;
     }
 
     public UUID getNetworkUuid() {
@@ -44,11 +41,7 @@ public class DynamicSimulationRunContext {
         return stopTime;
     }
 
-    public String getDynamicModelFileName() {
-        return dynamicModelFileName;
-    }
-
-    public String getDynamicModelContent() {
+    public byte[] getDynamicModelContent() {
         return dynamicModelContent;
     }
 }
