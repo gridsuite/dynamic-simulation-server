@@ -34,7 +34,6 @@ import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.r2dbc.core.DatabaseClient;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.messaging.Message;
@@ -45,6 +44,7 @@ import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.config.EnableWebFlux;
 import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.r2dbc.core.DatabaseClient;
 
 import java.io.File;
 import java.io.IOException;
@@ -107,7 +107,7 @@ public class DynamicSimulationTest {
 
         // Init schema
         File schemaFile = new File(getClass().getClassLoader().getResource("result.sql").getFile());
-        databaseClient.execute(Files.readString(Path.of(schemaFile.toURI()))).fetch().first().block();
+        databaseClient.sql(Files.readString(Path.of(schemaFile.toURI()))).fetch().first().block();
 
         ReadOnlyDataSource dataSource = new ResourceDataSource("IEEE14",
                 new ResourceSet("", TEST_FILE));
@@ -158,7 +158,7 @@ public class DynamicSimulationTest {
 
         UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        Message<byte[]> messageSwitch = output.receive(1000, "ds.run.destination");
+        Message<byte[]> messageSwitch = output.receive(1000);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get("resultUuid").toString()));
 
         //get the calculation status
