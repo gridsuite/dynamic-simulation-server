@@ -11,6 +11,7 @@ import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.repository.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.http.codec.multipart.FilePart;
@@ -35,12 +36,11 @@ public class DynamicSimulationService {
 
     private final ResultRepository resultRepository;
 
-    private final DynamicSimulationRunPublisherService runPublisherService;
+    @Autowired
+    private StreamBridge publishRun;
 
-    public DynamicSimulationService(ResultRepository resultRepository,
-                                    DynamicSimulationRunPublisherService runPublisherService) {
+    public DynamicSimulationService(ResultRepository resultRepository) {
         this.resultRepository = Objects.requireNonNull(resultRepository);
-        this.runPublisherService = Objects.requireNonNull(runPublisherService);
     }
 
     public Mono<UUID> runAndSaveResult(UUID networkUuid, int startTime, int stopTime, FilePart dynamicModel) {
@@ -54,7 +54,7 @@ public class DynamicSimulationService {
             // update status to running status and store the dynamicModel file
             return insertStatus(DynamicSimulationStatus.RUNNING.name())
                     .flatMap(resultEntity ->
-                            Mono.fromRunnable(() -> runPublisherService.publish(new DynamicSimulationResultContext(resultEntity.getId(), runContext)))
+                            Mono.fromRunnable(() -> publishRun.send("publishRun-out-0", new DynamicSimulationResultContext(resultEntity.getId(), runContext).toMessage()))
                                     .thenReturn(resultEntity.getId())
                     );
         });

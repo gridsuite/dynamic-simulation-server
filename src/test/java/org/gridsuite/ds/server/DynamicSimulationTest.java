@@ -158,7 +158,7 @@ public class DynamicSimulationTest {
 
         UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        Message<byte[]> messageSwitch = output.receive(1000);
+        Message<byte[]> messageSwitch = output.receive(1000, "ds.result.destination");
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get("resultUuid").toString()));
 
         //get the calculation status

@@ -8,7 +8,7 @@ spring:
 
   cloud:
     function:
-      definition: consumeRun;publishResult;publishRun
+      definition: consumeRun
     stream:
       bindings:
         consumeRun-in-0:

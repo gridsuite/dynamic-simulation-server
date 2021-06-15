@@ -23,9 +23,12 @@ import org.gridsuite.ds.server.repository.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
@@ -56,16 +59,15 @@ public class DynamicSimulationWorkerService {
 
     private final NetworkStoreService networkStoreService;
 
-    private final DynamicSimulationResultPublisherService resultPublisherService;
-
     private FileSystem fileSystem = FileSystems.getDefault();
 
+    @Autowired
+    private StreamBridge publishResult;
+
     public DynamicSimulationWorkerService(NetworkStoreService networkStoreService,
-                                          ResultRepository resultRepository,
-                                          DynamicSimulationResultPublisherService resultPublisherService) {
+                                          ResultRepository resultRepository) {
         this.networkStoreService = networkStoreService;
         this.resultRepository = resultRepository;
-        this.resultPublisherService = resultPublisherService;
     }
 
     public Mono<DynamicSimulationResult> run(DynamicSimulationRunContext context) {
@@ -102,7 +104,10 @@ public class DynamicSimulationWorkerService {
                     return run(resultContext.getRunContext())
                             .flatMap(result -> updateResult(resultContext.getResultUuid(), result.isOk()))
                             .doOnSuccess(unused -> {
-                                resultPublisherService.publish(resultContext.getResultUuid());
+                                publishResult.send("publishResult-out-0", MessageBuilder
+                                        .withPayload("")
+                                        .setHeader("resultUuid", resultContext.getResultUuid().toString())
+                                        .build());
                                 LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
                             });
                 })
