@@ -18,6 +18,7 @@ spring:
           destination: ds.result
         publishRun-out-0:
           destination: ds.run
+      source: publishResult;publishRun
 
 network-store-server:
   preloading-strategy: COLLECTION
