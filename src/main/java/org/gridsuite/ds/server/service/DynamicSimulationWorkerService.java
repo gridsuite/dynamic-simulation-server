@@ -55,6 +55,8 @@ public class DynamicSimulationWorkerService {
     private static final String CATEGORY_BROKER_INPUT = DynamicSimulationWorkerService.class.getName()
             + ".input-broker-messages";
 
+    private static final Logger OUTPUT_MESSAGE_LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_INPUT);
+
     private final ResultRepository resultRepository;
 
     private final NetworkStoreService networkStoreService;
@@ -104,10 +106,11 @@ public class DynamicSimulationWorkerService {
                     return run(resultContext.getRunContext())
                             .flatMap(result -> updateResult(resultContext.getResultUuid(), result.isOk()))
                             .doOnSuccess(unused -> {
-                                publishResult.send("publishResult-out-0", MessageBuilder
+                                Message<String> sendMessage = MessageBuilder
                                         .withPayload("")
                                         .setHeader("resultUuid", resultContext.getResultUuid().toString())
-                                        .build());
+                                        .build();
+                                sendResultMessage(sendMessage);
                                 LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
                             });
                 })
@@ -127,6 +130,11 @@ public class DynamicSimulationWorkerService {
 
     public void setFileSystem(FileSystem fs) {
         this.fileSystem = fs;
+    }
+
+    private void sendResultMessage(Message<String> message) {
+        OUTPUT_MESSAGE_LOGGER.debug("Sending message : {}", message);
+        publishResult.send("publishResult-out-0", message);
     }
 }
 
