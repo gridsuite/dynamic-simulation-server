@@ -55,7 +55,9 @@ public class DynamicSimulationWorkerService {
     private static final String CATEGORY_BROKER_INPUT = DynamicSimulationWorkerService.class.getName()
             + ".input-broker-messages";
 
-    private static final Logger OUTPUT_MESSAGE_LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_INPUT);
+    private static final String CATEGORY_BROKER_OUTPUT = DynamicSimulationService.class.getName() + ".output-broker-messages";
+
+    private static final Logger OUTPUT_MESSAGE_LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
 
     private final ResultRepository resultRepository;
 
