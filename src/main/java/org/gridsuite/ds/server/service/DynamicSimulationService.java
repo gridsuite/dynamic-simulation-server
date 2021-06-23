@@ -10,10 +10,14 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.repository.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 import reactor.core.publisher.Mono;
@@ -35,12 +39,15 @@ public class DynamicSimulationService {
 
     private final ResultRepository resultRepository;
 
-    private final DynamicSimulationRunPublisherService runPublisherService;
+    @Autowired
+    private StreamBridge publishRun;
 
-    public DynamicSimulationService(ResultRepository resultRepository,
-                                    DynamicSimulationRunPublisherService runPublisherService) {
+    private static final String CATEGORY_BROKER_OUTPUT = DynamicSimulationService.class.getName() + ".output-broker-messages";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
+
+    public DynamicSimulationService(ResultRepository resultRepository) {
         this.resultRepository = Objects.requireNonNull(resultRepository);
-        this.runPublisherService = Objects.requireNonNull(runPublisherService);
     }
 
     public Mono<UUID> runAndSaveResult(UUID networkUuid, int startTime, int stopTime, FilePart dynamicModel) {
@@ -54,7 +61,10 @@ public class DynamicSimulationService {
             // update status to running status and store the dynamicModel file
             return insertStatus(DynamicSimulationStatus.RUNNING.name())
                     .flatMap(resultEntity ->
-                            Mono.fromRunnable(() -> runPublisherService.publish(new DynamicSimulationResultContext(resultEntity.getId(), runContext)))
+                            Mono.fromRunnable(() -> {
+                                Message<String> message = new DynamicSimulationResultContext(resultEntity.getId(), runContext).toMessage();
+                                sendRunMessage(message);
+                            })
                                     .thenReturn(resultEntity.getId())
                     );
         });
@@ -83,6 +93,11 @@ public class DynamicSimulationService {
     public Mono<Void> deleteResults() {
         Mono<Void> v1 = resultRepository.deleteAll();
         return v1.then().doOnError(throwable -> LOGGER.error(throwable.toString(), throwable));
+    }
+
+    private void sendRunMessage(Message<String> message) {
+        LOGGER.debug("Sending message : {}", message);
+        publishRun.send("publishRun-out-0", message);
     }
 
 }

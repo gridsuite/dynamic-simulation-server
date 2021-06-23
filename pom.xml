@@ -15,7 +15,7 @@
     <parent>
         <groupId>com.powsybl</groupId>
         <artifactId>powsybl-parent-ws</artifactId>
-        <version>4</version>
+        <version>5</version>
         <relativePath/>
     </parent>
 
@@ -46,14 +46,13 @@
     <properties>
         <java.version>11</java.version>
 
-        <gridsuite-dependencies.version>7</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>8</gridsuite-dependencies.version>
         <jib.from.image>gridsuite/java-dynawo</jib.from.image>
 
         <h2database.version>1.4.200</h2database.version>
         <powsybl-network-store-client.version>1.0.0-SNAPSHOT</powsybl-network-store-client.version>
         <r2dbc-h2.version>0.8.4.RELEASE</r2dbc-h2.version>
         <r2dbc-postgresql.version>0.8.6.RELEASE</r2dbc-postgresql.version>
-        <springboot.version>2.3.0.RELEASE</springboot.version>
     </properties>
 
     <build>
@@ -92,15 +91,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- overrides of imports needed to get 2.3 so we have r2dbc-->
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${springboot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
@@ -198,6 +188,11 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
