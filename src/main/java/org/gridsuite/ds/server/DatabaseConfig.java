@@ -49,6 +49,7 @@ public class DatabaseConfig extends AbstractR2dbcConfiguration {
                     .database(env.getRequiredProperty("database"))
                     .username(env.getRequiredProperty("login"))
                     .password(env.getRequiredProperty("password"))
+                    .schema(env.getProperty("schema", ""))
                     .build());
         } else {
             throw new DynamicSimulationException(DynamicSimulationException.Type.DATABASE_DRIVER_NOT_FOUND);
