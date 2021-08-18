@@ -37,10 +37,11 @@ public class DatabaseConfig extends AbstractR2dbcConfiguration {
     @Override
     public ConnectionFactory connectionFactory() {
         String driver = env.getRequiredProperty("driver");
+        String schema = env.getProperty("schema", "");
         if (driver.equals("h2")) {
             return new H2ConnectionFactory(H2ConnectionConfiguration.builder()
                     .inMemory(env.getRequiredProperty("database"))
-                    .option("DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE")
+                    .option("DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;INIT=CREATE SCHEMA IF NOT EXISTS " + schema + "\\;SET SCHEMA " + schema)
                     .build());
         } else if (driver.equals("postgresql")) {
             return new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
@@ -49,7 +50,7 @@ public class DatabaseConfig extends AbstractR2dbcConfiguration {
                     .database(env.getRequiredProperty("database"))
                     .username(env.getRequiredProperty("login"))
                     .password(env.getRequiredProperty("password"))
-                    .schema(env.getProperty("schema", ""))
+                    .schema(schema)
                     .build());
         } else {
             throw new DynamicSimulationException(DynamicSimulationException.Type.DATABASE_DRIVER_NOT_FOUND);

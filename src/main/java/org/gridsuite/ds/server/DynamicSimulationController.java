@@ -35,7 +35,7 @@ public class DynamicSimulationController {
         this.dynamicSimulationService = dynamicSimulationService;
     }
 
-    @PostMapping(value = "/networks/{networkUuid}/run", produces = "application/json")
+    @PostMapping(value = "/networks/{networkUuid}/run", produces = "application/json", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "run the dynamic simulation")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "")})
     public ResponseEntity<Mono<UUID>> run(@PathVariable("networkUuid") UUID networkUuid,
