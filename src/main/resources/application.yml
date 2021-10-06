@@ -1,15 +1,17 @@
 server :
-  port : 5032
   forward-headers-strategy: framework
 
 spring:
+  profiles:
+    active: default,local
+
   r2dbc:
     url: ${dbUrl}
     username: ${login}
     password: ${password}
 
   rabbitmq:
-    addresses: localhost
+    addresses: rabbitmq
     port: 5672
 
   cloud:
@@ -28,7 +30,6 @@ spring:
 
 network-store-server:
   preloading-strategy: COLLECTION
-  base-uri: http://localhost:8080/
 
 # this structure is shared among all microservices, if you change it, change it everywhere.
 # customQuery allows a microservice to set query parameters specific to itself.

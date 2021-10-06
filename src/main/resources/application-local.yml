@@ -1,0 +1,10 @@
+server:
+  port: 5032
+
+spring:
+  rabbitmq:
+    addresses: localhost
+    port: 5672
+
+network-store-server:
+  base-uri: http://localhost:8080/
