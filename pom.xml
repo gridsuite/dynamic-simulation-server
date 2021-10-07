@@ -48,11 +48,13 @@
 
         <gridsuite-dependencies.version>10</gridsuite-dependencies.version>
         <jib.from.image>gridsuite/java-dynawo</jib.from.image>
+        <jib.container.environment>SPRING_PROFILES_ACTIVE=default</jib.container.environment>
 
         <h2database.version>1.4.200</h2database.version>
         <powsybl-network-store-client.version>1.0.0-SNAPSHOT</powsybl-network-store-client.version>
         <r2dbc-h2.version>0.8.4.RELEASE</r2dbc-h2.version>
         <r2dbc-postgresql.version>0.8.6.RELEASE</r2dbc-postgresql.version>
+
     </properties>
 
     <build>
