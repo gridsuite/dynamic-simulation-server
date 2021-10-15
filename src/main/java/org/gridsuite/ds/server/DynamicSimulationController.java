@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.http.MediaType;
@@ -27,6 +28,7 @@ import static org.springframework.http.MediaType.*;
  */
 @RestController
 @RequestMapping(value = "/" + DynamicSimulationApi.API_VERSION)
+@Tag(name = "Dynamic simulation server")
 public class DynamicSimulationController {
 
     private final DynamicSimulationService dynamicSimulationService;
@@ -49,7 +51,7 @@ public class DynamicSimulationController {
     @GetMapping(value = "/results/{resultUuid}", produces = "application/json")
     @Operation(summary = "Get a dynamic simulation result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result"),
-            @ApiResponse(responseCode = "404", description = "Dynamic simulation result has not been found")})
+        @ApiResponse(responseCode = "404", description = "Dynamic simulation result has not been found")})
     public Mono<ResponseEntity<Boolean>> getResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         Mono<Boolean> result = dynamicSimulationService.getResult(resultUuid);
         return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
@@ -59,7 +61,7 @@ public class DynamicSimulationController {
     @GetMapping(value = "/results/{resultUuid}/status", produces = "application/json")
     @Operation(summary = "Get the dynamic simulation status from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation status"),
-            @ApiResponse(responseCode = "404", description = "Dynamic simulation status has not been found")})
+        @ApiResponse(responseCode = "404", description = "Dynamic simulation status has not been found")})
     public Mono<ResponseEntity<String>> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         Mono<String> result = dynamicSimulationService.getStatus(resultUuid);
         return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))

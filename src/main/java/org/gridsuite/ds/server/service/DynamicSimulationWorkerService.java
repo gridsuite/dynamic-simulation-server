@@ -26,10 +26,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -67,6 +69,10 @@ public class DynamicSimulationWorkerService {
 
     @Autowired
     private StreamBridge publishResult;
+
+    @Lazy // lazy because test use spybean on DynamicSimulationWorkerService
+    @Autowired
+    DynamicSimulationWorkerService self;
 
     public DynamicSimulationWorkerService(NetworkStoreService networkStoreService,
                                           ResultRepository resultRepository) {
@@ -122,8 +128,15 @@ public class DynamicSimulationWorkerService {
 
     public Mono<Void> updateResult(UUID resultUuid, Boolean result) {
         Objects.requireNonNull(resultUuid);
-        return resultRepository.save(toEntity(resultUuid, result, DynamicSimulationStatus.COMPLETED.name()))
-                .then();
+        return Mono.fromRunnable(() -> self.doUpdateResult(resultUuid, result));
+    }
+
+    @Transactional
+    public void doUpdateResult(UUID resultUuid, Boolean result) {
+        var res = resultRepository.getOne(resultUuid);
+        res.setResult(result);
+        res.setStatus(DynamicSimulationStatus.COMPLETED.name());
+        resultRepository.save(res);
     }
 
     private static ResultEntity toEntity(UUID resultUuid, Boolean result, String status) {

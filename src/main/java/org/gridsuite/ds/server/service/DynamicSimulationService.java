@@ -6,7 +6,6 @@
  */
 package org.gridsuite.ds.server.service;
 
-import com.powsybl.network.store.client.NetworkStoreService;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.repository.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
@@ -14,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.messaging.Message;
@@ -25,17 +23,11 @@ import reactor.core.publisher.Mono;
 import java.util.Objects;
 import java.util.UUID;
 
-import static io.swagger.v3.oas.integration.StringOpenApiConfigurationLoader.LOGGER;
-
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 @Service
-@ComponentScan(basePackageClasses = {NetworkStoreService.class})
 public class DynamicSimulationService {
-
-    @Autowired
-    private NetworkStoreService networkStoreService;
 
     private final ResultRepository resultRepository;
 
@@ -46,6 +38,7 @@ public class DynamicSimulationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
 
+    @Autowired
     public DynamicSimulationService(ResultRepository resultRepository) {
         this.resultRepository = Objects.requireNonNull(resultRepository);
     }
@@ -70,29 +63,33 @@ public class DynamicSimulationService {
         });
     }
 
+    //@Autowired
+    //DynamicSimulationService self;
+
     public Mono<ResultEntity> insertStatus(String status) {
-        return resultRepository.save(new ResultEntity(null, null, status, true));
+        return Mono.fromCallable(() -> resultRepository.save(new ResultEntity(null, null, status)));
     }
 
     public Mono<Boolean> getResult(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return resultRepository.findById(resultUuid).map(ResultEntity::getResult);
+        return Mono.fromCallable(() -> resultRepository.findById(resultUuid).map(ResultEntity::getResult)
+            .orElse(null));
     }
 
     public Mono<String> getStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return resultRepository.findById(resultUuid).map(ResultEntity::getStatus);
+        return Mono.fromCallable(() -> resultRepository.findById(resultUuid).map(ResultEntity::getStatus).orElse(null));
     }
 
     public Mono<Void> deleteResult(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return resultRepository.deleteById(resultUuid).then()
-                .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable));
+        return Mono.fromRunnable(() -> resultRepository.deleteById(resultUuid))
+            .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable)).then();
     }
 
     public Mono<Void> deleteResults() {
-        Mono<Void> v1 = resultRepository.deleteAll();
-        return v1.then().doOnError(throwable -> LOGGER.error(throwable.toString(), throwable));
+        return Mono.fromRunnable(resultRepository::deleteAll)
+            .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable)).then();
     }
 
     private void sendRunMessage(Message<String> message) {

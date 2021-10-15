@@ -5,15 +5,20 @@ spring:
   profiles:
     active: default,local
 
-  r2dbc:
-    url: ${dbUrl}
-    username: ${login}
-    password: ${password}
-
   rabbitmq:
     addresses: rabbitmq
     port: 5672
 
+  datasource:
+    url: ${dbUrl}
+    username: ${login}
+    password: ${password}
+  jpa:
+    database: POSTGRESQL
+    hibernate:
+      ddl-auto: validate
+    properties:
+      dialect: org.hibernate.dialect.PostgreSQLDialect
   cloud:
     function:
       definition: consumeRun
@@ -46,4 +51,4 @@ queryBegin: '?'
 customQueryBegin: '?'
 customQuery:
 dbName: ds
-dbApi: r2dbc
+dbApi: jdbc
