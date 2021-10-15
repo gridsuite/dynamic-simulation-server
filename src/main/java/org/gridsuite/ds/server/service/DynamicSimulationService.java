@@ -63,9 +63,6 @@ public class DynamicSimulationService {
         });
     }
 
-    //@Autowired
-    //DynamicSimulationService self;
-
     public Mono<ResultEntity> insertStatus(String status) {
         return Mono.fromCallable(() -> resultRepository.save(new ResultEntity(null, null, status)));
     }

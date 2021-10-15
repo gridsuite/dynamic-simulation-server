@@ -139,10 +139,6 @@ public class DynamicSimulationWorkerService {
         resultRepository.save(res);
     }
 
-    private static ResultEntity toEntity(UUID resultUuid, Boolean result, String status) {
-        return new ResultEntity(resultUuid, result, status);
-    }
-
     public void setFileSystem(FileSystem fs) {
         this.fileSystem = fs;
     }
