@@ -82,8 +82,6 @@ public class DynamicSimulationTest {
     @MockBean
     private NetworkStoreService networkStoreClient;
 
-    //@Autowired
-    //private DynamicSimulationWorkerService dynamicSimulationWorkerServiceAutowired;
     @SpyBean
     private DynamicSimulationWorkerService dynamicSimulationWorkerService;
 
