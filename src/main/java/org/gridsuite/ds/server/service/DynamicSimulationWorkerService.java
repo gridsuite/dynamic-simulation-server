@@ -19,7 +19,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
-import org.gridsuite.ds.server.repository.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
