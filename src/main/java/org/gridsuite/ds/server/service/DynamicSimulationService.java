@@ -38,7 +38,6 @@ public class DynamicSimulationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
 
-    @Autowired
     public DynamicSimulationService(ResultRepository resultRepository) {
         this.resultRepository = Objects.requireNonNull(resultRepository);
     }

@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS result (
-    resultUuid uuid,
+    result_uuid uuid,
     status varchar(15),
     result boolean
 );
