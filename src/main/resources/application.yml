@@ -5,14 +5,37 @@ spring:
   profiles:
     active: default,local
 
-  r2dbc:
-    url: ${dbUrl}
-    username: ${login}
-    password: ${password}
-
   rabbitmq:
     addresses: rabbitmq
     port: 5672
+
+  datasource:
+    url: ${dbUrl}
+    username: ${login}
+    password: ${password}
+  jpa:
+    database: POSTGRESQL
+    hibernate:
+      ddl-auto: validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
+
+    properties:
+      dialect: org.hibernate.dialect.PostgreSQLDialect
+      hibernate:
+        format_sql: true
+        # Used when action: create is uncommented
+        hbm2ddl:
+          delimiter: ;
+          # Uncomment action to automatically generate the database sql schema file
+      javax:
+        persistence:
+          schema-generation:
+            scripts:
+              #action: create
+              create-target: src/main/resources/result.sql
+              create-source: metadata
 
   cloud:
     function:
@@ -46,4 +69,4 @@ queryBegin: '?'
 customQueryBegin: '?'
 customQuery:
 dbName: ds
-dbApi: r2dbc
+dbApi: jdbc

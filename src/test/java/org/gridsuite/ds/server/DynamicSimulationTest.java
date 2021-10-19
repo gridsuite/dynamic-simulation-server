@@ -24,7 +24,6 @@ import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,14 +43,10 @@ import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.config.EnableWebFlux;
 import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.r2dbc.core.DatabaseClient;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -70,14 +65,12 @@ import static org.mockito.Mockito.*;
 @AutoConfigureWebTestClient
 @EnableWebFlux
 @SpringBootTest
-@ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class})
+@ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class},
+    initializers = CustomApplicationContextInitializer.class)
 public class DynamicSimulationTest {
 
     @Autowired
     private WebTestClient webTestClient;
-
-    @Autowired
-    private DatabaseClient databaseClient;
 
     @Autowired
     private OutputDestination output;
@@ -99,15 +92,9 @@ public class DynamicSimulationTest {
 
     @Before
     public void init() throws IOException {
-        MockitoAnnotations.initMocks(this);
-
         //initialize in memory FS
         fileSystem = Jimfs.newFileSystem(Configuration.unix());
         dynamicSimulationWorkerService.setFileSystem(fileSystem);
-
-        // Init schema
-        File schemaFile = new File(getClass().getClassLoader().getResource("result.sql").getFile());
-        databaseClient.sql(Files.readString(Path.of(schemaFile.toURI()))).fetch().first().block();
 
         ReadOnlyDataSource dataSource = new ResourceDataSource("IEEE14",
                 new ResourceSet("", TEST_FILE));

@@ -19,7 +19,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
-import org.gridsuite.ds.server.repository.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -67,6 +67,9 @@ public class DynamicSimulationWorkerService {
 
     @Autowired
     private StreamBridge publishResult;
+
+    @Autowired
+    DynamicSimulationWorkerService self;
 
     public DynamicSimulationWorkerService(NetworkStoreService networkStoreService,
                                           ResultRepository resultRepository) {
@@ -122,12 +125,14 @@ public class DynamicSimulationWorkerService {
 
     public Mono<Void> updateResult(UUID resultUuid, Boolean result) {
         Objects.requireNonNull(resultUuid);
-        return resultRepository.save(toEntity(resultUuid, result, DynamicSimulationStatus.COMPLETED.name()))
-                .then();
+        return Mono.fromRunnable(() -> self.doUpdateResult(resultUuid, result));
     }
 
-    private static ResultEntity toEntity(UUID resultUuid, Boolean result, String status) {
-        return new ResultEntity(resultUuid, result, status);
+    @Transactional
+    public void doUpdateResult(UUID resultUuid, Boolean result) {
+        var res = resultRepository.getOne(resultUuid);
+        res.setResult(result);
+        res.setStatus(DynamicSimulationStatus.COMPLETED.name());
     }
 
     public void setFileSystem(FileSystem fs) {

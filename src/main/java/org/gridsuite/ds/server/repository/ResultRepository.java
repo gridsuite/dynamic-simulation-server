@@ -6,7 +6,7 @@
  */
 package org.gridsuite.ds.server.repository;
 
-import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
@@ -15,6 +15,5 @@ import java.util.UUID;
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 @Repository
-public interface ResultRepository extends ReactiveCrudRepository<ResultEntity, UUID> {
-
+public interface ResultRepository extends JpaRepository<ResultEntity, UUID> {
 }

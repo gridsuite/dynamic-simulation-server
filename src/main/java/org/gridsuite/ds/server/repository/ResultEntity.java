@@ -6,15 +6,10 @@
  */
 package org.gridsuite.ds.server.repository;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.PersistenceConstructor;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.domain.Persistable;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
+import javax.persistence.*;
 
 import java.io.Serializable;
 import java.util.UUID;
@@ -24,36 +19,26 @@ import java.util.UUID;
  */
 @Getter
 @Setter
-@Table("result")
-@AllArgsConstructor
-public class ResultEntity implements Serializable, Persistable<UUID> {
+@Table(name = "result")
+@NoArgsConstructor
+@Entity
+public class ResultEntity extends AbstractManuallyAssignedIdentifierEntity<UUID> implements Serializable {
 
-    @PersistenceConstructor
     public ResultEntity(UUID id, Boolean result, String status) {
         this.id = id;
         this.result = result;
         this.status = status;
-        this.newElement = false;
     }
 
     @Id
-    @Column("resultUuid")
+    @Column(name = "resultUuid")
+    @GeneratedValue
     private UUID id;
 
-    @Column("result")
+    @Column(name = "result")
     private Boolean result;
 
-    @Column("status")
+    @Column(name = "status")
     private String status;
 
-    @Transient
-    private boolean newElement;
-
-    @Override
-    public boolean isNew() {
-        if (newElement && id == null) {
-            id = UUID.randomUUID();
-        }
-        return newElement;
-    }
 }

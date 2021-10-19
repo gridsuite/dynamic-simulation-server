@@ -6,10 +6,8 @@
  */
 package org.gridsuite.ds.server;
 
-import org.gridsuite.ds.server.repository.ResultRepository;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -18,7 +16,5 @@ import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 @Configuration
 @PropertySource(value = {"classpath:database.properties"})
 @PropertySource(value = {"file:/config/database.properties"}, ignoreResourceNotFound = true)
-@EnableR2dbcRepositories(basePackageClasses = {ResultRepository.class})
-public class DatabaseConfig {
-
+public class DataSourceConfig {
 }

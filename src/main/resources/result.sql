@@ -1,5 +1,7 @@
-CREATE TABLE IF NOT EXISTS result (
-    resultUuid uuid,
-    status varchar(15),
-    result boolean
-);
+
+    create table result (
+       resultUuid uuid not null,
+        result boolean,
+        status varchar(255),
+        primary key (resultUuid)
+    );
