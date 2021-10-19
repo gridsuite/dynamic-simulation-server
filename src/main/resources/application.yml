@@ -17,7 +17,28 @@ spring:
     database: POSTGRESQL
     hibernate:
       ddl-auto: validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
+
     properties:
+      hibernate:
+        ddl-auto: validate
+        format_sql: true
+        # Used when action: create is uncommented
+        hbm2ddl:
+          delimiter: ;
+          # Uncomment action to automatically generate the database sql schema file
+      javax:
+        persistence:
+          schema-generation:
+            scripts:
+              #action: create
+              create-target: src/main/resources/result.sql
+              create-source: metadata
+
+
+  properties:
       dialect: org.hibernate.dialect.PostgreSQLDialect
   cloud:
     function:
