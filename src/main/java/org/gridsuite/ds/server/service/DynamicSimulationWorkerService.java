@@ -69,7 +69,19 @@ public class DynamicSimulationWorkerService {
     @Autowired
     private StreamBridge publishResult;
 
-    @Lazy // lazy because test use spybean on DynamicSimulationWorkerService
+    /* lazy because test use spybean on self injecting bean (DynamicSimulationWorkerService)
+        without lazy springs fails with
+        org.springframework.beans.factory.BeanCurrentlyInCreationException: Error creating bean with name
+            'dynamicSimulationWorkerService': Bean with name 'dynamicSimulationWorkerService' has been injected into other
+            beans [dynamicSimulationWorkerService] in its raw version as part of a circular reference, but has eventually
+            been wrapped. This means that said other beans do not use the final version of the bean. This is often the
+            result of over-eager type matching - consider using 'getBeanNamesForType'
+            with the 'allowEagerInit' flag turned off, for example.
+
+        Lazy is not a perfect solution because self is still vanilla  DynamicSimulationWorkerService, and not the mocked bean
+            however it works for us now because we only mock function not called on self
+        if this causes problems in the future we will need to find a better fix */
+    @Lazy
     @Autowired
     DynamicSimulationWorkerService self;
 
