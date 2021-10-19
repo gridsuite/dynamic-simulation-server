@@ -24,7 +24,6 @@ spring:
     properties:
       dialect: org.hibernate.dialect.PostgreSQLDialect
       hibernate:
-        ddl-auto: validate
         format_sql: true
         # Used when action: create is uncommented
         hbm2ddl:
