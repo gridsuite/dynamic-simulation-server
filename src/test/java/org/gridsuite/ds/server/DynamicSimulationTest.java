@@ -94,7 +94,6 @@ public class DynamicSimulationTest {
     @Before
     public void init() throws IOException {
         MockitoAnnotations.initMocks(this);
-       // dynamicSimulationWorkerService = Mockito.spy(dynamicSimulationWorkerServiceAutowired);
         //initialize in memory FS
         fileSystem = Jimfs.newFileSystem(Configuration.unix());
         dynamicSimulationWorkerService.setFileSystem(fileSystem);

@@ -135,7 +135,6 @@ public class DynamicSimulationWorkerService {
         var res = resultRepository.getOne(resultUuid);
         res.setResult(result);
         res.setStatus(DynamicSimulationStatus.COMPLETED.name());
-        resultRepository.save(res);
     }
 
     public void setFileSystem(FileSystem fs) {
