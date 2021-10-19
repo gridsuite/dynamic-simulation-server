@@ -15,7 +15,7 @@ import org.springframework.context.ConfigurableApplicationContext;
  * @author Jacques Borsenberger <jacques.borsenberger at rte-france.com>
 */
 
-public class TestInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+public class CustomApplicationContextInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
     /* setAllowRawInjectionDespiteWrapping(true) because test use spybean on self injecting bean (DynamicSimulationWorkerService)
     without lazy or allowRawInjectionDespiteWrapping springs fails with
     org.springframework.beans.factory.BeanCurrentlyInCreationException: Error creating bean with name
