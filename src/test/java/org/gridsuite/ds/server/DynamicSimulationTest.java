@@ -65,7 +65,8 @@ import static org.mockito.Mockito.*;
 @AutoConfigureWebTestClient
 @EnableWebFlux
 @SpringBootTest
-@ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class})
+@ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class},
+    initializers = TestInitializer.class)
 public class DynamicSimulationTest {
 
     @Autowired
