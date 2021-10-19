@@ -22,6 +22,7 @@ spring:
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
 
     properties:
+      dialect: org.hibernate.dialect.PostgreSQLDialect
       hibernate:
         ddl-auto: validate
         format_sql: true
@@ -37,9 +38,6 @@ spring:
               create-target: src/main/resources/result.sql
               create-source: metadata
 
-
-  properties:
-      dialect: org.hibernate.dialect.PostgreSQLDialect
   cloud:
     function:
       definition: consumeRun
