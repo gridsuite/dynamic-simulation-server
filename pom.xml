@@ -15,7 +15,7 @@
     <parent>
         <groupId>com.powsybl</groupId>
         <artifactId>powsybl-parent-ws</artifactId>
-        <version>5</version>
+        <version>6</version>
         <relativePath/>
     </parent>
 
@@ -52,6 +52,7 @@
 
         <h2database.version>1.4.200</h2database.version>
         <powsybl-network-store-client.version>1.0.0-SNAPSHOT</powsybl-network-store-client.version>
+        <liquibase-hibernate-package>org.gridsuite.ds.server</liquibase-hibernate-package>
     </properties>
 
     <build>
@@ -146,6 +147,11 @@
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-network-store-client</artifactId>
             <version>${powsybl-network-store-client.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <!-- runtime dependencies -->
         <dependency>
