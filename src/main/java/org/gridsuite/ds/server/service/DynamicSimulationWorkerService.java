@@ -83,7 +83,7 @@ public class DynamicSimulationWorkerService {
         Objects.requireNonNull(context);
         LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {},", context.getNetworkUuid(), context.getStartTime(), context.getStopTime());
 
-        Network network = getNetwork(context.getNetworkUuid());
+        Network network = getNetwork(context.getNetworkUuid(), context.getVariantId());
         List<DynamicModelGroovyExtension> extensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynaWaltzProvider.NAME);
         GroovyDynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(new ByteArrayInputStream(context.getDynamicModelContent()), extensions);
         DynamicSimulationParameters parameters = new DynamicSimulationParameters(context.getStartTime(), context.getStopTime());
@@ -96,11 +96,15 @@ public class DynamicSimulationWorkerService {
         return DynamicSimulation.runAsync(network, dynamicModelsSupplier, dynamicSimulationParameters);
     }
 
-    private Network getNetwork(UUID networkUuid) {
+    private Network getNetwork(UUID networkUuid, String variantId) {
         try {
-            return networkStoreService.getNetwork(networkUuid, PreloadingStrategy.COLLECTION);
+            Network network = networkStoreService.getNetwork(networkUuid, PreloadingStrategy.COLLECTION);
+            if (variantId != null) {
+                network.getVariantManager().setWorkingVariant(variantId);
+            }
+            return network;
         } catch (PowsyblException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Network '" + networkUuid + "' not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
     }
 

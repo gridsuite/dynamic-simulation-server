@@ -48,10 +48,11 @@ public class DynamicSimulationResultContext {
         MessageHeaders headers = message.getHeaders();
         UUID resultUuid = UUID.fromString(getNonNullHeader(headers, "resultUuid"));
         UUID networkUuid = UUID.fromString(getNonNullHeader(headers, "networkUuid"));
+        String variantId = (String) headers.get("variantId");
         int startTime = Integer.parseInt(getNonNullHeader(headers, "startTime"));
         int stopTIme = Integer.parseInt(getNonNullHeader(headers, "stopTime"));
         byte[] dynamicModelContent = (byte[]) headers.get("dynamicModelContent");
-        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, startTime, stopTIme, dynamicModelContent);
+        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, variantId, startTime, stopTIme, dynamicModelContent);
         return new DynamicSimulationResultContext(resultUuid, runContext);
     }
 
@@ -59,6 +60,7 @@ public class DynamicSimulationResultContext {
         return MessageBuilder.withPayload("")
                 .setHeader("resultUuid", resultUuid.toString())
                 .setHeader("networkUuid", runContext.getNetworkUuid().toString())
+                .setHeader("variantId", runContext.getVariantId())
                 .setHeader("startTime", String.valueOf(runContext.getStartTime()))
                 .setHeader("stopTime", String.valueOf(runContext.getStopTime()))
                 .setHeader("dynamicModelContent", runContext.getDynamicModelContent())

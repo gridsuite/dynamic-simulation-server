@@ -16,14 +16,17 @@ public class DynamicSimulationRunContext {
 
     private final UUID networkUuid;
 
+    private final String variantId;
+
     private final int startTime;
 
     private final int stopTime;
 
     private final byte[] dynamicModelContent;
 
-    public DynamicSimulationRunContext(UUID networkUuid, int startTime, int stopTime, byte[] dynamicModelContent) {
+    public DynamicSimulationRunContext(UUID networkUuid, String variantId, int startTime, int stopTime, byte[] dynamicModelContent) {
         this.networkUuid = Objects.requireNonNull(networkUuid);
+        this.variantId = variantId;
         this.startTime = startTime;
         this.stopTime = stopTime;
         this.dynamicModelContent = dynamicModelContent;
@@ -31,6 +34,10 @@ public class DynamicSimulationRunContext {
 
     public UUID getNetworkUuid() {
         return networkUuid;
+    }
+
+    public String getVariantId() {
+        return variantId;
     }
 
     public int getStartTime() {

@@ -14,7 +14,9 @@ import com.powsybl.commons.datasource.ResourceSet;
 import com.powsybl.dynamicsimulation.*;
 import com.powsybl.iidm.import_.Importers;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.StringTimeSeries;
 import com.powsybl.timeseries.TimeSeries;
@@ -87,6 +89,7 @@ public class DynamicSimulationTest {
     private FileSystem fileSystem;
 
     private static final String NETWORK_UUID_STRING = "11111111-0000-0000-0000-000000000000";
+    private static final String VARIANT_1_ID = "variant_1";
     private static final String TEST_FILE = "IEEE14.iidm";
     private static final boolean RESULT = true;
 
@@ -99,7 +102,8 @@ public class DynamicSimulationTest {
         ReadOnlyDataSource dataSource = new ResourceDataSource("IEEE14",
                 new ResourceSet("", TEST_FILE));
         Network network = Importers.importData("XIIDM", dataSource, null);
-        given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_STRING))).willReturn(network);
+        network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_1_ID);
+        given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_STRING), PreloadingStrategy.COLLECTION)).willReturn(network);
 
         Map<String, TimeSeries> curves = new HashMap<>();
         TimeSeriesIndex index = new IrregularTimeSeriesIndex(new long[] {32, 64, 128, 256});
@@ -133,8 +137,23 @@ public class DynamicSimulationTest {
         bodyBuilder.part("dynamicModel", dynamicModel)
                 .filename("dynamicModels.groovy");
 
-        //run the dynamic simulation
+        //run the dynamic simulation on a specific variant
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
+            .uri("/v1/networks/{networkUuid}/run?variantId=" + VARIANT_1_ID + "&startTime=0&stopTime=100", NETWORK_UUID_STRING)
+            .contentType(MediaType.MULTIPART_FORM_DATA)
+            .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(UUID.class)
+            .returnResult();
+
+        UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
+
+        Message<byte[]> messageSwitch = output.receive(1000, "ds.result.destination");
+        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get("resultUuid").toString()));
+
+        //run the dynamic simulation on the implicit default variant
+        entityExchangeResult = webTestClient.post()
                 .uri("/v1/networks/{networkUuid}/run?startTime=0&stopTime=100", NETWORK_UUID_STRING)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
@@ -143,9 +162,9 @@ public class DynamicSimulationTest {
                 .expectBody(UUID.class)
                 .returnResult();
 
-        UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
+        runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        Message<byte[]> messageSwitch = output.receive(1000, "ds.result.destination");
+        messageSwitch = output.receive(1000, "ds.result.destination");
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get("resultUuid").toString()));
 
         //get the calculation status

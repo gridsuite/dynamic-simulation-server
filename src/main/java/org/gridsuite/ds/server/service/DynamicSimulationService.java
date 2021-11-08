@@ -42,14 +42,14 @@ public class DynamicSimulationService {
         this.resultRepository = Objects.requireNonNull(resultRepository);
     }
 
-    public Mono<UUID> runAndSaveResult(UUID networkUuid, int startTime, int stopTime, FilePart dynamicModel) {
+    public Mono<UUID> runAndSaveResult(UUID networkUuid, String variantId, int startTime, int stopTime, FilePart dynamicModel) {
 
         Mono<byte[]> fileBytes;
         fileBytes = dynamicModel.content().collectList().flatMap(all -> Mono.fromCallable(() ->
                 StreamUtils.copyToByteArray(new DefaultDataBufferFactory().join(all).asInputStream())));
 
         return fileBytes.flatMap(bytes -> {
-            DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, startTime, stopTime, bytes);
+            DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, variantId, startTime, stopTime, bytes);
             // update status to running status and store the dynamicModel file
             return insertStatus(DynamicSimulationStatus.RUNNING.name())
                     .flatMap(resultEntity ->
