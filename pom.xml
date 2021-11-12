@@ -105,7 +105,7 @@
     <dependencies>
         <dependency>
             <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-iidm-impl</artifactId>
+            <artifactId>powsybl-network-store-iidm-impl</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
