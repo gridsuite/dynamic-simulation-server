@@ -8,6 +8,7 @@ package org.gridsuite.ds.server;
 
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
+import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
 import com.powsybl.commons.datasource.ResourceSet;
@@ -89,6 +90,7 @@ public class DynamicSimulationTest {
     private FileSystem fileSystem;
 
     private static final String NETWORK_UUID_STRING = "11111111-0000-0000-0000-000000000000";
+    private static final String NETWORK_UUID_NOT_FOUND_STRING = "22222222-0000-0000-0000-000000000000";
     private static final String VARIANT_1_ID = "variant_1";
     private static final String TEST_FILE = "IEEE14.iidm";
     private static final boolean RESULT = true;
@@ -100,10 +102,11 @@ public class DynamicSimulationTest {
         dynamicSimulationWorkerService.setFileSystem(fileSystem);
 
         ReadOnlyDataSource dataSource = new ResourceDataSource("IEEE14",
-                new ResourceSet("", TEST_FILE));
+            new ResourceSet("", TEST_FILE));
         Network network = Importers.importData("XIIDM", dataSource, null);
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_1_ID);
         given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_STRING), PreloadingStrategy.COLLECTION)).willReturn(network);
+        given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_NOT_FOUND_STRING), PreloadingStrategy.COLLECTION)).willThrow(new PowsyblException());
 
         Map<String, TimeSeries> curves = new HashMap<>();
         TimeSeriesIndex index = new IrregularTimeSeriesIndex(new long[] {32, 64, 128, 256});
@@ -112,13 +115,13 @@ public class DynamicSimulationTest {
 
         index = new IrregularTimeSeriesIndex(new long[] {102479, 102479, 102479, 104396});
         StringTimeSeries timeLine = TimeSeries.createString("TimeLine", index,
-                "CLA_2_5 - CLA : order to change topology",
-                "_BUS____2-BUS____5-1_AC - LINE : opening both sides",
-                "CLA_2_5 - CLA : order to change topology",
-                "CLA_2_4 - CLA : arming by over-current constraint");
+            "CLA_2_5 - CLA : order to change topology",
+            "_BUS____2-BUS____5-1_AC - LINE : opening both sides",
+            "CLA_2_5 - CLA : order to change topology",
+            "CLA_2_4 - CLA : arming by over-current constraint");
 
         doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(RESULT, "", curves, timeLine)))
-                .when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any());
+            .when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any());
         doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(RESULT, "", curves, timeLine)))
             .when(dynamicSimulationWorkerService).runAsync(any(), isNull(), any(), any());
     }
@@ -136,7 +139,7 @@ public class DynamicSimulationTest {
 
         MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
         bodyBuilder.part("dynamicModel", dynamicModel)
-                .filename("dynamicModels.groovy");
+            .filename("dynamicModels.groovy");
 
         //run the dynamic simulation on a specific variant
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
@@ -155,13 +158,13 @@ public class DynamicSimulationTest {
 
         //run the dynamic simulation on the implicit default variant
         entityExchangeResult = webTestClient.post()
-                .uri("/v1/networks/{networkUuid}/run?startTime=0&stopTime=100", NETWORK_UUID_STRING)
-                .contentType(MediaType.MULTIPART_FORM_DATA)
-                .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(UUID.class)
-                .returnResult();
+            .uri("/v1/networks/{networkUuid}/run?startTime=0&stopTime=100", NETWORK_UUID_STRING)
+            .contentType(MediaType.MULTIPART_FORM_DATA)
+            .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(UUID.class)
+            .returnResult();
 
         runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
@@ -170,53 +173,65 @@ public class DynamicSimulationTest {
 
         //get the calculation status
         EntityExchangeResult<String> entityExchangeResult2 = webTestClient.get()
-                .uri("/v1/results/{resultUuid}/status", runUuid)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class)
-                .returnResult();
+            .uri("/v1/results/{resultUuid}/status", runUuid)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(String.class)
+            .returnResult();
 
         //depending on the execution speed it can be both
         assertTrue(DynamicSimulationStatus.COMPLETED.name().equals(entityExchangeResult2.getResponseBody())
-                || DynamicSimulationStatus.RUNNING.name().equals(entityExchangeResult2.getResponseBody()));
+            || DynamicSimulationStatus.RUNNING.name().equals(entityExchangeResult2.getResponseBody()));
 
         //get the status of a non existing simulation and expect a not found
         webTestClient.get()
-                .uri("/v1/results/{resultUuid}/status", UUID.randomUUID())
-                .exchange()
-                .expectStatus().isNotFound();
+            .uri("/v1/results/{resultUuid}/status", UUID.randomUUID())
+            .exchange()
+            .expectStatus().isNotFound();
 
         //get the results of a non existing simulation and expect a not found
         webTestClient.get()
-                .uri("/v1/results/{resultUuid}", UUID.randomUUID())
-                .exchange()
-                .expectStatus().isNotFound();
+            .uri("/v1/results/{resultUuid}", UUID.randomUUID())
+            .exchange()
+            .expectStatus().isNotFound();
 
         //get the results of the calculation and expect to get true since the calculation is complete
         webTestClient.get()
-                .uri("/v1/results/{resultUuid}", runUuid)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(boolean.class)
-                .isEqualTo(RESULT);
+            .uri("/v1/results/{resultUuid}", runUuid)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(boolean.class)
+            .isEqualTo(RESULT);
 
         //delete a result and expect ok
         webTestClient.delete()
-                .uri("/v1/results/{resultUuid}", runUuid)
-                .exchange()
-                .expectStatus().isOk();
+            .uri("/v1/results/{resultUuid}", runUuid)
+            .exchange()
+            .expectStatus().isOk();
 
         //try to get the removed result and except a not found
         webTestClient.get()
-                .uri("/v1/results/{resultUuid}", runUuid)
-                .exchange()
-                .expectStatus().isNotFound();
+            .uri("/v1/results/{resultUuid}", runUuid)
+            .exchange()
+            .expectStatus().isNotFound();
 
         //delete all results and except ok
         webTestClient.delete()
-                .uri("/v1/results")
-                .exchange()
-                .expectStatus().isOk();
-    }
+            .uri("/v1/results")
+            .exchange()
+            .expectStatus().isOk();
 
+        // network not found
+        webTestClient.post()
+            .uri("/v1/networks/{networkUuid}/run?startTime=0&stopTime=100", NETWORK_UUID_NOT_FOUND_STRING)
+            .contentType(MediaType.MULTIPART_FORM_DATA)
+            .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(UUID.class)
+            .returnResult();
+
+        messageSwitch = output.receive(1000, "ds.result.destination");
+        assertEquals(null, messageSwitch);
+    }
 }
