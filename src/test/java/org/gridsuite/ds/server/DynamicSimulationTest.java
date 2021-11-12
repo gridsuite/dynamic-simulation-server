@@ -119,7 +119,8 @@ public class DynamicSimulationTest {
 
         doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(RESULT, "", curves, timeLine)))
                 .when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any());
-
+        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(RESULT, "", curves, timeLine)))
+            .when(dynamicSimulationWorkerService).runAsync(any(), isNull(), any(), any());
     }
 
     private static MockMultipartFile createMockMultipartFile(String fileName) throws IOException {
