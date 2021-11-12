@@ -88,14 +88,17 @@ public class DynamicSimulationWorkerService {
         List<DynamicModelGroovyExtension> extensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynaWaltzProvider.NAME);
         GroovyDynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(new ByteArrayInputStream(context.getDynamicModelContent()), extensions);
         DynamicSimulationParameters parameters = new DynamicSimulationParameters(context.getStartTime(), context.getStopTime());
-        return Mono.fromCompletionStage(runAsync(network, context.getVariantId(), dynamicModelsSupplier, parameters));
+        return Mono.fromCompletionStage(runAsync(network,
+            context.getVariantId() != null ? context.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
+            dynamicModelsSupplier,
+            parameters));
     }
 
     public CompletableFuture<DynamicSimulationResult> runAsync(Network network,
                                                                String variantId,
                                                                DynamicModelsSupplier dynamicModelsSupplier,
                                                                DynamicSimulationParameters dynamicSimulationParameters) {
-        return DynamicSimulation.runAsync(network, dynamicModelsSupplier, n1 -> null, n1 -> null, variantId != null ? variantId : VariantManagerConstants.INITIAL_VARIANT_ID, dynamicSimulationParameters);
+        return DynamicSimulation.runAsync(network, dynamicModelsSupplier, n1 -> null, n1 -> null, variantId, dynamicSimulationParameters);
     }
 
     private Network getNetwork(UUID networkUuid) {
