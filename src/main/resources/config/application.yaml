@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: dynamic-simulation-server
+
+  cloud:
+    function:
+      definition: consumeRun
+    stream:
+      bindings:
+        consumeRun-in-0:
+          destination: ds.run
+          group: dsGroup
+        publishResult-out-0:
+          destination: ds.result
+        publishRun-out-0:
+          destination: ds.run
+      source: publishResult;publishRun
+
+network-store-server:
+  preloading-strategy: COLLECTION
+
+dbName: ds

@@ -15,7 +15,7 @@
     <parent>
         <groupId>com.powsybl</groupId>
         <artifactId>powsybl-parent-ws</artifactId>
-        <version>6</version>
+        <version>7</version>
         <relativePath/>
     </parent>
 
@@ -46,9 +46,8 @@
     <properties>
         <java.version>11</java.version>
 
-        <gridsuite-dependencies.version>11</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>12</gridsuite-dependencies.version>
         <jib.from.image>gridsuite/java-dynawo</jib.from.image>
-        <jib.container.environment>SPRING_PROFILES_ACTIVE=default</jib.container.environment>
 
         <h2database.version>1.4.200</h2database.version>
         <powsybl-network-store-client.version>1.0.0-SNAPSHOT</powsybl-network-store-client.version>
@@ -146,7 +145,10 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-network-store-client</artifactId>
-            <version>${powsybl-network-store-client.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-ws-commons</artifactId>
         </dependency>
         <dependency>
             <groupId>org.liquibase</groupId>
