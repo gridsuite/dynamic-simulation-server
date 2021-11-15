@@ -16,6 +16,7 @@ import com.powsybl.dynamicsimulation.groovy.GroovyDynamicModelsSupplier;
 import com.powsybl.dynamicsimulation.groovy.GroovyExtension;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
@@ -87,20 +88,24 @@ public class DynamicSimulationWorkerService {
         List<DynamicModelGroovyExtension> extensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynaWaltzProvider.NAME);
         GroovyDynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(new ByteArrayInputStream(context.getDynamicModelContent()), extensions);
         DynamicSimulationParameters parameters = new DynamicSimulationParameters(context.getStartTime(), context.getStopTime());
-        return Mono.fromCompletionStage(runAsync(network, dynamicModelsSupplier, parameters));
+        return Mono.fromCompletionStage(runAsync(network,
+            context.getVariantId() != null ? context.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
+            dynamicModelsSupplier,
+            parameters));
     }
 
     public CompletableFuture<DynamicSimulationResult> runAsync(Network network,
+                                                               String variantId,
                                                                DynamicModelsSupplier dynamicModelsSupplier,
                                                                DynamicSimulationParameters dynamicSimulationParameters) {
-        return DynamicSimulation.runAsync(network, dynamicModelsSupplier, dynamicSimulationParameters);
+        return DynamicSimulation.runAsync(network, dynamicModelsSupplier, n1 -> null, n1 -> null, variantId, dynamicSimulationParameters);
     }
 
     private Network getNetwork(UUID networkUuid) {
         try {
             return networkStoreService.getNetwork(networkUuid, PreloadingStrategy.COLLECTION);
         } catch (PowsyblException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Network '" + networkUuid + "' not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
     }
 

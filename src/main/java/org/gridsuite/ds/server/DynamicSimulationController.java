@@ -41,10 +41,11 @@ public class DynamicSimulationController {
     @Operation(summary = "run the dynamic simulation")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "")})
     public ResponseEntity<Mono<UUID>> run(@PathVariable("networkUuid") UUID networkUuid,
+                                          @RequestParam(name = "variantId", required = false) String variantId,
                                           @DefaultValue("0") @RequestParam("startTime") int startTime,
                                           @RequestParam("stopTime") int stopTime,
                                           @RequestPart("dynamicModel") FilePart dynamicModel) {
-        Mono<UUID> resultUuid = dynamicSimulationService.runAndSaveResult(networkUuid, startTime, stopTime, dynamicModel);
+        Mono<UUID> resultUuid = dynamicSimulationService.runAndSaveResult(networkUuid, variantId, startTime, stopTime, dynamicModel);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
