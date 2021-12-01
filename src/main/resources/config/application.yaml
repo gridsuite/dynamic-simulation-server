@@ -8,12 +8,12 @@ spring:
     stream:
       bindings:
         consumeRun-in-0:
-          destination: ds.run
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}ds.run
           group: dsGroup
         publishResult-out-0:
-          destination: ds.result
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}ds.result
         publishRun-out-0:
-          destination: ds.run
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}ds.run
       source: publishResult;publishRun
 
 network-store-server:
