@@ -46,7 +46,7 @@
     <properties>
         <java.version>11</java.version>
 
-        <gridsuite-dependencies.version>17</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>18</gridsuite-dependencies.version>
         <jib.from.image>gridsuite/java-dynawo</jib.from.image>
 
         <h2database.version>1.4.200</h2database.version>

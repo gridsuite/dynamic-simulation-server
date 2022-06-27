@@ -6,6 +6,7 @@
  */
 package org.gridsuite.ds.server;
 
+import com.powsybl.ws.commons.Utils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.reactive.config.EnableWebFlux;
@@ -20,6 +21,7 @@ import org.springframework.web.reactive.config.EnableWebFlux;
 public class DynamicSimulationApplication {
 
     public static void main(String[] args) {
+        Utils.initProperties();
         SpringApplication.run(DynamicSimulationApplication.class, args);
     }
 
