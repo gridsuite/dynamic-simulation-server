@@ -31,7 +31,6 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.ByteArrayInputStream;
@@ -42,7 +41,6 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import java.util.logging.Level;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -55,6 +53,8 @@ public class DynamicSimulationWorkerService {
 
     private static final String CATEGORY_BROKER_INPUT = DynamicSimulationWorkerService.class.getName()
             + ".input-broker-messages";
+
+    private static final Logger LOGGER_BROKER_INPUT = LoggerFactory.getLogger(CATEGORY_BROKER_INPUT);
 
     private static final String CATEGORY_BROKER_OUTPUT = DynamicSimulationService.class.getName() + ".output-broker-messages";
 
@@ -109,12 +109,13 @@ public class DynamicSimulationWorkerService {
     }
 
     @Bean
-    public Consumer<Flux<Message<String>>> consumeRun() {
-        return f -> f.log(CATEGORY_BROKER_INPUT, Level.FINE)
-                .flatMap(message -> {
-                    DynamicSimulationResultContext resultContext = DynamicSimulationResultContext.fromMessage(message);
+    public Consumer<Message<String>> consumeRun() {
+        return message -> {
+            LOGGER_BROKER_INPUT.debug("consume {}", message);
+            try {
+                DynamicSimulationResultContext resultContext = DynamicSimulationResultContext.fromMessage(message);
 
-                    return run(resultContext.getRunContext())
+                run(resultContext.getRunContext())
                             .flatMap(result -> updateResult(resultContext.getResultUuid(), result.isOk()))
                             .doOnSuccess(unused -> {
                                 Message<String> sendMessage = MessageBuilder
@@ -123,10 +124,11 @@ public class DynamicSimulationWorkerService {
                                         .build();
                                 sendResultMessage(sendMessage);
                                 LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
-                            });
-                })
-                .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable))
-                .subscribe();
+                            }).block();
+            } catch (Exception e) {
+                LOGGER.error("error in consumeRun", e);
+            }
+        };
     }
 
     public Mono<Void> updateResult(UUID resultUuid, Boolean result) {
