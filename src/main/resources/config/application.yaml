@@ -14,7 +14,7 @@ spring:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}ds.result
         publishRun-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}ds.run
-      source: publishResult;publishRun
+      output-bindings: publishResult;publishRun
 
 network-store-server:
   preloading-strategy: COLLECTION
