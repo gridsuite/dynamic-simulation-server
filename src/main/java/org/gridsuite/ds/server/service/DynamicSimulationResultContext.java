@@ -9,9 +9,9 @@ package org.gridsuite.ds.server.service;
 import com.powsybl.commons.PowsyblException;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.support.MessageBuilder;
 
-import java.util.*;
+import java.util.Objects;
+import java.util.UUID;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -55,16 +55,4 @@ public class DynamicSimulationResultContext {
         DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, variantId, startTime, stopTIme, dynamicModelContent);
         return new DynamicSimulationResultContext(resultUuid, runContext);
     }
-
-    public Message<String> toMessage() {
-        return MessageBuilder.withPayload("")
-                .setHeader("resultUuid", resultUuid.toString())
-                .setHeader("networkUuid", runContext.getNetworkUuid().toString())
-                .setHeader("variantId", runContext.getVariantId())
-                .setHeader("startTime", String.valueOf(runContext.getStartTime()))
-                .setHeader("stopTime", String.valueOf(runContext.getStopTime()))
-                .setHeader("dynamicModelContent", runContext.getDynamicModelContent())
-                .build();
-    }
-
 }

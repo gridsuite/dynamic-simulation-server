@@ -22,13 +22,10 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import org.gridsuite.ds.server.repository.ResultRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
@@ -56,27 +53,24 @@ public class DynamicSimulationWorkerService {
 
     private static final Logger LOGGER_BROKER_INPUT = LoggerFactory.getLogger(CATEGORY_BROKER_INPUT);
 
-    private static final String CATEGORY_BROKER_OUTPUT = DynamicSimulationService.class.getName() + ".output-broker-messages";
-
-    private static final Logger OUTPUT_MESSAGE_LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
-
     private final ResultRepository resultRepository;
 
     private final NetworkStoreService networkStoreService;
 
     private FileSystem fileSystem = FileSystems.getDefault();
 
-    @Autowired
-    private StreamBridge publishResult;
+    private NotificationService notificationService;
 
     private DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult;
 
     public DynamicSimulationWorkerService(NetworkStoreService networkStoreService,
                                           ResultRepository resultRepository,
-                                          DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult) {
+                                          DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult,
+                                          NotificationService notificationService) {
         this.networkStoreService = networkStoreService;
         this.resultRepository = resultRepository;
         this.dynamicSimulationWorkerUpdateResult = dynamicSimulationWorkerUpdateResult;
+        this.notificationService = notificationService;
     }
 
     public Mono<DynamicSimulationResult> run(DynamicSimulationRunContext context) {
@@ -118,11 +112,7 @@ public class DynamicSimulationWorkerService {
                 run(resultContext.getRunContext())
                             .flatMap(result -> updateResult(resultContext.getResultUuid(), result.isOk()))
                             .doOnSuccess(unused -> {
-                                Message<String> sendMessage = MessageBuilder
-                                        .withPayload("")
-                                        .setHeader("resultUuid", resultContext.getResultUuid().toString())
-                                        .build();
-                                sendResultMessage(sendMessage);
+                                notificationService.emitResultMessage(resultContext.getResultUuid().toString());
                                 LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
                             }).block();
             } catch (Exception e) {
@@ -138,11 +128,6 @@ public class DynamicSimulationWorkerService {
 
     public void setFileSystem(FileSystem fs) {
         this.fileSystem = fs;
-    }
-
-    private void sendResultMessage(Message<String> message) {
-        OUTPUT_MESSAGE_LOGGER.debug("Sending message : {}", message);
-        publishResult.send("publishResult-out-0", message);
     }
 }
 
