@@ -21,4 +21,6 @@ spring:
 network-store-server:
   preloading-strategy: COLLECTION
 
-dbName: ds
+powsybl-ws:
+  database:
+    name: ds
