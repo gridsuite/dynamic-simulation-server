@@ -10,6 +10,8 @@ spring:
         consumeRun-in-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}ds.run
           group: dsGroup
+          consumer:
+            concurrency: 2
         publishResult-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}ds.result
         publishRun-out-0:
@@ -19,4 +21,6 @@ spring:
 network-store-server:
   preloading-strategy: COLLECTION
 
-dbName: ds
+powsybl-ws:
+  database:
+    name: ds
