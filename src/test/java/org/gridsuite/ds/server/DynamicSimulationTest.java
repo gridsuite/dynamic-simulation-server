@@ -121,9 +121,9 @@ public class DynamicSimulationTest {
             "CLA_2_4 - CLA : arming by over-current constraint");
 
         doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(RESULT, "", curves, timeLine)))
-            .when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any());
+            .when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any(), any());
         doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(RESULT, "", curves, timeLine)))
-            .when(dynamicSimulationWorkerService).runAsync(any(), isNull(), any(), any());
+            .when(dynamicSimulationWorkerService).runAsync(any(), isNull(), any(), any(), any(), any());
     }
 
     private static MockMultipartFile createMockMultipartFile(String fileName) throws IOException {

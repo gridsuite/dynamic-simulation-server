@@ -7,18 +7,15 @@
 package org.gridsuite.ds.server.service;
 
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.dynamicsimulation.DynamicModelsSupplier;
-import com.powsybl.dynamicsimulation.DynamicSimulation;
-import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
-import com.powsybl.dynamicsimulation.DynamicSimulationResult;
-import com.powsybl.dynamicsimulation.groovy.DynamicModelGroovyExtension;
-import com.powsybl.dynamicsimulation.groovy.GroovyDynamicModelsSupplier;
-import com.powsybl.dynamicsimulation.groovy.GroovyExtension;
+import com.powsybl.dynamicsimulation.*;
+import com.powsybl.dynamicsimulation.groovy.*;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
+import org.gridsuite.ds.server.dsl.GroovyCurvesSupplier;
+import org.gridsuite.ds.server.dsl.GroovyEventModelsSupplier;
 import org.gridsuite.ds.server.repository.ResultRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,20 +81,38 @@ public class DynamicSimulationWorkerService {
         LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {},", context.getNetworkUuid(), context.getStartTime(), context.getStopTime());
 
         Network network = getNetwork(context.getNetworkUuid());
-        List<DynamicModelGroovyExtension> extensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynaWaltzProvider.NAME);
-        GroovyDynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(new ByteArrayInputStream(context.getDynamicModelContent()), extensions);
-        DynamicSimulationParameters parameters = new DynamicSimulationParameters(context.getStartTime(), context.getStopTime());
+
+        List<DynamicModelGroovyExtension> dynamicModelExtensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynaWaltzProvider.NAME);
+        DynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(new ByteArrayInputStream(context.getDynamicModelContent()), dynamicModelExtensions);
+
+        List<EventModelGroovyExtension> eventModelExtensions = GroovyExtension.find(EventModelGroovyExtension.class, DynaWaltzProvider.NAME);
+        EventModelsSupplier eventModelsSupplier = new GroovyEventModelsSupplier(new ByteArrayInputStream(context.getDynamicModelContent()), eventModelExtensions);
+
+        List<CurveGroovyExtension> curveExtensions = GroovyExtension.find(CurveGroovyExtension.class, DynaWaltzProvider.NAME);
+        CurvesSupplier curvesSupplier = new GroovyCurvesSupplier(new ByteArrayInputStream(context.getDynamicModelContent()), curveExtensions);
+
+        DynamicSimulationParameters parameters = context.getParameters();
+        if (parameters != null) {
+            parameters = new DynamicSimulationParameters(context.getStartTime(), context.getStopTime());
+        }
+        parameters.setStartTime(context.getStartTime());
+        parameters.setStopTime(context.getStopTime());
+
         return Mono.fromCompletionStage(runAsync(network,
-            context.getVariantId() != null ? context.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
-            dynamicModelsSupplier,
-            parameters));
+                context.getVariantId() != null ? context.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
+                dynamicModelsSupplier,
+                eventModelsSupplier,
+                curvesSupplier,
+                parameters));
     }
 
     public CompletableFuture<DynamicSimulationResult> runAsync(Network network,
                                                                String variantId,
                                                                DynamicModelsSupplier dynamicModelsSupplier,
+                                                               EventModelsSupplier eventModelsSupplier,
+                                                               CurvesSupplier curvesSupplier,
                                                                DynamicSimulationParameters dynamicSimulationParameters) {
-        return DynamicSimulation.runAsync(network, dynamicModelsSupplier, n1 -> null, n1 -> null, variantId, dynamicSimulationParameters);
+        return DynamicSimulation.runAsync(network, dynamicModelsSupplier, eventModelsSupplier, curvesSupplier, variantId, dynamicSimulationParameters);
     }
 
     private Network getNetwork(UUID networkUuid) {
@@ -116,24 +131,25 @@ public class DynamicSimulationWorkerService {
                 DynamicSimulationResultContext resultContext = DynamicSimulationResultContext.fromMessage(message);
 
                 run(resultContext.getRunContext())
-                            .flatMap(result -> updateResult(resultContext.getResultUuid(), result.isOk()))
-                            .doOnSuccess(unused -> {
-                                Message<String> sendMessage = MessageBuilder
-                                        .withPayload("")
-                                        .setHeader("resultUuid", resultContext.getResultUuid().toString())
-                                        .build();
-                                sendResultMessage(sendMessage);
-                                LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
-                            }).block();
+                        .flatMap(result -> updateResult(resultContext.getResultUuid(), result))
+                        .doOnSuccess(unused -> {
+                            Message<String> sendMessage = MessageBuilder
+                                    .withPayload("")
+                                    .setHeader("resultUuid", resultContext.getResultUuid().toString())
+                                    .build();
+                            sendResultMessage(sendMessage);
+                            LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
+                        }).block();
             } catch (Exception e) {
                 LOGGER.error("error in consumeRun", e);
             }
         };
     }
 
-    public Mono<Void> updateResult(UUID resultUuid, Boolean result) {
+    public Mono<Void> updateResult(UUID resultUuid, DynamicSimulationResult result) {
         Objects.requireNonNull(resultUuid);
-        return Mono.fromRunnable(() -> dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, result));
+        System.out.println(result.getCurves().toString());
+        return Mono.fromRunnable(() -> dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, result.isOk()));
     }
 
     public void setFileSystem(FileSystem fs) {

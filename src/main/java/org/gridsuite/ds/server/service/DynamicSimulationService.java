@@ -6,6 +6,7 @@
  */
 package org.gridsuite.ds.server.service;
 
+import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.repository.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
@@ -42,6 +43,19 @@ public class DynamicSimulationService {
         this.resultRepository = Objects.requireNonNull(resultRepository);
     }
 
+    // These getters are used for mocking when testing service, TODO remove
+    public byte[] getEventModelContent() {
+        return null;
+    }
+
+    public byte[] getCurveContent() {
+        return null;
+    }
+
+    public DynamicSimulationParameters getDynamicSimulationParameters() {
+        return null;
+    }
+
     public Mono<UUID> runAndSaveResult(UUID networkUuid, String variantId, int startTime, int stopTime, FilePart dynamicModel) {
 
         Mono<byte[]> fileBytes;
@@ -49,14 +63,14 @@ public class DynamicSimulationService {
                 StreamUtils.copyToByteArray(new DefaultDataBufferFactory().join(all).asInputStream())));
 
         return fileBytes.flatMap(bytes -> {
-            DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, variantId, startTime, stopTime, bytes);
+            DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, variantId, startTime, stopTime, bytes, getEventModelContent(), getCurveContent(), getDynamicSimulationParameters());
             // update status to running status and store the dynamicModel file
             return insertStatus(DynamicSimulationStatus.RUNNING.name())
                     .flatMap(resultEntity ->
                             Mono.fromRunnable(() -> {
-                                Message<String> message = new DynamicSimulationResultContext(resultEntity.getId(), runContext).toMessage();
-                                sendRunMessage(message);
-                            })
+                                        Message<String> message = new DynamicSimulationResultContext(resultEntity.getId(), runContext).toMessage();
+                                        sendRunMessage(message);
+                                    })
                                     .thenReturn(resultEntity.getId())
                     );
         });
@@ -69,7 +83,7 @@ public class DynamicSimulationService {
     public Mono<Boolean> getResult(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return Mono.fromCallable(() -> resultRepository.findById(resultUuid).map(ResultEntity::getResult)
-            .orElse(null));
+                .orElse(null));
     }
 
     public Mono<String> getStatus(UUID resultUuid) {
@@ -80,12 +94,12 @@ public class DynamicSimulationService {
     public Mono<Void> deleteResult(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return Mono.fromRunnable(() -> resultRepository.deleteById(resultUuid))
-            .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable)).then();
+                .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable)).then();
     }
 
     public Mono<Void> deleteResults() {
         return Mono.fromRunnable(resultRepository::deleteAll)
-            .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable)).then();
+                .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable)).then();
     }
 
     private void sendRunMessage(Message<String> message) {

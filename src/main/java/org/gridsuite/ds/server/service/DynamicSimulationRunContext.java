@@ -6,6 +6,8 @@
  */
 package org.gridsuite.ds.server.service;
 
+import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
+
 import java.util.Objects;
 import java.util.UUID;
 
@@ -24,12 +26,21 @@ public class DynamicSimulationRunContext {
 
     private final byte[] dynamicModelContent;
 
-    public DynamicSimulationRunContext(UUID networkUuid, String variantId, int startTime, int stopTime, byte[] dynamicModelContent) {
+    private final byte[] eventModelContent;
+
+    private final byte[] curveContent;
+
+    private final DynamicSimulationParameters parameters;
+
+    public DynamicSimulationRunContext(UUID networkUuid, String variantId, int startTime, int stopTime, byte[] dynamicModelContent, byte[] eventModelContent, byte[] curveContent, DynamicSimulationParameters parameters) {
         this.networkUuid = Objects.requireNonNull(networkUuid);
         this.variantId = variantId;
         this.startTime = startTime;
         this.stopTime = stopTime;
         this.dynamicModelContent = dynamicModelContent;
+        this.eventModelContent = eventModelContent;
+        this.curveContent = curveContent;
+        this.parameters = parameters;
     }
 
     public UUID getNetworkUuid() {
@@ -50,6 +61,18 @@ public class DynamicSimulationRunContext {
 
     public byte[] getDynamicModelContent() {
         return dynamicModelContent;
+    }
+
+    public byte[] getEventModelContent() {
+        return eventModelContent;
+    }
+
+    public byte[] getCurveContent() {
+        return curveContent;
+    }
+
+    public DynamicSimulationParameters getParameters() {
+        return parameters;
     }
 }
 
