@@ -1,0 +1,11 @@
+dynawaltz:
+  homeDir: /home/phamquy/Projects/dynawo/dynawo
+  debug: true
+
+dynawaltz-default-parameters:
+  parametersFile: /home/phamquy/Projects/dynawo/test/models.par
+  network.parametersFile: /home/phamquy/Projects/dynawo/test/network.par
+  network.parametersId: "NETWORK"
+  solver.type: IDA
+  solver.parametersFile: /home/phamquy/Projects/dynawo/test/solvers.par
+  solver.parametersId: "2"

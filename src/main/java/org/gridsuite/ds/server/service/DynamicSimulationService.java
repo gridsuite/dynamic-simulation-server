@@ -7,6 +7,7 @@
 package org.gridsuite.ds.server.service;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
+import org.apache.commons.lang3.ArrayUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.repository.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
@@ -45,11 +46,11 @@ public class DynamicSimulationService {
 
     // These getters are used for mocking when testing service, TODO remove
     public byte[] getEventModelContent() {
-        return null;
+        return ArrayUtils.EMPTY_BYTE_ARRAY;
     }
 
     public byte[] getCurveContent() {
-        return null;
+        return ArrayUtils.EMPTY_BYTE_ARRAY;
     }
 
     public DynamicSimulationParameters getDynamicSimulationParameters() {

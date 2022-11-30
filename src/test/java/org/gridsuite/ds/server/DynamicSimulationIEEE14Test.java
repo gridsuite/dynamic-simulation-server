@@ -55,12 +55,13 @@ import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @RunWith(SpringRunner.class)
-@AutoConfigureWebTestClient
+@AutoConfigureWebTestClient(timeout = "PT360S")
 @EnableWebFlux
 @SpringBootTest
 @ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class},
@@ -71,7 +72,7 @@ public class DynamicSimulationIEEE14Test {
     private static final String VARIANT_1_ID = "variant_1";
     private static final String TEST_FILE = "IEEE14.iidm";
 
-    private static final String DATA_IEEE14_BASE_DIR = "data/ieee14";
+    private static final String DATA_IEEE14_BASE_DIR = "/data/ieee14";
     private static final String INPUT = "input";
     private static final String OUTPUT = "output";
 
@@ -88,7 +89,7 @@ public class DynamicSimulationIEEE14Test {
     @MockBean
     private NetworkStoreService networkStoreClient;
 
-    @MockBean
+    @SpyBean
     private DynamicSimulationService dynamicSimulationService;
 
     @SpyBean
@@ -127,27 +128,27 @@ public class DynamicSimulationIEEE14Test {
         // load event model file
         ClassPathResource eventModel = new ClassPathResource(Paths.get(inputBaseDir, "events.groovy").toString());
         byte[] eventBytes = StreamUtils.copyToByteArray(eventModel.getInputStream());
-        given(dynamicSimulationService.getEventModelContent()).willReturn(eventBytes);
+        when(dynamicSimulationService.getEventModelContent()).thenReturn(eventBytes);
 
         // load curve file
-        ClassPathResource curveModel = new ClassPathResource(Paths.get(inputBaseDir, "curve.groovy").toString());
+        ClassPathResource curveModel = new ClassPathResource(Paths.get(inputBaseDir, "curves.groovy").toString());
         byte[] curveBytes = StreamUtils.copyToByteArray(curveModel.getInputStream());
-        given(dynamicSimulationService.getCurveContent()).willReturn(curveBytes);
+        when(dynamicSimulationService.getCurveContent()).thenReturn(curveBytes);
 
         // load parameter file
         ClassPathResource parametersModel = new ClassPathResource(Paths.get(inputBaseDir, "parameters.json").toString());
-        DynamicSimulationParameters parameters = JsonDynamicSimulationParameters.read(Path.of(parametersModel.getPath()));
+        DynamicSimulationParameters parameters = JsonDynamicSimulationParameters.read(parametersModel.getInputStream());
         DynaWaltzParameters dynaWaltzParameters = parameters.getExtension(DynaWaltzParameters.class);
         // models.par path
         ClassPathResource dynamicParModel = new ClassPathResource(Paths.get(inputBaseDir, "models.par").toString());
-        dynaWaltzParameters.setParametersFile(dynamicParModel.getPath());
+        dynaWaltzParameters.setParametersFile(dynamicParModel.getFile().getAbsolutePath());
         // network.par path
         ClassPathResource networkParModel = new ClassPathResource(Paths.get(inputBaseDir, "network.par").toString());
-        dynaWaltzParameters.getNetwork().setParametersFile(networkParModel.getPath());
+        dynaWaltzParameters.getNetwork().setParametersFile(networkParModel.getFile().getAbsolutePath());
         // solvers.par path
         ClassPathResource solverParModel = new ClassPathResource(Paths.get(inputBaseDir, "solvers.par").toString());
-        dynaWaltzParameters.getSolver().setParametersFile(solverParModel.getPath());
-        given(dynamicSimulationService.getDynamicSimulationParameters()).willReturn(parameters);
+        dynaWaltzParameters.getSolver().setParametersFile(solverParModel.getFile().getAbsolutePath());
+        when(dynamicSimulationService.getDynamicSimulationParameters()).thenReturn(parameters);
 
         //run the dynamic simulation on a specific variant
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
