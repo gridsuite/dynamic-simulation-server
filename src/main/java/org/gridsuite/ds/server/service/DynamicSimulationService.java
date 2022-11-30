@@ -66,14 +66,11 @@ public class DynamicSimulationService {
         return fileBytes.flatMap(bytes -> {
             DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, variantId, startTime, stopTime, bytes, getEventModelContent(), getCurveContent(), getDynamicSimulationParameters());
             // update status to running status and store the dynamicModel file
-            return insertStatus(DynamicSimulationStatus.RUNNING.name())
-                    .flatMap(resultEntity ->
-                            Mono.fromRunnable(() -> {
-                                        Message<String> message = new DynamicSimulationResultContext(resultEntity.getId(), runContext).toMessage();
-                                        sendRunMessage(message);
-                                    })
-                                    .thenReturn(resultEntity.getId())
-                    );
+            return insertStatus(DynamicSimulationStatus.RUNNING.name()).flatMap(resultEntity -> Mono.fromRunnable(() -> {
+                Message<String> message = new DynamicSimulationResultContext(resultEntity.getId(), runContext).toMessage();
+                sendRunMessage(message);
+            }).thenReturn(resultEntity.getId())
+            );
         });
     }
 

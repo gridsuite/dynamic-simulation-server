@@ -76,7 +76,6 @@ public class DynamicSimulationIEEE14Test {
     private static final String INPUT = "input";
     private static final String OUTPUT = "output";
 
-
     @Autowired
     private WebTestClient webTestClient;
 
@@ -97,7 +96,6 @@ public class DynamicSimulationIEEE14Test {
 
     private FileSystem fileSystem;
 
-
     @Before
     public void init() throws IOException {
         //initialize in memory FS
@@ -114,7 +112,7 @@ public class DynamicSimulationIEEE14Test {
     }
 
     @Test
-    public void test_01() throws IOException {
+    public void test01() throws IOException {
         String testBaseDir = "_01";
         String inputBaseDir = Paths.get(DATA_IEEE14_BASE_DIR, testBaseDir, INPUT).toString();
         String outputBaseDir = Paths.get(DATA_IEEE14_BASE_DIR, testBaseDir, OUTPUT).toString();
@@ -171,7 +169,5 @@ public class DynamicSimulationIEEE14Test {
 
         // check the result to expected
 
-
     }
-
 }
