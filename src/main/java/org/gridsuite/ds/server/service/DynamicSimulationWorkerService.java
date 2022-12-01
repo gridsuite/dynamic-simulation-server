@@ -16,6 +16,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import org.gridsuite.ds.server.dsl.GroovyCurvesSupplier;
 import org.gridsuite.ds.server.dsl.GroovyEventModelsSupplier;
+import org.gridsuite.ds.server.json.DynamicSimulationResultSerializer;
 import org.gridsuite.ds.server.repository.ResultRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.util.List;
@@ -86,13 +88,13 @@ public class DynamicSimulationWorkerService {
         DynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(new ByteArrayInputStream(context.getDynamicModelContent()), dynamicModelExtensions);
 
         List<EventModelGroovyExtension> eventModelExtensions = GroovyExtension.find(EventModelGroovyExtension.class, DynaWaltzProvider.NAME);
-        EventModelsSupplier eventModelsSupplier = new GroovyEventModelsSupplier(new ByteArrayInputStream(context.getDynamicModelContent()), eventModelExtensions);
+        EventModelsSupplier eventModelsSupplier = new GroovyEventModelsSupplier(new ByteArrayInputStream(context.getEventModelContent()), eventModelExtensions);
 
         List<CurveGroovyExtension> curveExtensions = GroovyExtension.find(CurveGroovyExtension.class, DynaWaltzProvider.NAME);
-        CurvesSupplier curvesSupplier = new GroovyCurvesSupplier(new ByteArrayInputStream(context.getDynamicModelContent()), curveExtensions);
+        CurvesSupplier curvesSupplier = new GroovyCurvesSupplier(new ByteArrayInputStream(context.getCurveContent()), curveExtensions);
 
         DynamicSimulationParameters parameters = context.getParameters();
-        if (parameters != null) {
+        if (parameters == null) {
             parameters = new DynamicSimulationParameters(context.getStartTime(), context.getStopTime());
         }
         parameters.setStartTime(context.getStartTime());
@@ -132,9 +134,12 @@ public class DynamicSimulationWorkerService {
 
                 run(resultContext.getRunContext())
                         .flatMap(result -> updateResult(resultContext.getResultUuid(), result))
-                        .doOnSuccess(unused -> {
+                        .doOnSuccess(result -> {
+                            // build json payload
+                            ByteArrayOutputStream bytesOS = new ByteArrayOutputStream();
+                            DynamicSimulationResultSerializer.write(result, bytesOS);
                             Message<String> sendMessage = MessageBuilder
-                                    .withPayload("")
+                                    .withPayload(bytesOS.toString())
                                     .setHeader("resultUuid", resultContext.getResultUuid().toString())
                                     .build();
                             sendResultMessage(sendMessage);
@@ -146,10 +151,10 @@ public class DynamicSimulationWorkerService {
         };
     }
 
-    public Mono<Void> updateResult(UUID resultUuid, DynamicSimulationResult result) {
+    public Mono<DynamicSimulationResult> updateResult(UUID resultUuid, DynamicSimulationResult result) {
         Objects.requireNonNull(resultUuid);
-        System.out.println(result.getCurves().toString());
-        return Mono.fromRunnable(() -> dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, result.isOk()));
+        return Mono.fromRunnable(() ->
+            dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, result.isOk())).thenReturn(result);
     }
 
     public void setFileSystem(FileSystem fs) {

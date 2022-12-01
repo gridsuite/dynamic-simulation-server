@@ -6,6 +6,7 @@
  */
 package org.gridsuite.ds.server;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.powsybl.commons.PowsyblException;
@@ -22,6 +23,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
+import org.gridsuite.ds.server.json.DynamicSimulationResultSerializer;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
 import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
 import org.junit.Before;
@@ -47,9 +49,10 @@ import org.springframework.util.StreamUtils;
 import org.springframework.web.reactive.config.EnableWebFlux;
 import org.springframework.web.reactive.function.BodyInserters;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.FileSystem;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
@@ -75,6 +78,7 @@ public class DynamicSimulationIEEE14Test {
     private static final String DATA_IEEE14_BASE_DIR = "/data/ieee14";
     private static final String INPUT = "input";
     private static final String OUTPUT = "output";
+    private static final String TEST_ENV_BASE_DIR = "/work/unittests";
 
     @Autowired
     private WebTestClient webTestClient;
@@ -139,13 +143,25 @@ public class DynamicSimulationIEEE14Test {
         DynaWaltzParameters dynaWaltzParameters = parameters.getExtension(DynaWaltzParameters.class);
         // models.par path
         ClassPathResource dynamicParModel = new ClassPathResource(Paths.get(inputBaseDir, "models.par").toString());
-        dynaWaltzParameters.setParametersFile(dynamicParModel.getFile().getAbsolutePath());
+        String modelsSrcPath = dynamicParModel.getFile().getAbsolutePath();
+        String modelsDesPath = Paths.get(TEST_ENV_BASE_DIR, "models.par").toString();
+        // copy to test env dir
+
+        dynaWaltzParameters.setParametersFile(modelsDesPath);
         // network.par path
         ClassPathResource networkParModel = new ClassPathResource(Paths.get(inputBaseDir, "network.par").toString());
-        dynaWaltzParameters.getNetwork().setParametersFile(networkParModel.getFile().getAbsolutePath());
+        String networkSrcPath = networkParModel.getFile().getAbsolutePath();
+        String networkDesPath = Paths.get(TEST_ENV_BASE_DIR, "network.par").toString();
+        // copy to test env dir
+
+        dynaWaltzParameters.getNetwork().setParametersFile(networkDesPath);
         // solvers.par path
         ClassPathResource solverParModel = new ClassPathResource(Paths.get(inputBaseDir, "solvers.par").toString());
-        dynaWaltzParameters.getSolver().setParametersFile(solverParModel.getFile().getAbsolutePath());
+        String solversSrcPath = solverParModel.getFile().getAbsolutePath();
+        String solversDesPath = Paths.get(TEST_ENV_BASE_DIR, "solvers.par").toString();
+        // copy to test env dir
+
+        dynaWaltzParameters.getSolver().setParametersFile(solversDesPath);
         when(dynamicSimulationService.getDynamicSimulationParameters()).thenReturn(parameters);
 
         //run the dynamic simulation on a specific variant
@@ -163,11 +179,26 @@ public class DynamicSimulationIEEE14Test {
         Message<byte[]> messageSwitch = output.receive(1000, "ds.result.destination");
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get("resultUuid").toString()));
 
-        // prepare result to compare
-        ClassPathResource result = new ClassPathResource(Paths.get(outputBaseDir, "result.json").toString());
-        DynamicSimulationResult expectedResult = DynamicSimulationResultDeserializer.read(Path.of(result.getPath()));
+        // prepare expected result to compare
+        ClassPathResource expectedResultPathResource = new ClassPathResource(Paths.get(outputBaseDir, "result.json").toString());
+        DynamicSimulationResult expectedResult = DynamicSimulationResultDeserializer.read(expectedResultPathResource.getInputStream());
+        ByteArrayOutputStream bytesOS = new ByteArrayOutputStream();
+        DynamicSimulationResultSerializer.write(expectedResult, bytesOS);
+        String jsonExpectedResult = bytesOS.toString();
+        System.out.println("Expected");
+        System.out.println(jsonExpectedResult);
 
-        // check the result to expected
+        // get the result
+        ByteArrayInputStream bytesIS = new ByteArrayInputStream(messageSwitch.getPayload());
+        DynamicSimulationResult result = DynamicSimulationResultDeserializer.read(bytesIS);
+        ByteArrayOutputStream bytesOSResult = new ByteArrayOutputStream();
+        DynamicSimulationResultSerializer.write(result, bytesOSResult);
+        String jsonResult = bytesOSResult.toString();
+        System.out.println("Actual");
+        System.out.println(jsonResult);
 
+        // compare result
+        ObjectMapper mapper = new ObjectMapper();
+        assertEquals(mapper.readTree(jsonExpectedResult), mapper.readTree(jsonResult));
     }
 }

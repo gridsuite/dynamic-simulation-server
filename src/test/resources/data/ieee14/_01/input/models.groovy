@@ -40,9 +40,9 @@ for (Generator equipment : network.generators) {
                  }
     }
 
-/*    OmegaRef {
+    OmegaRef {
         generatorDynamicModelId equipment.id
-    }*/ // a enlever coté dynamic-mapping-server
+    }
 }
 
 CurrentLimitAutomaton {
