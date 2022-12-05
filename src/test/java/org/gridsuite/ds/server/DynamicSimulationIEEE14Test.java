@@ -143,6 +143,15 @@ public class DynamicSimulationIEEE14Test {
         Path solversSrcPath = solverParModel.getFile().toPath();
         Path solversConfigPath = Paths.get(configPathDir, "solvers.par");
         Files.copy(solversSrcPath, solversConfigPath, StandardCopyOption.REPLACE_EXISTING);
+
+        // rewrite filelist
+        ClassPathResource fileListResource = new ClassPathResource(Paths.get(CONFIG_TEST_DIR, "filelist.txt").toString());
+        Path fileListSrcPath = fileListResource.getFile().toPath();
+        String newFileListContent = "config.yml" +
+                "\n" + "models.par" +
+                "\n" + "network.par" +
+                "\n" + "solvers.par";
+        Files.writeString(fileListSrcPath, newFileListContent, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
     @Test

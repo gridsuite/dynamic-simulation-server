@@ -1,4 +1,1 @@
 config.yml
-models.par
-network.par
-solvers.par
