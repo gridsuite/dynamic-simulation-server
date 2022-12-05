@@ -24,7 +24,7 @@ import java.util.UUID;
 @Entity
 public class ResultEntity extends AbstractManuallyAssignedIdentifierEntity<UUID> implements Serializable {
 
-    public ResultEntity(UUID id, Boolean result, String status) {
+    public ResultEntity(UUID id, UUID result, String status) {
         this.id = id;
         this.result = result;
         this.status = status;
@@ -36,7 +36,7 @@ public class ResultEntity extends AbstractManuallyAssignedIdentifierEntity<UUID>
     private UUID id;
 
     @Column(name = "result")
-    private Boolean result;
+    private UUID result;
 
     @Column(name = "status")
     private String status;

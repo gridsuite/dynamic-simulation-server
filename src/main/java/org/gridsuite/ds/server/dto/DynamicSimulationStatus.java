@@ -10,6 +10,8 @@ package org.gridsuite.ds.server.dto;
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 public enum DynamicSimulationStatus {
+    NOT_DONE,
     RUNNING,
-    COMPLETED
+    CONVERGED,
+    DIVERGED
 }

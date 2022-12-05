@@ -53,8 +53,8 @@ public class DynamicSimulationController {
     @Operation(summary = "Get a dynamic simulation result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result has not been found")})
-    public Mono<ResponseEntity<Boolean>> getResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        Mono<Boolean> result = dynamicSimulationService.getResult(resultUuid);
+    public Mono<ResponseEntity<UUID>> getResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        Mono<UUID> result = dynamicSimulationService.getResult(resultUuid);
         return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }

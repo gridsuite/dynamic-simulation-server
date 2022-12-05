@@ -16,8 +16,10 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import org.gridsuite.ds.server.dsl.GroovyCurvesSupplier;
 import org.gridsuite.ds.server.dsl.GroovyEventModelsSupplier;
+import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.json.DynamicSimulationResultSerializer;
 import org.gridsuite.ds.server.repository.ResultRepository;
+import org.gridsuite.ds.server.service.timeseries.TimeSeriesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +42,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -63,6 +66,8 @@ public class DynamicSimulationWorkerService {
 
     private final NetworkStoreService networkStoreService;
 
+    private final TimeSeriesService timeSeriesService;
+
     private FileSystem fileSystem = FileSystems.getDefault();
 
     @Autowired
@@ -71,9 +76,11 @@ public class DynamicSimulationWorkerService {
     private DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult;
 
     public DynamicSimulationWorkerService(NetworkStoreService networkStoreService,
+                                          TimeSeriesService timeSeriesService,
                                           ResultRepository resultRepository,
                                           DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult) {
         this.networkStoreService = networkStoreService;
+        this.timeSeriesService = timeSeriesService;
         this.resultRepository = resultRepository;
         this.dynamicSimulationWorkerUpdateResult = dynamicSimulationWorkerUpdateResult;
     }
@@ -129,8 +136,8 @@ public class DynamicSimulationWorkerService {
     public Consumer<Message<String>> consumeRun() {
         return message -> {
             LOGGER_BROKER_INPUT.debug("consume {}", message);
+            DynamicSimulationResultContext resultContext = DynamicSimulationResultContext.fromMessage(message);
             try {
-                DynamicSimulationResultContext resultContext = DynamicSimulationResultContext.fromMessage(message);
 
                 run(resultContext.getRunContext())
                         .flatMap(result -> updateResult(resultContext.getResultUuid(), result))
@@ -146,6 +153,7 @@ public class DynamicSimulationWorkerService {
                             LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
                         }).block();
             } catch (Exception e) {
+                dynamicSimulationWorkerUpdateResult.doUpdateResult(resultContext.getResultUuid(), null, DynamicSimulationStatus.NOT_DONE);
                 LOGGER.error("error in consumeRun", e);
             }
         };
@@ -153,8 +161,11 @@ public class DynamicSimulationWorkerService {
 
     public Mono<DynamicSimulationResult> updateResult(UUID resultUuid, DynamicSimulationResult result) {
         Objects.requireNonNull(resultUuid);
-        return Mono.fromRunnable(() ->
-            dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, result.isOk())).thenReturn(result);
+        return Mono.fromRunnable(() -> {
+            // send timeseries to time-series-server
+            UUID timeSeriesUuid = timeSeriesService.sendTimeSeries(result.getCurves().values().stream().collect(Collectors.toList()));
+            dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED);
+        }).thenReturn(result);
     }
 
     public void setFileSystem(FileSystem fs) {

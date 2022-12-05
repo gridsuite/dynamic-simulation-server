@@ -78,7 +78,7 @@ public class DynamicSimulationService {
         return Mono.fromCallable(() -> resultRepository.save(new ResultEntity(null, null, status)));
     }
 
-    public Mono<Boolean> getResult(UUID resultUuid) {
+    public Mono<UUID> getResult(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return Mono.fromCallable(() -> resultRepository.findById(resultUuid).map(ResultEntity::getResult)
                 .orElse(null));
