@@ -14,7 +14,6 @@ import com.powsybl.commons.config.PlatformConfig;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
 import com.powsybl.commons.datasource.ResourceSet;
-import com.powsybl.commons.io.FileUtil;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.DynamicSimulationResult;
 import com.powsybl.dynamicsimulation.json.DynamicSimulationResultDeserializer;
@@ -30,7 +29,6 @@ import org.gridsuite.ds.server.service.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
 import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -159,11 +157,11 @@ public class DynamicSimulationIEEE14Test extends AbstractDynamicSimulationTest {
     }
 
     private String getResult(InputStream resultIS) throws IOException {
-        DynamicSimulationResult expectedResult = DynamicSimulationResultDeserializer.read(resultIS);
+        DynamicSimulationResult result = DynamicSimulationResultDeserializer.read(resultIS);
         ByteArrayOutputStream bytesOS = new ByteArrayOutputStream();
-        DynamicSimulationResultSerializer.write(expectedResult, bytesOS);
-        String jsonExpectedResult = bytesOS.toString();
-        return jsonExpectedResult;
+        DynamicSimulationResultSerializer.write(result, bytesOS);
+        String resultJson = bytesOS.toString();
+        return resultJson;
     }
 
     @Test
