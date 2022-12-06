@@ -9,8 +9,8 @@ package org.gridsuite.ds.server.repository;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import javax.persistence.*;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -24,9 +24,10 @@ import java.util.UUID;
 @Entity
 public class ResultEntity extends AbstractManuallyAssignedIdentifierEntity<UUID> implements Serializable {
 
-    public ResultEntity(UUID id, UUID result, String status) {
+    public ResultEntity(UUID id, UUID timeSeriesId, UUID timeLineId, String status) {
         this.id = id;
-        this.result = result;
+        this.timeSeriesId = timeSeriesId;
+        this.timeLineId = timeLineId;
         this.status = status;
     }
 
@@ -35,8 +36,11 @@ public class ResultEntity extends AbstractManuallyAssignedIdentifierEntity<UUID>
     @GeneratedValue
     private UUID id;
 
-    @Column(name = "result")
-    private UUID result;
+    @Column(name = "timeSeriesUuid")
+    private UUID timeSeriesId;
+
+    @Column(name = "timeLineUuid")
+    private UUID timeLineId;
 
     @Column(name = "status")
     private String status;

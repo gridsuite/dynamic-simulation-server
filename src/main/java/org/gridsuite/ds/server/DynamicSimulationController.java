@@ -21,7 +21,9 @@ import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
-import static org.springframework.http.MediaType.*;
+import static org.gridsuite.ds.server.service.timeseries.TimeSeriesService.TIME_LINE_GROUP_UUID;
+import static org.gridsuite.ds.server.service.timeseries.TimeSeriesService.TIME_SERIES_GROUP_UUID;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -49,12 +51,19 @@ public class DynamicSimulationController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
-    @GetMapping(value = "/results/{resultUuid}", produces = "application/json")
+    @GetMapping(value = "/results/{resultUuid}/{groupUuid}", produces = "application/json")
     @Operation(summary = "Get a dynamic simulation result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result has not been found")})
-    public Mono<ResponseEntity<UUID>> getResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        Mono<UUID> result = dynamicSimulationService.getResult(resultUuid);
+    public Mono<ResponseEntity<UUID>> getTimeSeriesResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
+                                                          @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
+        Mono<UUID> result = Mono.empty();
+        if (TIME_SERIES_GROUP_UUID.equals(groupUuid.toString())) {
+            result = dynamicSimulationService.getTimeSeriesId(resultUuid);
+        } else if (TIME_LINE_GROUP_UUID.equals(groupUuid.toString())) {
+            result = dynamicSimulationService.getTimeLineId(resultUuid);
+        }
+
         return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }

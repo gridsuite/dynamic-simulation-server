@@ -75,12 +75,18 @@ public class DynamicSimulationService {
     }
 
     public Mono<ResultEntity> insertStatus(String status) {
-        return Mono.fromCallable(() -> resultRepository.save(new ResultEntity(null, null, status)));
+        return Mono.fromCallable(() -> resultRepository.save(new ResultEntity(null, null, null, status)));
     }
 
-    public Mono<UUID> getResult(UUID resultUuid) {
+    public Mono<UUID> getTimeSeriesId(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return Mono.fromCallable(() -> resultRepository.findById(resultUuid).map(ResultEntity::getResult)
+        return Mono.fromCallable(() -> resultRepository.findById(resultUuid).map(ResultEntity::getTimeSeriesId)
+                .orElse(null));
+    }
+
+    public Mono<UUID> getTimeLineId(UUID resultUuid) {
+        Objects.requireNonNull(resultUuid);
+        return Mono.fromCallable(() -> resultRepository.findById(resultUuid).map(ResultEntity::getTimeLineId)
                 .orElse(null));
     }
 

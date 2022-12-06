@@ -14,6 +14,8 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
+import com.powsybl.timeseries.StringTimeSeries;
+import com.powsybl.timeseries.TimeSeries;
 import org.gridsuite.ds.server.dsl.GroovyCurvesSupplier;
 import org.gridsuite.ds.server.dsl.GroovyEventModelsSupplier;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
@@ -153,7 +155,7 @@ public class DynamicSimulationWorkerService {
                             LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
                         }).block();
             } catch (Exception e) {
-                dynamicSimulationWorkerUpdateResult.doUpdateResult(resultContext.getResultUuid(), null, DynamicSimulationStatus.NOT_DONE);
+                dynamicSimulationWorkerUpdateResult.doUpdateResult(resultContext.getResultUuid(), null, null, DynamicSimulationStatus.NOT_DONE);
                 LOGGER.error("error in consumeRun", e);
             }
         };
@@ -162,9 +164,13 @@ public class DynamicSimulationWorkerService {
     public Mono<DynamicSimulationResult> updateResult(UUID resultUuid, DynamicSimulationResult result) {
         Objects.requireNonNull(resultUuid);
         return Mono.fromRunnable(() -> {
-            // send timeseries to time-series-server
-            UUID timeSeriesUuid = timeSeriesService.sendTimeSeries(result.getCurves().values().stream().collect(Collectors.toList()));
-            dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED);
+            // send timeseries and timeline to time-series-server
+            List<TimeSeries> timeSeries = result.getCurves().values().stream().collect(Collectors.toList());
+            UUID timeSeriesUuid = timeSeriesService.sendTimeSeries(timeSeries);
+            StringTimeSeries timeLine = result.getTimeLine();
+            UUID timeLineUuid = timeSeriesService.sendTimeLine(timeLine);
+
+            dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED);
         }).thenReturn(result);
     }
 
