@@ -14,8 +14,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import com.powsybl.timeseries.StringTimeSeries;
-import com.powsybl.timeseries.TimeSeries;
 import org.gridsuite.ds.server.dsl.GroovyCurvesSupplier;
 import org.gridsuite.ds.server.dsl.GroovyEventModelsSupplier;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
@@ -44,7 +42,6 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -165,13 +162,13 @@ public class DynamicSimulationWorkerService {
         Objects.requireNonNull(resultUuid);
         return Mono.fromRunnable(() -> {
             // send timeseries and timeline to time-series-server
-            List<TimeSeries> timeSeries = result.getCurves().values().stream().collect(Collectors.toList());
+/*            List<TimeSeries> timeSeries = result.getCurves().values().stream().collect(Collectors.toList());
             UUID timeSeriesUuid = timeSeriesService.sendTimeSeries(timeSeries);
             StringTimeSeries timeLine = result.getTimeLine();
-            UUID timeLineUuid = timeSeriesService.sendTimeLine(timeLine);
+            UUID timeLineUuid = timeSeriesService.sendTimeLine(timeLine);*/
 
-            dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED);
-        }).thenReturn(result);
+            dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, UUID.randomUUID(), UUID.randomUUID(), result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED);
+        }).then(Mono.just(result));
     }
 
     public void setFileSystem(FileSystem fs) {
