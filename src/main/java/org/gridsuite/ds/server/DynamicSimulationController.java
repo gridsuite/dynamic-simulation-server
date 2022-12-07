@@ -19,6 +19,7 @@ import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
 import java.util.UUID;
 
 import static org.gridsuite.ds.server.service.timeseries.TimeSeriesService.TIME_LINE_GROUP_UUID;
@@ -46,8 +47,9 @@ public class DynamicSimulationController {
                                           @RequestParam(name = "variantId", required = false) String variantId,
                                           @DefaultValue("0") @RequestParam("startTime") int startTime,
                                           @RequestParam("stopTime") int stopTime,
-                                          @RequestPart("dynamicModel") FilePart dynamicModel) {
-        Mono<UUID> resultUuid = dynamicSimulationService.runAndSaveResult(networkUuid, variantId, startTime, stopTime, dynamicModel);
+                                          @RequestParam("mappingName") String mappingName,
+                                          @RequestPart("dynamicModel") FilePart dynamicModel) throws IOException {
+        Mono<UUID> resultUuid = dynamicSimulationService.runAndSaveResult(networkUuid, variantId, startTime, stopTime, mappingName);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 

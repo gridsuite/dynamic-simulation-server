@@ -6,8 +6,6 @@
  */
 package org.gridsuite.ds.server;
 
-import com.google.common.jimfs.Configuration;
-import com.google.common.jimfs.Jimfs;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
@@ -42,7 +40,6 @@ import org.springframework.web.reactive.function.BodyInserters;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.FileSystem;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -75,8 +72,6 @@ public class DynamicSimulationTest extends AbstractDynamicSimulationTest {
     @SpyBean
     private DynamicSimulationWorkerService dynamicSimulationWorkerService;
 
-    private FileSystem fileSystem;
-
     private static final String NETWORK_UUID_STRING = "11111111-0000-0000-0000-000000000000";
     private static final String NETWORK_UUID_NOT_FOUND_STRING = "22222222-0000-0000-0000-000000000000";
     private static final String VARIANT_1_ID = "variant_1";
@@ -84,10 +79,7 @@ public class DynamicSimulationTest extends AbstractDynamicSimulationTest {
     private static final boolean RESULT = true;
 
     @Before
-    public void init() throws IOException {
-        //initialize in memory FS
-        fileSystem = Jimfs.newFileSystem(Configuration.unix());
-        dynamicSimulationWorkerService.setFileSystem(fileSystem);
+    public void init() {
 
         ReadOnlyDataSource dataSource = new ResourceDataSource("IEEE14",
                 new ResourceSet("", TEST_FILE));
@@ -171,13 +163,13 @@ public class DynamicSimulationTest extends AbstractDynamicSimulationTest {
         assertTrue(DynamicSimulationStatus.CONVERGED.name().equals(entityExchangeResult2.getResponseBody())
                 || DynamicSimulationStatus.RUNNING.name().equals(entityExchangeResult2.getResponseBody()));
 
-        //get the status of a non existing simulation and expect a not found
+        //get the status of a non-existing simulation and expect a not found
         webTestClient.get()
                 .uri("/v1/results/{resultUuid}/status", UUID.randomUUID())
                 .exchange()
                 .expectStatus().isNotFound();
 
-        //get the results of a non existing simulation and expect a not found
+        //get the results of a non-existing simulation and expect a not found
         webTestClient.get()
                 .uri("/v1/results/{resultUuid}/{groupUuid}", UUID.randomUUID(), TIME_SERIES_GROUP_UUID)
                 .exchange()

@@ -9,6 +9,7 @@ package org.gridsuite.ds.server.service;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.json.JsonDynamicSimulationParameters;
+import org.apache.commons.lang3.tuple.Triple;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
@@ -74,7 +75,7 @@ public class DynamicSimulationResultContext {
         byte[] curveContent = (byte[]) headers.get(CURVE_CONTENT);
         // decode the parameters
 
-        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, variantId, startTime, stopTIme, dynamicModelContent, eventModelContent, curveContent, parameters);
+        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, variantId, startTime, stopTIme, Triple.of(dynamicModelContent, eventModelContent, curveContent), parameters);
         return new DynamicSimulationResultContext(resultUuid, runContext);
     }
 

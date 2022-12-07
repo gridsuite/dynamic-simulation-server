@@ -7,6 +7,7 @@
 package org.gridsuite.ds.server.service;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -32,14 +33,14 @@ public class DynamicSimulationRunContext {
 
     private final DynamicSimulationParameters parameters;
 
-    public DynamicSimulationRunContext(UUID networkUuid, String variantId, int startTime, int stopTime, byte[] dynamicModelContent, byte[] eventModelContent, byte[] curveContent, DynamicSimulationParameters parameters) {
+    public DynamicSimulationRunContext(UUID networkUuid, String variantId, int startTime, int stopTime, Triple<byte[], byte[], byte[]> inputs, DynamicSimulationParameters parameters) {
         this.networkUuid = Objects.requireNonNull(networkUuid);
         this.variantId = variantId;
         this.startTime = startTime;
         this.stopTime = stopTime;
-        this.dynamicModelContent = dynamicModelContent;
-        this.eventModelContent = eventModelContent;
-        this.curveContent = curveContent;
+        this.dynamicModelContent = inputs.getLeft();
+        this.eventModelContent = inputs.getMiddle();
+        this.curveContent = inputs.getRight();
         this.parameters = parameters;
     }
 

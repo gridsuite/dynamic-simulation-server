@@ -10,12 +10,14 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.timeseries.StringTimeSeries;
 import com.powsybl.timeseries.TimeSeries;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,14 +30,21 @@ public class TimeSeriesService {
     public static final String TIME_SERIES_END_POINT = "timeseries";
     public static final String TIME_SERIES_GROUP_UUID = "88888888-0000-0000-0000-000000000000";
     public static final String TIME_LINE_GROUP_UUID = "99999999-0000-0000-0000-000000000000";
-    private String baseUri;
+    private final String baseUri;
+
+    private RestTemplate restTemplate;
 
     public TimeSeriesService(@Value("${time-series-server.base-uri:http://time-series-server/}") String baseUri) {
         this.baseUri = baseUri;
+
+    }
+
+    @PostConstruct
+    public void init() {
+        restTemplate = new RestTemplateBuilder().build();
     }
 
     public UUID sendTimeSeries(List<TimeSeries> timeSeriesList) throws HttpClientErrorException {
-        var restTemplate = new RestTemplate();
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         String url = baseUri + DELIMITER + TIME_SERIES_END_POINT + DELIMITER + TIME_SERIES_GROUP_UUID;
@@ -54,7 +63,6 @@ public class TimeSeriesService {
     }
 
     public UUID sendTimeLine(StringTimeSeries timeLine) {
-        var restTemplate = new RestTemplate();
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         String url = baseUri + DELIMITER + TIME_SERIES_END_POINT + DELIMITER + TIME_LINE_GROUP_UUID;

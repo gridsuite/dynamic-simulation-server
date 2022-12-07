@@ -7,21 +7,22 @@
 package org.gridsuite.ds.server.service;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.tuple.Triple;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
+import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.repository.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
+import org.gridsuite.ds.server.service.dynamicmapping.DynamicMappingService;
+import org.gridsuite.ds.server.service.notification.NotificationService;
+import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.stream.function.StreamBridge;
-import org.springframework.core.io.buffer.DefaultDataBufferFactory;
-import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StreamUtils;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -30,45 +31,37 @@ import java.util.UUID;
  */
 @Service
 public class DynamicSimulationService {
-
-    private final ResultRepository resultRepository;
-
-    @Autowired
-    private StreamBridge publishRun;
-
     private static final String CATEGORY_BROKER_OUTPUT = DynamicSimulationService.class.getName() + ".output-broker-messages";
-
     private static final Logger LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
+    private final ResultRepository resultRepository;
+    private final NotificationService notificationService;
+    private final DynamicMappingService dynamicMappingService;
+    private final ParametersService parametersService;
 
-    public DynamicSimulationService(ResultRepository resultRepository) {
+    public DynamicSimulationService(ResultRepository resultRepository, NotificationService notificationService, DynamicMappingService dynamicMappingService, ParametersService parametersService) {
         this.resultRepository = Objects.requireNonNull(resultRepository);
+        this.notificationService = Objects.requireNonNull(notificationService);
+        this.dynamicMappingService = Objects.requireNonNull(dynamicMappingService);
+        this.parametersService = Objects.requireNonNull(parametersService);
     }
 
-    // These getters are used for mocking when testing service, TODO remove
-    public byte[] getEventModelContent() {
-        return ArrayUtils.EMPTY_BYTE_ARRAY;
-    }
+    public Mono<UUID> runAndSaveResult(UUID networkUuid, String variantId, int startTime, int stopTime, String mappingName) throws IOException {
+        // get script and parameters file from dynamic mapping server
+        Script scriptObj = dynamicMappingService.createFromMapping(mappingName);
 
-    public byte[] getCurveContent() {
-        return ArrayUtils.EMPTY_BYTE_ARRAY;
-    }
+        // get all dynamic simulation parameters
+        String parametersFile = scriptObj.getParametersFile();
+        DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(parametersFile.getBytes());
 
-    public DynamicSimulationParameters getDynamicSimulationParameters() {
-        return null;
-    }
+        String script = scriptObj.getScript();
+        Mono< Triple<byte[], byte[], byte[]>> inputsMono = Mono.just(Triple.of(script.getBytes(StandardCharsets.UTF_8), null, null));
 
-    public Mono<UUID> runAndSaveResult(UUID networkUuid, String variantId, int startTime, int stopTime, FilePart dynamicModel) {
-
-        Mono<byte[]> fileBytes;
-        fileBytes = dynamicModel.content().collectList().flatMap(all -> Mono.fromCallable(() ->
-                StreamUtils.copyToByteArray(new DefaultDataBufferFactory().join(all).asInputStream())));
-
-        return fileBytes.flatMap(bytes -> {
-            DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, variantId, startTime, stopTime, bytes, getEventModelContent(), getCurveContent(), getDynamicSimulationParameters());
-            // update status to running status and store the dynamicModel file
+        return inputsMono.flatMap(inputs -> {
+            DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, variantId, startTime, stopTime, inputs, parameters);
+            // update status to running status
             return insertStatus(DynamicSimulationStatus.RUNNING.name()).flatMap(resultEntity -> Mono.fromRunnable(() -> {
                 Message<String> message = new DynamicSimulationResultContext(resultEntity.getId(), runContext).toMessage();
-                sendRunMessage(message);
+                notificationService.emitRunDynamicSimulationMessage(message);
             }).thenReturn(resultEntity.getId())
             );
         });
@@ -104,11 +97,6 @@ public class DynamicSimulationService {
     public Mono<Void> deleteResults() {
         return Mono.fromRunnable(resultRepository::deleteAll)
                 .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable)).then();
-    }
-
-    private void sendRunMessage(Message<String> message) {
-        LOGGER.debug("Sending message : {}", message);
-        publishRun.send("publishRun-out-0", message);
     }
 
 }
