@@ -45,7 +45,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import static org.gridsuite.ds.server.service.timeseries.TimeSeriesService.TIME_SERIES_GROUP_UUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -171,13 +170,20 @@ public class DynamicSimulationTest extends AbstractDynamicSimulationTest {
 
         //get the results of a non-existing simulation and expect a not found
         webTestClient.get()
-                .uri("/v1/results/{resultUuid}/{groupUuid}", UUID.randomUUID(), TIME_SERIES_GROUP_UUID)
+                .uri("/v1/results/{resultUuid}/timeseries", UUID.randomUUID())
                 .exchange()
                 .expectStatus().isNotFound();
 
-        //get the result uuid of the calculation
+        //get the result timeseries uuid of the calculation
         webTestClient.get()
-                .uri("/v1/results/{resultUuid}/{groupUuid}", runUuid, TIME_SERIES_GROUP_UUID)
+                .uri("/v1/results/{resultUuid}/timeseries", runUuid)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(UUID.class);
+
+        //get the result timeline uuid of the calculation
+        webTestClient.get()
+                .uri("/v1/results/{resultUuid}/timeline", runUuid)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(UUID.class);
@@ -198,7 +204,7 @@ public class DynamicSimulationTest extends AbstractDynamicSimulationTest {
 
         //try to get the removed result and except a not found
         webTestClient.get()
-                .uri("/v1/results/{resultUuid}/{groupUuid}", runUuid, TIME_SERIES_GROUP_UUID)
+                .uri("/v1/results/{resultUuid}/timeseries", runUuid)
                 .exchange()
                 .expectStatus().isNotFound();
 

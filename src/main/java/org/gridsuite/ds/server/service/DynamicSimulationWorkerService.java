@@ -35,6 +35,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -154,7 +155,7 @@ public class DynamicSimulationWorkerService {
             List<TimeSeries> timeSeries = result.getCurves().values().stream().collect(Collectors.toList());
             UUID timeSeriesUuid = timeSeriesService.sendTimeSeries(timeSeries);
             StringTimeSeries timeLine = result.getTimeLine();
-            UUID timeLineUuid = timeSeriesService.sendTimeLine(timeLine);
+            UUID timeLineUuid = timeSeriesService.sendTimeSeries(Arrays.asList(timeLine));
 
             dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED);
         }).then(Mono.just(result));

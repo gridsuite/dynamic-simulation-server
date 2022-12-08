@@ -60,7 +60,6 @@ public abstract class AbstractDynamicSimulationTest {
     // time-series-server mocks
     private static final int TIME_SERIES_PORT = 5034;
     public static final String TIME_SERIES_UUID = "33333333-0000-0000-0000-000000000000";
-    public static final String TIME_LINE_UUID = "44444444-0000-0000-0000-000000000000";
     static MockWebServer timeSeriesServer;
 
     // dynamic-mapping-server mocks
@@ -82,22 +81,16 @@ public abstract class AbstractDynamicSimulationTest {
             @Override
             public MockResponse dispatch(@NotNull RecordedRequest recordedRequest) throws InterruptedException {
                 String path = Objects.requireNonNull(recordedRequest.getPath());
-                String baseUrl = DELIMITER + TIME_SERIES_END_POINT + DELIMITER;
+                String baseUrl = DELIMITER + TIME_SERIES_END_POINT;
                 String method = recordedRequest.getMethod();
 
                 // timeseries/{groupUuid}
                 if ("POST".equals(method)
-                        && path.matches(baseUrl + TIME_SERIES_GROUP_UUID + ".*")) {
+                        && path.matches(baseUrl + ".*")) {
                     return new MockResponse()
                             .setResponseCode(HttpStatus.OK.value())
                             .addHeader("Content-Type", "application/json; charset=utf-8")
                             .setBody(TIME_SERIES_UUID);
-                } else if ("POST".equals(method)
-                        && path.matches(baseUrl + TIME_LINE_GROUP_UUID + ".*")) {
-                    return new MockResponse()
-                            .setResponseCode(HttpStatus.OK.value())
-                            .addHeader("Content-Type", "application/json; charset=utf-8")
-                            .setBody(TIME_LINE_UUID);
                 }
                 return new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value());
             }
