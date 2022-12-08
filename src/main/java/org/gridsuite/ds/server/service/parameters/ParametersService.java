@@ -1,19 +1,22 @@
 package org.gridsuite.ds.server.service.parameters;
 
+import com.powsybl.commons.config.PlatformConfig;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.json.JsonDynamicSimulationParameters;
 import com.powsybl.dynawaltz.DynaWaltzParameters;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.util.List;
 
 @Service
 public class ParametersService {
-    public static final String BASE_TMP_DIR = "dynamic_simulation_";
+    public static final String TMP_DIR = "/tmp";
+    public static final String BASE_WORKING_DIR = "dynamic_simulation_";
     public static final String PARAMETERS_DIR = "/parameters";
     public static final String EVENTS_GROOVY = "events.groovy";
     public static final String CURVES_GROOVY = "curves.groovy";
@@ -32,48 +35,27 @@ public class ParametersService {
         return getClass().getResourceAsStream(Paths.get(PARAMETERS_DIR, CURVES_GROOVY).toString()).readAllBytes();
     }
 
-    private String getDynamicParameters(Path tmpDir, byte[] dynamicParams) throws IOException {
-        // save dynamicParams into a temp dir then return dest path
-        Path destPath = Files.write(Paths.get(tmpDir.toString(), MODELS_PAR), dynamicParams, StandardOpenOption.CREATE_NEW);
-        return destPath.toString();
-    }
-
-    private String getNetworkParameters(Path tmpDir) throws IOException {
-        // copy network parameter file into a temp dir then return dest path
-        Path target = Paths.get(tmpDir.toString(), NETWORK_PAR);
-        Files.copy(getClass().getResourceAsStream(Paths.get(PARAMETERS_DIR, NETWORK_PAR).toString()), target);
-        return target.toString();
-    }
-
-    private String getSolversParameters(Path tmpDir) throws IOException {
-        // copy solver parameter file into a temp dir then return dest path
-        Path target = Paths.get(tmpDir.toString(), SOLVERS_PAR);
-        Files.copy(getClass().getResourceAsStream(Paths.get(PARAMETERS_DIR, SOLVERS_PAR).toString()), target);
-        return target.toString();
-    }
-
     public DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams) throws IOException {
-        if (dynamicParams == null) {
-            return null;
-        }
+
+        Path configDir = PlatformConfig.defaultConfig().getConfigDir().orElseThrow();
 
         // prepare a temp dir for current running simulation
-        Path tmpDirPath = Files.createTempDirectory(BASE_TMP_DIR + System.currentTimeMillis());
+        Path tmpDir = Files.createDirectories(configDir.getFileSystem().getPath(TMP_DIR, BASE_WORKING_DIR + System.currentTimeMillis()).toAbsolutePath());
 
         // load parametersFile in a runtime tmp directory
-        String modelsDestPath = getDynamicParameters(tmpDirPath, dynamicParams);
+        Files.copy(new ByteArrayInputStream(dynamicParams), tmpDir.resolve(MODELS_PAR));
 
-        // load two others par files
-        String networkDestPath = getNetworkParameters(tmpDirPath);
-        String solversDestPath = getSolversParameters(tmpDirPath);
+        // load two others files
+        for (String parFileName : List.of(NETWORK_PAR, SOLVERS_PAR)) {
+            Files.copy(getClass().getResourceAsStream(Paths.get(PARAMETERS_DIR, parFileName).toString()), tmpDir.resolve(parFileName));
+        }
 
-        // create a new DynamicSimulationParameters
-        // load parameter file
+        // load parameter file then config paths
         DynamicSimulationParameters parameters = JsonDynamicSimulationParameters.read(getClass().getResourceAsStream(Paths.get(PARAMETERS_DIR, PARAMETERS_JSON).toString()));
         DynaWaltzParameters dynaWaltzParameters = parameters.getExtension(DynaWaltzParameters.class);
-        dynaWaltzParameters.setParametersFile(modelsDestPath);
-        dynaWaltzParameters.getNetwork().setParametersFile(networkDestPath);
-        dynaWaltzParameters.getSolver().setParametersFile(solversDestPath);
+        dynaWaltzParameters.setParametersFile(tmpDir.resolve(MODELS_PAR).toString());
+        dynaWaltzParameters.getNetwork().setParametersFile(tmpDir.resolve(NETWORK_PAR).toString());
+        dynaWaltzParameters.getSolver().setParametersFile(tmpDir.resolve(SOLVERS_PAR).toString());
         return parameters;
     }
 }
