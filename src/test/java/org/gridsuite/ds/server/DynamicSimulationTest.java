@@ -123,7 +123,7 @@ public class DynamicSimulationTest extends AbstractDynamicSimulationTest {
 
         //run the dynamic simulation on a specific variant
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
-                .uri("/v1/networks/{networkUuid}/run?variantId=" + VARIANT_1_ID + "&startTime=0&stopTime=100", NETWORK_UUID_STRING)
+                .uri("/v1/networks/{networkUuid}/run?variantId=" + VARIANT_1_ID + "&startTime=0&stopTime=100" + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
                 .exchange()
@@ -138,7 +138,7 @@ public class DynamicSimulationTest extends AbstractDynamicSimulationTest {
 
         //run the dynamic simulation on the implicit default variant
         entityExchangeResult = webTestClient.post()
-                .uri("/v1/networks/{networkUuid}/run?startTime=0&stopTime=100", NETWORK_UUID_STRING)
+                .uri("/v1/networks/{networkUuid}/run?startTime=0&stopTime=100" + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
                 .exchange()
@@ -210,7 +210,7 @@ public class DynamicSimulationTest extends AbstractDynamicSimulationTest {
 
         // network not found
         webTestClient.post()
-                .uri("/v1/networks/{networkUuid}/run?startTime=0&stopTime=100", NETWORK_UUID_NOT_FOUND_STRING)
+                .uri("/v1/networks/{networkUuid}/run?startTime=0&stopTime=100" + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_NOT_FOUND_STRING)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
                 .exchange()

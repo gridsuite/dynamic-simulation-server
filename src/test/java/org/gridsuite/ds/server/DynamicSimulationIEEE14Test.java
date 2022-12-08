@@ -51,6 +51,7 @@ import java.nio.file.Paths;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
 
@@ -128,7 +129,7 @@ public class DynamicSimulationIEEE14Test extends AbstractDynamicSimulationTest {
 
         String solversDesPath = Paths.get(TEST_ENV_BASE_DIR, testBaseDir, SOLVERS_PAR).toString();
         dynaWaltzParameters.getSolver().setParametersFile(solversDesPath);
-        when(parametersService.getDynamicSimulationParameters(new byte[] {})).thenReturn(parameters);
+        when(parametersService.getDynamicSimulationParameters(any())).thenReturn(parameters);
     }
 
     private String getResult(InputStream resultIS) throws IOException {

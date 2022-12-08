@@ -123,9 +123,9 @@ public abstract class AbstractDynamicSimulationTest {
                 String method = recordedRequest.getMethod();
 
                 // scripts/from/{mappingName}
-                if ("POST".equals(method)
+                if ("GET".equals(method)
                         && path.matches(baseScriptCreateUrl + ".*")) {
-                    String mappingName = recordedRequest.getRequestUrl().queryParameter("mappingName");
+                    String mappingName = recordedRequest.getRequestUrl().pathSegments().get(2);
                     if (MAPPING_NAME_01.equals(mappingName)) {
                         String scriptJson;
                         try {

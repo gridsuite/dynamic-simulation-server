@@ -54,7 +54,7 @@ public class DynamicSimulationService {
         DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(parametersFile.getBytes());
 
         String script = scriptObj.getScript();
-        Mono< Triple<byte[], byte[], byte[]>> inputsMono = Mono.just(Triple.of(script.getBytes(StandardCharsets.UTF_8), null, null));
+        Mono< Triple<byte[], byte[], byte[]>> inputsMono = Mono.just(Triple.of(script.getBytes(StandardCharsets.UTF_8), parametersService.getEventModel(), parametersService.getCurveModel()));
 
         return inputsMono.flatMap(inputs -> {
             DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, variantId, startTime, stopTime, inputs, parameters);

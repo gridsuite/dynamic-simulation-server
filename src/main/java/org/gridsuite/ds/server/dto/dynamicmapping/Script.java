@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
@@ -18,6 +19,7 @@ import java.util.Date;
  */
 @Data
 @Schema(description = "Script")
+@NoArgsConstructor
 @AllArgsConstructor
 public class Script {
 

@@ -53,6 +53,10 @@ public class ParametersService {
     }
 
     public DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams) throws IOException {
+        if (dynamicParams == null) {
+            return null;
+        }
+
         // prepare a temp dir for current running simulation
         Path tmpDirPath = Files.createTempDirectory(BASE_TMP_DIR + System.currentTimeMillis());
 
