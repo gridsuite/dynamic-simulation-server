@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.ds.server;
+package org.gridsuite.ds.server.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -22,13 +22,14 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.util.UUID;
 
+import static org.gridsuite.ds.server.DynamicSimulationApi.API_VERSION;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 @RestController
-@RequestMapping(value = "/" + DynamicSimulationApi.API_VERSION)
+@RequestMapping(value = "/" + API_VERSION)
 @Tag(name = "Dynamic simulation server")
 public class DynamicSimulationController {
 

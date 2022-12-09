@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2022, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 package org.gridsuite.ds.server.service.parameters.implementation;
 
 import com.powsybl.commons.config.PlatformConfig;
@@ -14,20 +20,26 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+/**
+ * @author Thang PHAM <quyet-thang.pham at rte-france.com>
+ */
 @Service
 public class ParametersServiceImpl implements ParametersService {
 
-    @Override public byte[] getEventModel() throws IOException {
+    @Override
+    public byte[] getEventModel() throws IOException {
         // read the events.groovy in the "parameters" resources
         return getClass().getResourceAsStream(Paths.get(PARAMETERS_DIR, EVENTS_GROOVY).toString()).readAllBytes();
     }
 
-    @Override public byte[] getCurveModel() throws IOException {
+    @Override
+    public byte[] getCurveModel() throws IOException {
         // read the curves.groovy in the "parameters" resources
         return getClass().getResourceAsStream(Paths.get(PARAMETERS_DIR, CURVES_GROOVY).toString()).readAllBytes();
     }
 
-    @Override public DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams) throws IOException {
+    @Override
+    public DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams) throws IOException {
 
         Path configDir = PlatformConfig.defaultConfig().getConfigDir().orElseThrow();
 

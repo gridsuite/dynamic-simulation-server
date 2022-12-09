@@ -41,7 +41,8 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
         restTemplate = new RestTemplateBuilder().build();
     }
 
-    @Override public UUID sendTimeSeries(List<TimeSeries> timeSeriesList) throws HttpClientErrorException {
+    @Override
+    public UUID sendTimeSeries(List<TimeSeries> timeSeriesList) throws HttpClientErrorException {
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         String url = baseUri + DELIMITER + TIME_SERIES_END_POINT;

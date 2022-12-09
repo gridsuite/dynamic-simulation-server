@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.ds.server.json;
+package com.powsybl.dynamicsimulation.json;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,7 +26,6 @@ import java.util.Objects;
 
 /**
  * @author Marcos de Miguel <demiguelm at aia.es>
- * TODO merge with @link{DynamicSimulationResultSerializer} in powsybl-dynamic-simulation-dsl 5.x.x
  */
 public class DynamicSimulationResultSerializer extends StdSerializer<DynamicSimulationResult> {
 

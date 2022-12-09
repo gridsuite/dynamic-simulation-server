@@ -18,7 +18,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import org.gridsuite.ds.server.json.DynamicSimulationResultSerializer;
+import com.powsybl.dynamicsimulation.json.DynamicSimulationResultSerializer;
 import org.gridsuite.ds.server.service.DynamicSimulationResultContext;
 import org.junit.Before;
 import org.junit.Test;

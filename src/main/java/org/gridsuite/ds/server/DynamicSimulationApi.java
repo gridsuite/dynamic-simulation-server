@@ -10,10 +10,10 @@ package org.gridsuite.ds.server;
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 
-final class DynamicSimulationApi {
+public final class DynamicSimulationApi {
 
     private DynamicSimulationApi() {
     }
 
-    static final String API_VERSION = "v1";
+    public static final String API_VERSION = "v1";
 }

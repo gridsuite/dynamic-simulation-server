@@ -10,7 +10,7 @@ import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import org.apache.commons.lang3.tuple.Triple;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
-import org.gridsuite.ds.server.repository.ResultEntity;
+import org.gridsuite.ds.server.model.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
 import org.gridsuite.ds.server.service.dynamicmapping.DynamicMappingService;
 import org.gridsuite.ds.server.service.notification.NotificationService;

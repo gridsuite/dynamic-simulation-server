@@ -5,13 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.ds.server.dsl;
+package com.powsybl.dynamicsimulation.groovy;
 
 import com.powsybl.dsl.ExpressionDslLoader;
 import com.powsybl.dsl.GroovyScripts;
-import com.powsybl.dynamicsimulation.Curve;
-import com.powsybl.dynamicsimulation.CurvesSupplier;
-import com.powsybl.dynamicsimulation.groovy.CurveGroovyExtension;
+import com.powsybl.dynamicsimulation.EventModel;
+import com.powsybl.dynamicsimulation.EventModelsSupplier;
 import com.powsybl.iidm.network.Network;
 import groovy.lang.Binding;
 import groovy.lang.GroovyCodeSource;
@@ -24,18 +23,15 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * @author Mathieu Bague <mathieu.bague@rte-france.com>
+ * @author Marcos de Miguel <demiguelm at aia.es>
  */
-public class GroovyCurvesSupplier implements CurvesSupplier {
+public class GroovyEventModelsSupplier implements EventModelsSupplier {
 
     private final GroovyCodeSource codeSource;
 
-    private final List<CurveGroovyExtension> extensions;
+    private final List<EventModelGroovyExtension> extensions;
 
-    /**
-     * TODO merge with @link{GroovyCurvesSupplier} in powsybl-dynamic-simulation-dsl 5.x.x
-     */
-    public GroovyCurvesSupplier(InputStream is, List<CurveGroovyExtension> extensions) {
+    public GroovyEventModelsSupplier(InputStream is, List<EventModelGroovyExtension> extensions) {
         this.codeSource = GroovyScripts.load(is);
         this.extensions = Objects.requireNonNull(extensions);
     }
@@ -46,18 +42,18 @@ public class GroovyCurvesSupplier implements CurvesSupplier {
     }
 
     @Override
-    public List<Curve> get(Network network) {
-        List<Curve> curves = new ArrayList<>();
+    public List<EventModel> get(Network network) {
+        List<EventModel> eventModels = new ArrayList<>();
 
         Binding binding = new Binding();
         binding.setVariable("network", network);
 
         ExpressionDslLoader.prepareClosures(binding);
-        extensions.forEach(e -> e.load(binding, curves::add));
+        extensions.forEach(e -> e.load(binding, eventModels::add));
 
         GroovyShell shell = new GroovyShell(binding, new CompilerConfiguration());
         shell.evaluate(codeSource);
 
-        return curves;
+        return eventModels;
     }
 }
