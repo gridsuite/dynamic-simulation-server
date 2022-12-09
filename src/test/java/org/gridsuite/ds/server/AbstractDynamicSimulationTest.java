@@ -29,7 +29,9 @@ import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Objects;
 
+import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
 import static org.gridsuite.ds.server.service.timeseries.TimeSeriesService.*;
+import static org.gridsuite.ds.server.service.parameters.ParametersService.*;
 
 @RunWith(SpringRunner.class)
 @AutoConfigureWebTestClient(timeout = "PT360S")
@@ -47,14 +49,7 @@ public abstract class AbstractDynamicSimulationTest {
     public static final String DATA_IEEE14_BASE_DIR = "/data/ieee14";
     public static final String INPUT = "input";
     public static final String OUTPUT = "output";
-    public static final String TEST_ENV_BASE_DIR = "/work/unittests";
-    public static final String MODELS_PAR = "models.par";
-    public static final String NETWORK_PAR = "network.par";
-    public static final String SOLVERS_PAR = "solvers.par";
     public static final String MODELS_GROOVY = "models.groovy";
-    public static final String EVENTS_GROOVY = "events.groovy";
-    public static final String CURVES_GROOVY = "curves.groovy";
-    public static final String PARAMETERS_JSON = "parameters.json";
     public static final String RESULT_JSON = "result.json";
 
     // time-series-server mocks
@@ -79,7 +74,7 @@ public abstract class AbstractDynamicSimulationTest {
         var timeSeriesDispatcher = new Dispatcher() {
             @NotNull
             @Override
-            public MockResponse dispatch(@NotNull RecordedRequest recordedRequest) throws InterruptedException {
+            public MockResponse dispatch(@NotNull RecordedRequest recordedRequest) {
                 String path = Objects.requireNonNull(recordedRequest.getPath());
                 String baseUrl = DELIMITER + TIME_SERIES_END_POINT;
                 String method = recordedRequest.getMethod();
@@ -110,15 +105,16 @@ public abstract class AbstractDynamicSimulationTest {
         var dynamicMappingDispatcher = new Dispatcher() {
             @NotNull
             @Override
-            public MockResponse dispatch(@NotNull RecordedRequest recordedRequest) throws InterruptedException {
+            public MockResponse dispatch(@NotNull RecordedRequest recordedRequest) {
                 String path = Objects.requireNonNull(recordedRequest.getPath());
                 String baseScriptCreateUrl = DELIMITER + DynamicMappingService.DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT + DELIMITER;
                 String method = recordedRequest.getMethod();
-
+                MockResponse response = new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value());
                 // scripts/from/{mappingName}
                 if ("GET".equals(method)
                         && path.matches(baseScriptCreateUrl + ".*")) {
-                    String mappingName = recordedRequest.getRequestUrl().pathSegments().get(2);
+                    // take {mappingName} at the 2nd index
+                    String mappingName = emptyIfNull(recordedRequest.getRequestUrl().pathSegments()).stream().skip(2).limit(2).findFirst().orElse("");
                     if (MAPPING_NAME_01.equals(mappingName)) {
                         String scriptJson;
                         try {
@@ -154,13 +150,13 @@ public abstract class AbstractDynamicSimulationTest {
                             return new MockResponse().setResponseCode(HttpStatus.NO_CONTENT.value());
                         }
 
-                        return new MockResponse()
+                        response = new MockResponse()
                                 .setResponseCode(HttpStatus.OK.value())
                                 .addHeader("Content-Type", "application/json; charset=utf-8")
                                 .setBody(scriptJson);
                     }
                 }
-                return new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value());
+                return response;
             }
         };
         // attach dispatcher
