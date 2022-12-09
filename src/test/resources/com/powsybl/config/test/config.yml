@@ -1,4 +1,5 @@
 dynawaltz:
+#  homeDir: /home/runner/work/dynamic-simulation-server/dynamic-simulation-server/dynawo
   homeDir: /home/phamquy/Projects/dynawo/dynawo
   debug: true
 
