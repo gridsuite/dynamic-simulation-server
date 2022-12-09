@@ -63,7 +63,7 @@ public class DynamicSimulationWorkerService {
 
     private final TimeSeriesService timeSeriesService;
 
-    private DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult;
+    private final DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult;
 
     public DynamicSimulationWorkerService(NetworkStoreService networkStoreService,
                                           NotificationService notificationService,
@@ -140,7 +140,7 @@ public class DynamicSimulationWorkerService {
                                     .build();
                             notificationService.emitResultDynamicSimulationMessage(sendMessage);
                             LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
-                        }).block();
+                        }).subscribe();
             } catch (Exception e) {
                 dynamicSimulationWorkerUpdateResult.doUpdateResult(resultContext.getResultUuid(), null, null, DynamicSimulationStatus.NOT_DONE);
                 LOGGER.error("error in consumeRun", e);

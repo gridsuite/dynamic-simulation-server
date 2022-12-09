@@ -23,7 +23,6 @@ import com.powsybl.timeseries.TimeSeriesIndex;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -56,7 +55,6 @@ import static org.mockito.Mockito.isNull;
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
-@Ignore
 public class DynamicSimulationTest extends AbstractDynamicSimulationTest {
     @Autowired
     private WebTestClient webTestClient;
