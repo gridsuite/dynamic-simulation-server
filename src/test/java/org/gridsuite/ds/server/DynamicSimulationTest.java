@@ -12,8 +12,8 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
 import com.powsybl.commons.datasource.ResourceSet;
-import com.powsybl.dynamicsimulation.*;
-import com.powsybl.iidm.import_.Importers;
+import com.powsybl.dynamicsimulation.DynamicSimulationResultImpl;
+import com.powsybl.iidm.network.Importers;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -39,7 +39,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.messaging.Message;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
@@ -48,7 +47,6 @@ import org.springframework.web.reactive.config.EnableWebFlux;
 import org.springframework.web.reactive.function.BodyInserters;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.FileSystem;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,7 +57,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.isNull;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -101,8 +100,7 @@ public class DynamicSimulationTest {
         fileSystem = Jimfs.newFileSystem(Configuration.unix());
         dynamicSimulationWorkerService.setFileSystem(fileSystem);
 
-        ReadOnlyDataSource dataSource = new ResourceDataSource("IEEE14",
-            new ResourceSet("", TEST_FILE));
+        ReadOnlyDataSource dataSource = new ResourceDataSource("IEEE14", new ResourceSet("", TEST_FILE));
         Network network = Importers.importData("XIIDM", dataSource, null);
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_1_ID);
         given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_STRING), PreloadingStrategy.COLLECTION)).willReturn(network);
@@ -124,12 +122,6 @@ public class DynamicSimulationTest {
             .when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any());
         doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(RESULT, "", curves, timeLine)))
             .when(dynamicSimulationWorkerService).runAsync(any(), isNull(), any(), any());
-    }
-
-    private static MockMultipartFile createMockMultipartFile(String fileName) throws IOException {
-        try (InputStream inputStream = DynamicSimulationTest.class.getResourceAsStream("/" + fileName)) {
-            return new MockMultipartFile("file", fileName, MediaType.TEXT_PLAIN_VALUE, inputStream);
-        }
     }
 
     @Test
