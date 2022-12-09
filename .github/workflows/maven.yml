@@ -27,7 +27,7 @@ jobs:
           unzip Dynawo_Linux_v${DYNAWO_VERSION}.zip
           rm -f Dynawo_Linux_v${DYNAWO_VERSION}.zip
           pwd
-          ls -al ${GITHUB_WORKSPACE}
+          ls -al ${GITHUB_WORKSPACE}/dynawo
 
       - name: Checkout network store sources
         uses: actions/checkout@v1
