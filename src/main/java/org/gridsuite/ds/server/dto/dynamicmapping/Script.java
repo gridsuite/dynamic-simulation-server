@@ -6,38 +6,32 @@
  */
 package org.gridsuite.ds.server.dto.dynamicmapping;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Date;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-@Data
-@Schema(description = "Script")
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class Script {
 
-    @Schema(description = "Name")
     private String name;
 
-    @Schema(description = "Name of the parent mapping")
     private String parentName;
 
-    @Schema(description = "Generated Script")
     private String script;
 
-    @Schema(description = "Creation date")
     private Date createdDate;
 
-    @Schema(description = "Script parameters are up to date")
     private boolean current;
 
-    @Schema(description = "Parameter file")
     private String parametersFile;
 
 }
