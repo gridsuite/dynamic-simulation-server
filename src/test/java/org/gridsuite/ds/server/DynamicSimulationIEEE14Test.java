@@ -107,7 +107,7 @@ public class DynamicSimulationIEEE14Test extends AbstractDynamicSimulationTest {
 
         UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        Message<byte[]> messageSwitch = output.receive(1000, "ds.result.destination");
+        Message<byte[]> messageSwitch = output.receive(1000 * 5, "ds.result.destination");
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(DynamicSimulationResultContext.RESULT_UUID).toString()));
 
         // prepare expected result to compare
