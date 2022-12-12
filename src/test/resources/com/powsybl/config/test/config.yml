@@ -1,5 +1,5 @@
 dynawaltz:
-  homeDir: /home/runner/work/dynamic-simulation-server/dynamic-simulation-server/dynawo
+  homeDir: /home/runner/work/dynamic-simulation-server/dynawo
   debug: true
 
 dynawaltz-default-parameters:
