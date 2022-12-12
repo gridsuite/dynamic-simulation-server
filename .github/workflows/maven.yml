@@ -20,7 +20,6 @@ jobs:
           java-version: 11
 
       - name: Setup Dynawo
-        working-directory: ../dynawo
         env:
           DYNAWO_VERSION: 1.3.1
         run: |
@@ -57,7 +56,9 @@ jobs:
         run: mvn --batch-mode -DskipTests=true --file ../powsybl-dynawo/pom.xml install
 
       - name: Checkout sources
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
+        with:
+          clean: false
 
       - name: Build with Maven
         run: mvn --batch-mode -P jacoco verify
