@@ -8,6 +8,8 @@ package org.gridsuite.ds.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.commons.config.ModuleConfig;
+import com.powsybl.commons.config.PlatformConfig;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
 import com.powsybl.commons.datasource.ResourceSet;
@@ -34,10 +36,7 @@ import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Paths;
 import java.util.UUID;
 
@@ -92,6 +91,16 @@ public class DynamicSimulationIEEE14Test extends AbstractDynamicSimulationTest {
         MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
         bodyBuilder.part("dynamicModel", dynamicModel)
                 .filename(MODELS_GROOVY);
+
+        // debug home dir dynawo
+        ModuleConfig config = PlatformConfig.defaultConfig().getOptionalModuleConfig("dynawaltz").orElseThrow();
+        String homeDir = config.getStringProperty("homeDir");
+        File dynawoShell = new File(Paths.get(homeDir, "dynawo.sh").toString());
+        if (dynawoShell.isFile()) {
+            System.out.println("Dynawo shell found");
+        } else {
+            System.out.println("Dynawo shell NOT found");
+        }
 
         //run the dynamic simulation (on a specific variant with variantId=" + VARIANT_1_ID + ")
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
