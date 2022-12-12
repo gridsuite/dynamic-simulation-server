@@ -95,11 +95,19 @@ public class DynamicSimulationIEEE14Test extends AbstractDynamicSimulationTest {
         // debug home dir dynawo
         ModuleConfig config = PlatformConfig.defaultConfig().getOptionalModuleConfig("dynawaltz").orElseThrow();
         String homeDir = config.getStringProperty("homeDir");
+        System.out.println(homeDir);
+        File dynawoDir = new File(homeDir);
+        if (dynawoDir.exists() && dynawoDir.isDirectory()) {
+            System.out.println(dynawoDir + " directory found");
+        } else {
+            System.out.println(dynawoDir + " directory NOT found");
+        }
+
         File dynawoShell = new File(Paths.get(homeDir, "dynawo.sh").toString());
         if (dynawoShell.isFile()) {
-            System.out.println("Dynawo shell found");
+            System.out.println(dynawoShell.getAbsolutePath() + " Dynawo shell found");
         } else {
-            System.out.println("Dynawo shell NOT found");
+            System.out.println(dynawoShell.getAbsolutePath() + " Dynawo shell NOT found");
         }
 
         //run the dynamic simulation (on a specific variant with variantId=" + VARIANT_1_ID + ")
