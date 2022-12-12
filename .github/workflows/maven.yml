@@ -24,9 +24,9 @@ jobs:
           DYNAWO_VERSION: 1.3.1
         run: |
           wget https://github.com/dynawo/dynawo/releases/download/v${DYNAWO_VERSION}/Dynawo_Linux_v${DYNAWO_VERSION}.zip
-          unzip Dynawo_Linux_v${DYNAWO_VERSION}.zip -d ..
+          unzip Dynawo_Linux_v${DYNAWO_VERSION}.zip
           rm -f Dynawo_Linux_v${DYNAWO_VERSION}.zip
-          ls -ald ../dynawo/*
+          ls -ald ${PWD}/dynawo/*
 
       - name: Checkout network store sources
         uses: actions/checkout@v1
@@ -57,6 +57,8 @@ jobs:
 
       - name: Checkout sources
         uses: actions/checkout@v1
+        with:
+            clean: false
 
       - name: Build with Maven
         run: mvn --batch-mode -P jacoco verify
