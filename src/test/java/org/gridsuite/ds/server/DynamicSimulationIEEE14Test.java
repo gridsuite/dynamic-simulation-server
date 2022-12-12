@@ -8,8 +8,6 @@ package org.gridsuite.ds.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.config.ModuleConfig;
-import com.powsybl.commons.config.PlatformConfig;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
 import com.powsybl.commons.datasource.ResourceSet;
@@ -37,7 +35,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 
 import java.io.*;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -83,6 +81,11 @@ public class DynamicSimulationIEEE14Test extends AbstractDynamicSimulationTest {
         return resultJson;
     }
 
+    private void writeResult(InputStream resultIS, Path jsonFile) throws IOException {
+        DynamicSimulationResult result = DynamicSimulationResultDeserializer.read(resultIS);
+        DynamicSimulationResultSerializer.write(result, jsonFile);
+    }
+
     @Test
     public void test01() throws IOException {
         String testBaseDir = MAPPING_NAME_01;
@@ -91,24 +94,6 @@ public class DynamicSimulationIEEE14Test extends AbstractDynamicSimulationTest {
         MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
         bodyBuilder.part("dynamicModel", dynamicModel)
                 .filename(MODELS_GROOVY);
-
-        // debug home dir dynawo
-        ModuleConfig config = PlatformConfig.defaultConfig().getOptionalModuleConfig("dynawaltz").orElseThrow();
-        String homeDir = config.getStringProperty("homeDir");
-        System.out.println(homeDir);
-        File dynawoDir = new File(homeDir);
-        if (dynawoDir.exists() && dynawoDir.isDirectory()) {
-            System.out.println(dynawoDir + " directory found");
-        } else {
-            System.out.println(dynawoDir + " directory NOT found");
-        }
-
-        File dynawoShell = new File(Paths.get(homeDir, "dynawo.sh").toString());
-        if (dynawoShell.isFile()) {
-            System.out.println(dynawoShell.getAbsolutePath() + " Dynawo shell found");
-        } else {
-            System.out.println(dynawoShell.getAbsolutePath() + " Dynawo shell NOT found");
-        }
 
         //run the dynamic simulation (on a specific variant with variantId=" + VARIANT_1_ID + ")
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
@@ -128,9 +113,15 @@ public class DynamicSimulationIEEE14Test extends AbstractDynamicSimulationTest {
         // prepare expected result to compare
         String jsonExpectedResult = getResult(getClass().getResourceAsStream(Paths.get(DATA_IEEE14_BASE_DIR, testBaseDir, OUTPUT, RESULT_JSON).toString()));
 
-        // get the result from the message's payload
-        ByteArrayInputStream bytesIS = new ByteArrayInputStream(messageSwitch.getPayload());
-        String jsonResult = getResult(bytesIS);
+        // export result into file
+        String resultDir = getClass().getResource(Paths.get(DATA_IEEE14_BASE_DIR, testBaseDir, OUTPUT).toString()).getPath();
+        Path resultJsonFile = Paths.get(resultDir).resolve("exported_" + RESULT_JSON);
+        Files.deleteIfExists(resultJsonFile);
+        Files.createFile(resultJsonFile);
+        writeResult(new ByteArrayInputStream(messageSwitch.getPayload()), resultJsonFile);
+
+        // get the result from exported file
+        String jsonResult = getResult(Files.newInputStream(resultJsonFile));
 
         // compare result
         ObjectMapper mapper = new ObjectMapper();
