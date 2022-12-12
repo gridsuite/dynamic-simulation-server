@@ -24,9 +24,9 @@ jobs:
           DYNAWO_VERSION: 1.3.1
         run: |
           wget https://github.com/dynawo/dynawo/releases/download/v${DYNAWO_VERSION}/Dynawo_Linux_v${DYNAWO_VERSION}.zip
-          unzip Dynawo_Linux_v${DYNAWO_VERSION}.zip
+          unzip Dynawo_Linux_v${DYNAWO_VERSION}.zip -d ..
           rm -f Dynawo_Linux_v${DYNAWO_VERSION}.zip
-          ls -ald ${PWD}/dynawo/*
+          ls -ald ../dynawo/*
 
       - name: Checkout network store sources
         uses: actions/checkout@v1
