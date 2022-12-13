@@ -40,9 +40,6 @@ for (Generator equipment : network.generators) {
                  }
     }
 
-    OmegaRef {
-        generatorDynamicModelId equipment.id
-    }
 }
 
 CurrentLimitAutomaton {
