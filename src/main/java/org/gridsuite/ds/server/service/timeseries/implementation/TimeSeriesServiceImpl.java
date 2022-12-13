@@ -6,18 +6,15 @@
  */
 package org.gridsuite.ds.server.service.timeseries.implementation;
 
-import com.powsybl.commons.PowsyblException;
 import com.powsybl.timeseries.TimeSeries;
 import org.gridsuite.ds.server.service.timeseries.TimeSeriesService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,36 +24,27 @@ import java.util.UUID;
 @Service
 public class TimeSeriesServiceImpl implements TimeSeriesService {
 
-    private final String baseUri;
+    private final WebClient webClient;
 
-    private RestTemplate restTemplate;
-
-    public TimeSeriesServiceImpl(@Value("${time-series-server.base-uri:http://time-series-server/}") String baseUri) {
-        this.baseUri = baseUri;
-
-    }
-
-    @PostConstruct
-    public void init() {
-        restTemplate = new RestTemplateBuilder().build();
+    public TimeSeriesServiceImpl(WebClient.Builder builder, @Value("${time-series-server.base-uri:http://time-series-server/}") String baseUri) {
+        webClient = builder.baseUrl(baseUri).build();
     }
 
     @Override
-    public UUID sendTimeSeries(List<TimeSeries> timeSeriesList) throws HttpClientErrorException {
-        var headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        String url = baseUri + DELIMITER + TIME_SERIES_END_POINT;
-        var uriBuilder = UriComponentsBuilder.fromHttpUrl(url);
+    public Mono<UUID> sendTimeSeries(List<TimeSeries> timeSeriesList) throws HttpClientErrorException {
+        String url = API_VERSION + DELIMITER + TIME_SERIES_END_POINT;
 
         // convert timeseries to json
         var timeSeriesListJson = TimeSeries.toJson(timeSeriesList);
 
         // call time-series Rest API
-        var responseEntity = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.POST, new HttpEntity<>(timeSeriesListJson, headers), String.class);
-        if (responseEntity.getStatusCode() == HttpStatus.OK) {
-            return UUID.fromString(responseEntity.getBody());
-        } else {
-            throw new PowsyblException("Can not send time series to server: HttpStatus = " + responseEntity.getStatusCode());
-        }
+        return webClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path(url)
+                        .build())
+                .body(BodyInserters.fromValue(timeSeriesListJson))
+                .retrieve()
+                .bodyToMono(String.class)
+                .map(UUID::fromString);
     }
 }

@@ -24,6 +24,7 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -47,10 +48,10 @@ public class DynamicSimulationService {
 
     public Mono<UUID> runAndSaveResult(UUID networkUuid, String variantId, int startTime, int stopTime, String mappingName) throws IOException {
         // get script and parameters file from dynamic mapping server
-        Script scriptObj = dynamicMappingService.createFromMapping(mappingName);
+        Script scriptObj = dynamicMappingService.createFromMapping(mappingName).block();
 
         // get all dynamic simulation parameters
-        String parametersFile = scriptObj.getParametersFile();
+        String parametersFile = Optional.of(scriptObj).orElseThrow().getParametersFile();
         DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(parametersFile.getBytes());
 
         String script = scriptObj.getScript();

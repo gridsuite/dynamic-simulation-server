@@ -35,13 +35,9 @@ import reactor.core.publisher.Mono;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -152,10 +148,10 @@ public class DynamicSimulationWorkerService {
         Objects.requireNonNull(resultUuid);
         return Mono.fromRunnable(() -> {
             // send timeseries and timeline to time-series-server
-            List<TimeSeries> timeSeries = result.getCurves().values().stream().collect(Collectors.toList());
-            UUID timeSeriesUuid = timeSeriesService.sendTimeSeries(timeSeries);
+            List<TimeSeries> timeSeries = new ArrayList(result.getCurves().values());
+            UUID timeSeriesUuid = timeSeriesService.sendTimeSeries(timeSeries).block();
             StringTimeSeries timeLine = result.getTimeLine();
-            UUID timeLineUuid = timeSeriesService.sendTimeSeries(Arrays.asList(timeLine));
+            UUID timeLineUuid = timeSeriesService.sendTimeSeries(Arrays.asList(timeLine)).block();
 
             dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED);
         }).then(Mono.just(result));

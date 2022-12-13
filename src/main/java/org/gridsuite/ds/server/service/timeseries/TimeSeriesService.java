@@ -8,6 +8,7 @@ package org.gridsuite.ds.server.service.timeseries;
 
 import com.powsybl.timeseries.TimeSeries;
 import org.springframework.web.client.HttpClientErrorException;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.UUID;
@@ -16,8 +17,9 @@ import java.util.UUID;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public interface TimeSeriesService {
+    String API_VERSION = "v1";
     String DELIMITER = "/";
     String TIME_SERIES_END_POINT = "time-series";
 
-    UUID sendTimeSeries(List<TimeSeries> timeSeriesList) throws HttpClientErrorException;
+    Mono<UUID> sendTimeSeries(List<TimeSeries> timeSeriesList) throws HttpClientErrorException;
 }
