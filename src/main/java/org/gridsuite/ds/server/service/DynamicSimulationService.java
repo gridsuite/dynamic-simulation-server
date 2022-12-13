@@ -48,10 +48,10 @@ public class DynamicSimulationService {
 
     public Mono<UUID> runAndSaveResult(UUID networkUuid, String variantId, int startTime, int stopTime, String mappingName) throws IOException {
         // get script and parameters file from dynamic mapping server
-        Script scriptObj = dynamicMappingService.createFromMapping(mappingName).block();
+        Script scriptObj = Optional.ofNullable(dynamicMappingService.createFromMapping(mappingName).block()).orElseThrow();
 
         // get all dynamic simulation parameters
-        String parametersFile = Optional.of(scriptObj).orElseThrow().getParametersFile();
+        String parametersFile = scriptObj.getParametersFile();
         DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(parametersFile.getBytes());
 
         String script = scriptObj.getScript();
