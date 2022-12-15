@@ -32,7 +32,7 @@ import static org.junit.Assert.assertEquals;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public class TimeSeriesServiceTest extends AbstractServiceTest {
-    private static final int TIME_SERIES_PORT = 5101;
+    private static final int TIME_SERIES_PORT = 5037;
     public static final String TIME_SERIES_UUID = "33333333-0000-0000-0000-000000000000";
 
     private TimeSeriesService timeSeriesService;

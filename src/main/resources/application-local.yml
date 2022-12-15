@@ -14,7 +14,7 @@ network-store-server:
   base-uri: http://localhost:8080/
 
 timeseries-server:
-  base-uri: http://localhost:5101
+  base-uri: http://localhost:5037
 
 dynamic-mapping-server:
     base-uri: http://localhost:5036
