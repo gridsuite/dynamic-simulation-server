@@ -13,8 +13,8 @@ powsybl-ws:
 network-store-server:
   base-uri: http://localhost:8080/
 
-time-series-server:
-  base-uri: http://localhost:5034
+timeseries-server:
+  base-uri: http://localhost:5101
 
 dynamic-mapping-server:
     base-uri: http://localhost:5036

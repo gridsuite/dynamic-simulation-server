@@ -39,6 +39,8 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
+import static org.gridsuite.ds.server.service.timeseries.TimeSeriesService.UUID_KEY;
+
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
@@ -149,9 +151,9 @@ public class DynamicSimulationWorkerService {
         return Mono.fromRunnable(() -> {
             // send timeseries and timeline to time-series-server
             List<TimeSeries> timeSeries = new ArrayList(result.getCurves().values());
-            UUID timeSeriesUuid = timeSeriesService.sendTimeSeries(timeSeries).block();
+            UUID timeSeriesUuid = timeSeriesService.sendTimeSeries(timeSeries).block().getOrDefault(UUID_KEY, null);
             StringTimeSeries timeLine = result.getTimeLine();
-            UUID timeLineUuid = timeSeriesService.sendTimeSeries(Arrays.asList(timeLine)).block();
+            UUID timeLineUuid = timeSeriesService.sendTimeSeries(Arrays.asList(timeLine)).block().getOrDefault(UUID_KEY, null);
 
             dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED);
         }).then(Mono.just(result));

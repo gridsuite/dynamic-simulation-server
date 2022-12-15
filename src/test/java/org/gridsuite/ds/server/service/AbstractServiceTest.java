@@ -36,7 +36,7 @@ public abstract class AbstractServiceTest {
 
     protected MockWebServer server;
 
-    private final ObjectMapper objectMapper = createObjectMapper();
+    protected final ObjectMapper objectMapper = createObjectMapper();
 
     public final Logger getLogger() {
         return LoggerFactory.getLogger(this.getClass());

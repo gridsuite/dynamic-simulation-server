@@ -9,6 +9,7 @@ package org.gridsuite.ds.server.service.timeseries.implementation;
 import com.powsybl.timeseries.TimeSeries;
 import org.gridsuite.ds.server.service.timeseries.TimeSeriesService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -16,6 +17,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -26,12 +28,12 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
 
     private final WebClient webClient;
 
-    public TimeSeriesServiceImpl(WebClient.Builder builder, @Value("${time-series-server.base-uri:http://time-series-server/}") String baseUri) {
+    public TimeSeriesServiceImpl(WebClient.Builder builder, @Value("${timeseries-server.base-uri:http://timeseries-server/}") String baseUri) {
         webClient = builder.baseUrl(baseUri).build();
     }
 
     @Override
-    public Mono<UUID> sendTimeSeries(List<TimeSeries> timeSeriesList) throws HttpClientErrorException {
+    public Mono<Map<String, UUID>> sendTimeSeries(List<TimeSeries> timeSeriesList) throws HttpClientErrorException {
         String url = API_VERSION + DELIMITER + TIME_SERIES_END_POINT;
 
         // convert timeseries to json
@@ -44,7 +46,6 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
                         .build())
                 .body(BodyInserters.fromValue(timeSeriesListJson))
                 .retrieve()
-                .bodyToMono(String.class)
-                .map(UUID::fromString);
+                .bodyToMono(new ParameterizedTypeReference<Map<String, UUID>>() { });
     }
 }

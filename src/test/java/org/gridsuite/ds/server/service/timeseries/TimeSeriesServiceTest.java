@@ -10,6 +10,7 @@ package org.gridsuite.ds.server.service.timeseries;
 import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.TimeSeries;
 import com.powsybl.timeseries.TimeSeriesIndex;
+import lombok.SneakyThrows;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -31,7 +32,7 @@ import static org.junit.Assert.assertEquals;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public class TimeSeriesServiceTest extends AbstractServiceTest {
-    private static final int TIME_SERIES_PORT = 5034;
+    private static final int TIME_SERIES_PORT = 5101;
     public static final String TIME_SERIES_UUID = "33333333-0000-0000-0000-000000000000";
 
     private TimeSeriesService timeSeriesService;
@@ -40,6 +41,7 @@ public class TimeSeriesServiceTest extends AbstractServiceTest {
     @NotNull
     protected Dispatcher getDispatcher() {
         return new Dispatcher() {
+            @SneakyThrows
             @NotNull
             @Override
             public MockResponse dispatch(@NotNull RecordedRequest recordedRequest) {
@@ -53,7 +55,7 @@ public class TimeSeriesServiceTest extends AbstractServiceTest {
                     return new MockResponse()
                             .setResponseCode(HttpStatus.OK.value())
                             .addHeader("Content-Type", "application/json; charset=utf-8")
-                            .setBody(TIME_SERIES_UUID);
+                            .setBody(objectMapper.writeValueAsString(Map.of(UUID_KEY, UUID.fromString(TIME_SERIES_UUID))));
                 }
                 return new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value());
             }
@@ -76,7 +78,7 @@ public class TimeSeriesServiceTest extends AbstractServiceTest {
         curves.put("NETWORK__BUS____2-BUS____5-1_AC_iSide2", TimeSeries.createDouble("NETWORK__BUS____2-BUS____5-1_AC_iSide2", index, 333.847331, 333.847321, 333.847300, 333.847259));
         curves.put("NETWORK__BUS____1_TN_Upu_value", TimeSeries.createDouble("NETWORK__BUS____1_TN_Upu_value", index, 1.059970, 1.059970, 1.059970, 1.059970));
         List<TimeSeries> timeSeries = new ArrayList<>(curves.values());
-        UUID timeSeriesUuid = timeSeriesService.sendTimeSeries(timeSeries).block();
+        UUID timeSeriesUuid = timeSeriesService.sendTimeSeries(timeSeries).block().getOrDefault(UUID_KEY, null);
         assertEquals(TIME_SERIES_UUID, Optional.of(timeSeriesUuid).orElseThrow().toString());
 
     }

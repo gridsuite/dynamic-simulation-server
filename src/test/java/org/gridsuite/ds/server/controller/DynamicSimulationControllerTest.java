@@ -6,6 +6,7 @@
  */
 package org.gridsuite.ds.server.controller;
 
+import com.google.common.collect.ImmutableMap;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
@@ -47,6 +48,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import static org.gridsuite.ds.server.service.timeseries.TimeSeriesService.UUID_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -101,7 +103,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
     @Override
     protected void initTimeSeriesServiceMock() throws IOException {
-        given(timeSeriesService.sendTimeSeries(any())).willReturn(Mono.just(UUID.fromString(TimeSeriesServiceTest.TIME_SERIES_UUID)));
+        given(timeSeriesService.sendTimeSeries(any())).willReturn(Mono.just(ImmutableMap.of(UUID_KEY, UUID.fromString(TimeSeriesServiceTest.TIME_SERIES_UUID))));
     }
 
     @Before

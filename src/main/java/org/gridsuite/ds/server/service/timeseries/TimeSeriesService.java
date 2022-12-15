@@ -11,6 +11,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -19,7 +20,9 @@ import java.util.UUID;
 public interface TimeSeriesService {
     String API_VERSION = "v1";
     String DELIMITER = "/";
-    String TIME_SERIES_END_POINT = "time-series";
+    String TIME_SERIES_END_POINT = "timeseries-group";
+    // convention from timeseries-server
+    String UUID_KEY = "id";
 
-    Mono<UUID> sendTimeSeries(List<TimeSeries> timeSeriesList) throws HttpClientErrorException;
+    Mono<Map<String, UUID>> sendTimeSeries(List<TimeSeries> timeSeriesList) throws HttpClientErrorException;
 }
