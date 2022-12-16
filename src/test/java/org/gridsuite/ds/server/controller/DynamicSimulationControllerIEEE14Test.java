@@ -27,14 +27,10 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.util.StreamUtils;
-import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 
 import java.io.ByteArrayInputStream;
@@ -139,17 +135,10 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     @Test
     public void test01() throws IOException {
         String testBaseDir = MAPPING_NAME_01;
-        // load dynamic model file
-        ClassPathResource dynamicModel = new ClassPathResource(Paths.get(DATA_IEEE14_BASE_DIR, testBaseDir, INPUT, MODELS_GROOVY).toString());
-        MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
-        bodyBuilder.part("dynamicModel", dynamicModel)
-                .filename(MODELS_GROOVY);
 
         //run the dynamic simulation (on a specific variant with variantId=" + VARIANT_1_ID + ")
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
                 .uri("/v1/networks/{networkUuid}/run?&startTime=0&stopTime=50" + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING)
-                .contentType(MediaType.MULTIPART_FORM_DATA)
-                .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(UUID.class)

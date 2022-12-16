@@ -15,7 +15,6 @@ import org.gridsuite.ds.server.service.DynamicSimulationService;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -46,8 +45,7 @@ public class DynamicSimulationController {
                                           @RequestParam(name = "variantId", required = false) String variantId,
                                           @DefaultValue("0") @RequestParam("startTime") int startTime,
                                           @RequestParam("stopTime") int stopTime,
-                                          @RequestParam("mappingName") String mappingName,
-                                          @RequestPart("dynamicModel") FilePart dynamicModel) throws IOException {
+                                          @RequestParam("mappingName") String mappingName) throws IOException {
         Mono<UUID> resultUuid = dynamicSimulationService.runAndSaveResult(networkUuid, variantId, startTime, stopTime, mappingName);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
