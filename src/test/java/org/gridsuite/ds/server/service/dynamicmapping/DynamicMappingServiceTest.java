@@ -59,14 +59,15 @@ public class DynamicMappingServiceTest extends AbstractServiceTest {
             @Override
             public MockResponse dispatch(@NotNull RecordedRequest recordedRequest) {
                 String path = Objects.requireNonNull(recordedRequest.getPath());
-                String baseScriptCreateUrl = DELIMITER + API_VERSION + DELIMITER + DynamicMappingService.DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT + DELIMITER;
+                String baseUrl = DELIMITER + API_VERSION + DELIMITER + DynamicMappingService.DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT + DELIMITER;
+                baseUrl = baseUrl.replace("//", "/");
                 String method = recordedRequest.getMethod();
                 MockResponse response = new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value());
                 // scripts/from/{mappingName}
                 if ("GET".equals(method)
-                        && path.matches(baseScriptCreateUrl + ".*")) {
-                    // take {mappingName} at the 3rd index
-                    String mappingName = emptyIfNull(recordedRequest.getRequestUrl().pathSegments()).stream().skip(3).limit(3).findFirst().orElse("");
+                        && path.matches(baseUrl + ".*")) {
+                    // take {mappingName} at the last
+                    String mappingName = emptyIfNull(recordedRequest.getRequestUrl().pathSegments()).stream().reduce((first, second) -> second).orElse("");
                     if (MAPPING_NAME_01.equals(mappingName)) {
                         String scriptJson;
                         try {
@@ -112,6 +113,14 @@ public class DynamicMappingServiceTest extends AbstractServiceTest {
             }
         };
     }
+
+//    /**
+//     * used for test with local server
+//     */
+//    @Override
+//    protected String initMockWebServer(int port) throws RuntimeException {
+//        return "http://localhost:" + DYNAMIC_MAPPING_PORT;
+//    }
 
     @Override
     public void setUp() throws IOException {

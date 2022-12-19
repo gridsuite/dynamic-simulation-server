@@ -47,6 +47,7 @@ public class TimeSeriesServiceTest extends AbstractServiceTest {
             public MockResponse dispatch(@NotNull RecordedRequest recordedRequest) {
                 String path = Objects.requireNonNull(recordedRequest.getPath());
                 String baseUrl = DELIMITER + API_VERSION + DELIMITER + TIME_SERIES_END_POINT;
+                baseUrl = baseUrl.replace("//", "/");
                 String method = recordedRequest.getMethod();
 
                 // v1/time-series
@@ -61,6 +62,15 @@ public class TimeSeriesServiceTest extends AbstractServiceTest {
             }
         };
     }
+
+//    /**
+//     * Used for test with a local server
+//     * @throws RuntimeException
+//     */
+//    @Override
+//    protected String initMockWebServer(int port) throws RuntimeException {
+//        return "http://localhost:" + TIME_SERIES_PORT;
+//    }
 
     @Before
     public void setUp() throws IOException {

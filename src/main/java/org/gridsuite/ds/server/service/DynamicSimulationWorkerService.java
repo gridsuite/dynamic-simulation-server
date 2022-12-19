@@ -32,6 +32,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -138,25 +139,33 @@ public class DynamicSimulationWorkerService {
                                     .build();
                             notificationService.emitResultDynamicSimulationMessage(sendMessage);
                             LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
-                        }).subscribe();
+                        })
+                        .toFuture().get();
             } catch (Exception e) {
                 dynamicSimulationWorkerUpdateResult.doUpdateResult(resultContext.getResultUuid(), null, null, DynamicSimulationStatus.NOT_DONE);
                 LOGGER.error("error in consumeRun", e);
+                // S2142 Restore interrupted state...
+                Thread.currentThread().interrupt();
             }
         };
     }
 
     public Mono<DynamicSimulationResult> updateResult(UUID resultUuid, DynamicSimulationResult result) {
         Objects.requireNonNull(resultUuid);
-        return Mono.fromRunnable(() -> {
-            // send timeseries and timeline to time-series-server
-            List<TimeSeries> timeSeries = new ArrayList(result.getCurves().values());
-            UUID timeSeriesUuid = timeSeriesService.sendTimeSeries(timeSeries).block().getOrDefault(UUID_KEY, null);
-            StringTimeSeries timeLine = result.getTimeLine();
-            UUID timeLineUuid = timeSeriesService.sendTimeSeries(Arrays.asList(timeLine)).block().getOrDefault(UUID_KEY, null);
+        List<TimeSeries> timeSeries = new ArrayList(result.getCurves().values());
+        StringTimeSeries timeLine = result.getTimeLine();
+        return Mono.zip(
+                    timeSeriesService.sendTimeSeries(timeSeries).subscribeOn(Schedulers.immediate()),
+                    timeSeriesService.sendTimeSeries(Arrays.asList(timeLine)).subscribeOn(Schedulers.immediate())
+                )
+                .flatMap(uuidTuple -> {
+                    UUID timeSeriesUuid = uuidTuple.getT1().getOrDefault(UUID_KEY, null);
+                    UUID timeLineUuid = uuidTuple.getT2().getOrDefault(UUID_KEY, null);
+                    DynamicSimulationStatus status = result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED;
 
-            dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED);
-        }).then(Mono.just(result));
+                    dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
+                    return Mono.just(result);
+                });
     }
 }
 

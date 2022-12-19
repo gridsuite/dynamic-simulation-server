@@ -7,9 +7,7 @@
 package org.gridsuite.ds.server.service;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
-import org.apache.commons.lang3.tuple.Triple;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
-import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.model.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
 import org.gridsuite.ds.server.service.dynamicmapping.DynamicMappingService;
@@ -24,7 +22,6 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -46,26 +43,33 @@ public class DynamicSimulationService {
         this.parametersService = Objects.requireNonNull(parametersService);
     }
 
-    public Mono<UUID> runAndSaveResult(UUID networkUuid, String variantId, int startTime, int stopTime, String mappingName) throws IOException {
-        // get script and parameters file from dynamic mapping server
-        Script scriptObj = Optional.ofNullable(dynamicMappingService.createFromMapping(mappingName).block()).orElseThrow();
+    public Mono<UUID> runAndSaveResult(UUID networkUuid, String variantId, int startTime, int stopTime, String mappingName) {
 
-        // get all dynamic simulation parameters
-        String parametersFile = scriptObj.getParametersFile();
-        DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(parametersFile.getBytes());
+        return dynamicMappingService.createFromMapping(mappingName) // get script and parameters file from dynamic mapping server
+                .flatMap(scriptObj -> {
+                    try {
+                        // get all dynamic simulation parameters
+                        String parametersFile = scriptObj.getParametersFile();
+                        DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(parametersFile.getBytes());
 
-        String script = scriptObj.getScript();
-        Mono< Triple<byte[], byte[], byte[]>> inputsMono = Mono.just(Triple.of(script.getBytes(StandardCharsets.UTF_8), parametersService.getEventModel(), parametersService.getCurveModel()));
+                        String script = scriptObj.getScript();
+                        byte[] dynamicModel = script.getBytes(StandardCharsets.UTF_8);
+                        byte[] eventModel = parametersService.getEventModel();
+                        byte[] curveModel = parametersService.getCurveModel();
 
-        return inputsMono.flatMap(inputs -> {
-            DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, variantId, startTime, stopTime, inputs, parameters);
-            // update status to running status
-            return insertStatus(DynamicSimulationStatus.RUNNING.name()).flatMap(resultEntity -> Mono.fromRunnable(() -> {
-                Message<String> message = new DynamicSimulationResultContext(resultEntity.getId(), runContext).toMessage();
-                notificationService.emitRunDynamicSimulationMessage(message);
-            }).thenReturn(resultEntity.getId())
-            );
-        });
+                        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, variantId, startTime, stopTime, dynamicModel, eventModel, curveModel, parameters);
+
+                        return insertStatus(DynamicSimulationStatus.RUNNING.name()) // update status to running status
+                                .flatMap(resultEntity -> {
+                                    Message<String> message = new DynamicSimulationResultContext(resultEntity.getId(), runContext).toMessage();
+                                    notificationService.emitRunDynamicSimulationMessage(message);
+                                    return Mono.just(resultEntity.getId());
+                                });
+                    } catch (IOException e) {
+                        return Mono.error(e);
+                    }
+                }
+        );
     }
 
     public Mono<ResultEntity> insertStatus(String status) {
