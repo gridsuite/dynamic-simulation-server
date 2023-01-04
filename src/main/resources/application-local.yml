@@ -10,6 +10,7 @@ powsybl-ws:
   database:
     host: localhost
 
-backing-services:
-  network-store-server:
-    base-uri: http://localhost:8080/
+powsybl:
+  services:
+    network-store-server:
+      base-uri: http://localhost:8080/
