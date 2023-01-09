@@ -18,8 +18,10 @@ spring:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}ds.run
       output-bindings: publishResult;publishRun
 
-network-store-server:
-  preloading-strategy: COLLECTION
+powsybl:
+  services:
+    network-store-server:
+      preloading-strategy: COLLECTION
 
 powsybl-ws:
   database:
