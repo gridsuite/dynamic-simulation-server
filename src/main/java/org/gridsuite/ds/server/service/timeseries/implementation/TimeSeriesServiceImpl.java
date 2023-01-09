@@ -28,7 +28,7 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
 
     private final WebClient webClient;
 
-    public TimeSeriesServiceImpl(WebClient.Builder builder, @Value("${timeseries-server.base-uri:http://timeseries-server/}") String baseUri) {
+    public TimeSeriesServiceImpl(WebClient.Builder builder, @Value("${gridsuite.services.timeseries-server.base-uri:http://timeseries-server/}") String baseUri) {
         webClient = builder.baseUrl(baseUri).build();
     }
 

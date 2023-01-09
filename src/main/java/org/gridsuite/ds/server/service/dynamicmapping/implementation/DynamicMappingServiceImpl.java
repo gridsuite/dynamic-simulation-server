@@ -21,7 +21,7 @@ public class DynamicMappingServiceImpl implements DynamicMappingService {
 
     private final WebClient webClient;
 
-    public DynamicMappingServiceImpl(WebClient.Builder builder, @Value("${dynamic-mapping-server.base-uri:http://dynamic-mapping-server/}") String baseUri) {
+    public DynamicMappingServiceImpl(WebClient.Builder builder, @Value("${gridsuite.services.dynamic-mapping-server.base-uri:http://dynamic-mapping-server/}") String baseUri) {
         webClient = builder.baseUrl(baseUri).build();
     }
 
