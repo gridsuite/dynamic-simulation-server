@@ -23,7 +23,7 @@ import com.powsybl.timeseries.TimeSeriesIndex;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
-import org.gridsuite.ds.server.service.timeseries.TimeSeriesServiceTest;
+import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +45,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import static org.gridsuite.ds.server.service.timeseries.TimeSeriesService.UUID_KEY;
+import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.UUID_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -95,12 +95,12 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 new Date(),
                 true,
                 "");
-        given(dynamicMappingService.createFromMapping(MAPPING_NAME)).willReturn(Mono.just(scriptObj));
+        given(dynamicMappingClient.createFromMapping(MAPPING_NAME)).willReturn(Mono.just(scriptObj));
     }
 
     @Override
     protected void initTimeSeriesServiceMock() throws IOException {
-        given(timeSeriesService.sendTimeSeries(any())).willReturn(Mono.just(ImmutableMap.of(UUID_KEY, UUID.fromString(TimeSeriesServiceTest.TIME_SERIES_UUID))));
+        given(timeSeriesClient.sendTimeSeries(any())).willReturn(Mono.just(ImmutableMap.of(UUID_KEY, UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID))));
     }
 
     @Before

@@ -1,13 +1,13 @@
-/**
- * Copyright (c) 2022, RTE (http://www.rte-france.com)
+/*
+ * Copyright (c) 2022-2023, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.ds.server.service.timeseries.implementation;
+package org.gridsuite.ds.server.service.client.timeseries.impl;
 
 import com.powsybl.timeseries.TimeSeries;
-import org.gridsuite.ds.server.service.timeseries.TimeSeriesService;
+import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
@@ -24,11 +24,11 @@ import java.util.UUID;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @Service
-public class TimeSeriesServiceImpl implements TimeSeriesService {
+public class TimeSeriesClientImpl implements TimeSeriesClient {
 
     private final WebClient webClient;
 
-    public TimeSeriesServiceImpl(WebClient.Builder builder, @Value("${gridsuite.services.timeseries-server.base-uri:http://timeseries-server/}") String baseUri) {
+    public TimeSeriesClientImpl(WebClient.Builder builder, @Value("${gridsuite.services.timeseries-server.base-uri:http://timeseries-server/}") String baseUri) {
         webClient = builder.baseUrl(baseUri).build();
     }
 

@@ -21,8 +21,8 @@ import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.service.DynamicSimulationResultContext;
-import org.gridsuite.ds.server.service.dynamicmapping.DynamicMappingServiceTest;
-import org.gridsuite.ds.server.service.timeseries.TimeSeriesServiceTest;
+import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
+import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.binder.test.InputDestination;
@@ -45,7 +45,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import static org.gridsuite.ds.server.service.parameters.ParametersService.MODELS_PAR;
-import static org.gridsuite.ds.server.service.timeseries.TimeSeriesService.UUID_KEY;
+import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.UUID_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -111,12 +111,12 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
                 new Date(),
                 true,
                 parametersFile);
-        given(dynamicMappingService.createFromMapping(DynamicMappingServiceTest.MAPPING_NAME_01)).willReturn(Mono.just(scriptObj));
+        given(dynamicMappingClient.createFromMapping(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(Mono.just(scriptObj));
     }
 
     @Override
     protected void initTimeSeriesServiceMock() throws IOException {
-        given(timeSeriesService.sendTimeSeries(any())).willReturn(Mono.just(ImmutableMap.of(UUID_KEY, UUID.fromString(TimeSeriesServiceTest.TIME_SERIES_UUID))));
+        given(timeSeriesClient.sendTimeSeries(any())).willReturn(Mono.just(ImmutableMap.of(UUID_KEY, UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID))));
     }
 
     private String getResult(InputStream resultIS) throws IOException {

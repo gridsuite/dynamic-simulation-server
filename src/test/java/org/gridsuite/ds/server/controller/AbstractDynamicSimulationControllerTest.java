@@ -9,8 +9,8 @@ package org.gridsuite.ds.server.controller;
 import com.powsybl.network.store.client.NetworkStoreService;
 import org.gridsuite.ds.server.CustomApplicationContextInitializer;
 import org.gridsuite.ds.server.DynamicSimulationApplication;
-import org.gridsuite.ds.server.service.dynamicmapping.DynamicMappingService;
-import org.gridsuite.ds.server.service.timeseries.TimeSeriesService;
+import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
+import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
@@ -35,10 +35,10 @@ import java.io.IOException;
 public abstract class AbstractDynamicSimulationControllerTest {
 
     @MockBean
-    protected DynamicMappingService dynamicMappingService;
+    protected DynamicMappingClient dynamicMappingClient;
 
     @MockBean
-    protected TimeSeriesService timeSeriesService;
+    protected TimeSeriesClient timeSeriesClient;
 
     @MockBean
     protected NetworkStoreService networkStoreClient;

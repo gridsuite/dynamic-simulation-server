@@ -1,13 +1,13 @@
-/**
- * Copyright (c) 2022, RTE (http://www.rte-france.com)
+/*
+ * Copyright (c) 2022-2023, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.ds.server.service.dynamicmapping.implementation;
+package org.gridsuite.ds.server.service.client.dynamicmapping.impl;
 
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
-import org.gridsuite.ds.server.service.dynamicmapping.DynamicMappingService;
+import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -17,11 +17,11 @@ import reactor.core.publisher.Mono;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @Service
-public class DynamicMappingServiceImpl implements DynamicMappingService {
+public class DynamicMappingClientImpl implements DynamicMappingClient {
 
     private final WebClient webClient;
 
-    public DynamicMappingServiceImpl(WebClient.Builder builder, @Value("${gridsuite.services.dynamic-mapping-server.base-uri:http://dynamic-mapping-server/}") String baseUri) {
+    public DynamicMappingClientImpl(WebClient.Builder builder, @Value("${gridsuite.services.dynamic-mapping-server.base-uri:http://dynamic-mapping-server/}") String baseUri) {
         webClient = builder.baseUrl(baseUri).build();
     }
 

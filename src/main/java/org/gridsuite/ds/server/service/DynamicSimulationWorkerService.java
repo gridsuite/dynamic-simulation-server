@@ -21,7 +21,7 @@ import com.powsybl.dynamicsimulation.groovy.GroovyEventModelsSupplier;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import com.powsybl.dynamicsimulation.json.DynamicSimulationResultSerializer;
 import org.gridsuite.ds.server.service.notification.NotificationService;
-import org.gridsuite.ds.server.service.timeseries.TimeSeriesService;
+import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -40,7 +40,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-import static org.gridsuite.ds.server.service.timeseries.TimeSeriesService.UUID_KEY;
+import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.UUID_KEY;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -60,17 +60,17 @@ public class DynamicSimulationWorkerService {
 
     private final NotificationService notificationService;
 
-    private final TimeSeriesService timeSeriesService;
+    private final TimeSeriesClient timeSeriesClient;
 
     private final DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult;
 
     public DynamicSimulationWorkerService(NetworkStoreService networkStoreService,
                                           NotificationService notificationService,
-                                          TimeSeriesService timeSeriesService,
+                                          TimeSeriesClient timeSeriesClient,
                                           DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult) {
         this.networkStoreService = networkStoreService;
         this.notificationService = notificationService;
-        this.timeSeriesService = timeSeriesService;
+        this.timeSeriesClient = timeSeriesClient;
         this.dynamicSimulationWorkerUpdateResult = dynamicSimulationWorkerUpdateResult;
     }
 
@@ -155,8 +155,8 @@ public class DynamicSimulationWorkerService {
         List<TimeSeries> timeSeries = new ArrayList(result.getCurves().values());
         StringTimeSeries timeLine = result.getTimeLine();
         return Mono.zip(
-                    timeSeriesService.sendTimeSeries(timeSeries).subscribeOn(Schedulers.immediate()),
-                    timeSeriesService.sendTimeSeries(Arrays.asList(timeLine)).subscribeOn(Schedulers.immediate())
+                    timeSeriesClient.sendTimeSeries(timeSeries).subscribeOn(Schedulers.immediate()),
+                    timeSeriesClient.sendTimeSeries(Arrays.asList(timeLine)).subscribeOn(Schedulers.immediate())
                 )
                 .flatMap(uuidTuple -> {
                     UUID timeSeriesUuid = uuidTuple.getT1().getOrDefault(UUID_KEY, null);

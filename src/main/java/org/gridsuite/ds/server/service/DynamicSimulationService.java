@@ -10,7 +10,7 @@ import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.model.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
-import org.gridsuite.ds.server.service.dynamicmapping.DynamicMappingService;
+import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.gridsuite.ds.server.service.notification.NotificationService;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.slf4j.Logger;
@@ -33,19 +33,19 @@ public class DynamicSimulationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
     private final ResultRepository resultRepository;
     private final NotificationService notificationService;
-    private final DynamicMappingService dynamicMappingService;
+    private final DynamicMappingClient dynamicMappingClient;
     private final ParametersService parametersService;
 
-    public DynamicSimulationService(ResultRepository resultRepository, NotificationService notificationService, DynamicMappingService dynamicMappingService, ParametersService parametersService) {
+    public DynamicSimulationService(ResultRepository resultRepository, NotificationService notificationService, DynamicMappingClient dynamicMappingClient, ParametersService parametersService) {
         this.resultRepository = Objects.requireNonNull(resultRepository);
         this.notificationService = Objects.requireNonNull(notificationService);
-        this.dynamicMappingService = Objects.requireNonNull(dynamicMappingService);
+        this.dynamicMappingClient = Objects.requireNonNull(dynamicMappingClient);
         this.parametersService = Objects.requireNonNull(parametersService);
     }
 
     public Mono<UUID> runAndSaveResult(UUID networkUuid, String variantId, int startTime, int stopTime, String mappingName) {
 
-        return dynamicMappingService.createFromMapping(mappingName) // get script and parameters file from dynamic mapping server
+        return dynamicMappingClient.createFromMapping(mappingName) // get script and parameters file from dynamic mapping server
                 .flatMap(scriptObj -> {
                     try {
                         // get all dynamic simulation parameters
