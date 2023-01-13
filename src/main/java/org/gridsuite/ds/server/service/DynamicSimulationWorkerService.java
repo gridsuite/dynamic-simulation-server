@@ -124,6 +124,9 @@ public class DynamicSimulationWorkerService {
     @Bean
     public Consumer<Message<String>> consumeRun() {
         return message -> {
+            // TODO log to be removed, only for showing thread's name when using block()/toFuture().get()
+            LOGGER.info(" DS-current thread:" + Thread.currentThread().getName());
+
             LOGGER_BROKER_INPUT.debug("consume {}", message);
             DynamicSimulationResultContext resultContext = DynamicSimulationResultContext.fromMessage(message);
             try {
@@ -141,6 +144,12 @@ public class DynamicSimulationWorkerService {
                             LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
                         })
                         .toFuture().get();
+
+                // TODO use block() => run on local the thread forked is s.run.dsGroup-2 => OK
+                // But at moment, using toFuture().get() instead of block() in order to avoid fail test in github
+                // IllegalStateException: block()/blockFirst()/blockLast() are blocking, which is not supported in thread parallel-1
+                // reactor.core.publisher.BlockingSingleSubscriber.blockingGet(BlockingSingleSubscriber.java:83)
+                // reactor.core.publisher.Mono.block(Mono.java:1707)
             } catch (Exception e) {
                 dynamicSimulationWorkerUpdateResult.doUpdateResult(resultContext.getResultUuid(), null, null, DynamicSimulationStatus.NOT_DONE);
                 LOGGER.error("error in consumeRun", e);
