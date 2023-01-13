@@ -145,7 +145,9 @@ public class DynamicSimulationWorkerService {
                 dynamicSimulationWorkerUpdateResult.doUpdateResult(resultContext.getResultUuid(), null, null, DynamicSimulationStatus.NOT_DONE);
                 LOGGER.error("error in consumeRun", e);
                 // S2142 Restore interrupted state...
-                Thread.currentThread().interrupt();
+                if (e instanceof InterruptedException) {
+                    Thread.currentThread().interrupt();
+                }
             }
         };
     }
@@ -155,16 +157,16 @@ public class DynamicSimulationWorkerService {
         List<TimeSeries> timeSeries = new ArrayList(result.getCurves().values());
         StringTimeSeries timeLine = result.getTimeLine();
         return Mono.zip(
-                    timeSeriesClient.sendTimeSeries(timeSeries).subscribeOn(Schedulers.immediate()),
-                    timeSeriesClient.sendTimeSeries(Arrays.asList(timeLine)).subscribeOn(Schedulers.immediate())
+                    timeSeriesClient.sendTimeSeries(timeSeries).subscribeOn(Schedulers.boundedElastic()),
+                    timeSeriesClient.sendTimeSeries(Arrays.asList(timeLine)).subscribeOn(Schedulers.boundedElastic())
                 )
-                .flatMap(uuidTuple -> {
+                .map(uuidTuple -> {
                     UUID timeSeriesUuid = uuidTuple.getT1().getOrDefault(UUID_KEY, null);
                     UUID timeLineUuid = uuidTuple.getT2().getOrDefault(UUID_KEY, null);
                     DynamicSimulationStatus status = result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED;
 
                     dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
-                    return Mono.just(result);
+                    return result;
                 });
     }
 }

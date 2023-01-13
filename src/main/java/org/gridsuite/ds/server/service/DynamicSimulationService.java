@@ -60,10 +60,10 @@ public class DynamicSimulationService {
                         DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, variantId, startTime, stopTime, dynamicModel, eventModel, curveModel, parameters);
 
                         return insertStatus(DynamicSimulationStatus.RUNNING.name()) // update status to running status
-                                .flatMap(resultEntity -> {
+                                .map(resultEntity -> {
                                     Message<String> message = new DynamicSimulationResultContext(resultEntity.getId(), runContext).toMessage();
                                     notificationService.emitRunDynamicSimulationMessage(message);
-                                    return Mono.just(resultEntity.getId());
+                                    return resultEntity.getId();
                                 });
                     } catch (IOException e) {
                         return Mono.error(e);
