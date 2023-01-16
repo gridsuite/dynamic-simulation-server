@@ -20,7 +20,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.timeseries.TimeSeries;
-import com.powsybl.timeseries.TimeSeriesDataType;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.service.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
@@ -38,12 +37,10 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.util.StreamUtils;
 import reactor.core.publisher.Mono;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -73,7 +70,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     private static final String VARIANT_1_ID = "variant_1";
     private static final String NETWORK_FILE = "IEEE14.iidm";
 
-    private static final Map<UUID, List<TimeSeries>> timeSeriesMockBD= new HashMap<>();
+    private static final Map<UUID, List<TimeSeries>> TIME_SERIES_MOCK_BD = new HashMap<>();
 
     @Autowired
     private WebTestClient webTestClient;
@@ -137,7 +134,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
                             seriesUuid = UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID);
                             break;
                     }
-                    timeSeriesMockBD.put(seriesUuid, (List<TimeSeries>) args[0]);
+                    TIME_SERIES_MOCK_BD.put(seriesUuid, (List<TimeSeries>) args[0]);
                 }
                 return Mono.just(ImmutableMap.of(UUID_KEY, seriesUuid));
             }
@@ -180,7 +177,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
         // get timeseries from mock timeseries db
         UUID timeSeriesUuid = UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID);
-        String jsonResultTImeSeries = TimeSeries.toJson(timeSeriesMockBD.remove(timeSeriesUuid));
+        String jsonResultTImeSeries = TimeSeries.toJson(TIME_SERIES_MOCK_BD.remove(timeSeriesUuid));
 
         // compare result only timeseries
         ObjectMapper mapper = new ObjectMapper();
