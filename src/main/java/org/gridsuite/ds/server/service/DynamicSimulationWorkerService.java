@@ -134,6 +134,7 @@ public class DynamicSimulationWorkerService {
                             Message<String> sendMessage = MessageBuilder
                                     .withPayload("")
                                     .setHeader("resultUuid", resultContext.getResultUuid().toString())
+                                    .setHeader("receiver", resultContext.getRunContext().getReceiver())
                                     .build();
                             notificationService.emitResultDynamicSimulationMessage(sendMessage);
                             LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());

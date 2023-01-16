@@ -24,6 +24,7 @@ import java.util.UUID;
 public class DynamicSimulationResultContext {
 
     public static final String RESULT_UUID = "resultUuid";
+    public static final String RECEIVER = "receiver";
     public static final String NETWORK_UUID = "networkUuid";
     public static final String VARIANT_ID = "variantId";
     public static final String START_TIME = "startTime";
@@ -65,6 +66,7 @@ public class DynamicSimulationResultContext {
 
         MessageHeaders headers = message.getHeaders();
         UUID resultUuid = UUID.fromString(getNonNullHeader(headers, RESULT_UUID));
+        String receiver = (String) headers.get(RECEIVER);
         UUID networkUuid = UUID.fromString(getNonNullHeader(headers, NETWORK_UUID));
         String variantId = (String) headers.get(VARIANT_ID);
         int startTime = Integer.parseInt(getNonNullHeader(headers, START_TIME));
@@ -74,7 +76,7 @@ public class DynamicSimulationResultContext {
         byte[] curveContent = (byte[]) headers.get(CURVE_CONTENT);
         // decode the parameters
 
-        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, variantId, startTime, stopTIme, dynamicModelContent, eventModelContent, curveContent, parameters);
+        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(receiver, networkUuid, variantId, startTime, stopTIme, dynamicModelContent, eventModelContent, curveContent, parameters);
         return new DynamicSimulationResultContext(resultUuid, runContext);
     }
 
@@ -85,6 +87,7 @@ public class DynamicSimulationResultContext {
 
         return MessageBuilder.withPayload(bytesOS.toString())
                 .setHeader(RESULT_UUID, resultUuid.toString())
+                .setHeader(RECEIVER, runContext.getReceiver())
                 .setHeader(NETWORK_UUID, runContext.getNetworkUuid().toString())
                 .setHeader(VARIANT_ID, runContext.getVariantId())
                 .setHeader(START_TIME, String.valueOf(runContext.getStartTime()))

@@ -43,7 +43,7 @@ public class DynamicSimulationService {
         this.parametersService = Objects.requireNonNull(parametersService);
     }
 
-    public Mono<UUID> runAndSaveResult(UUID networkUuid, String variantId, int startTime, int stopTime, String mappingName) {
+    public Mono<UUID> runAndSaveResult(String receiver, UUID networkUuid, String variantId, int startTime, int stopTime, String mappingName) {
 
         return dynamicMappingClient.createFromMapping(mappingName) // get script and parameters file from dynamic mapping server
                 .flatMap(scriptObj -> {
@@ -57,7 +57,7 @@ public class DynamicSimulationService {
                         byte[] eventModel = parametersService.getEventModel();
                         byte[] curveModel = parametersService.getCurveModel();
 
-                        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(networkUuid, variantId, startTime, stopTime, dynamicModel, eventModel, curveModel, parameters);
+                        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(receiver, networkUuid, variantId, startTime, stopTime, dynamicModel, eventModel, curveModel, parameters);
 
                         return insertStatus(DynamicSimulationStatus.RUNNING.name()) // update status to running status
                                 .map(resultEntity -> {

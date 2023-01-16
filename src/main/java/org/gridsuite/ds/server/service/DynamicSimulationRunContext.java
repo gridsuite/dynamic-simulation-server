@@ -16,6 +16,8 @@ import java.util.UUID;
  */
 public class DynamicSimulationRunContext {
 
+    private final String receiver;
+
     private final UUID networkUuid;
 
     private final String variantId;
@@ -32,7 +34,8 @@ public class DynamicSimulationRunContext {
 
     private final DynamicSimulationParameters parameters;
 
-    public DynamicSimulationRunContext(UUID networkUuid, String variantId, int startTime, int stopTime, byte[] dynamicModelContent, byte[] eventModelContent, byte[] curveContent, DynamicSimulationParameters parameters) {
+    public DynamicSimulationRunContext(String receiver, UUID networkUuid, String variantId, int startTime, int stopTime, byte[] dynamicModelContent, byte[] eventModelContent, byte[] curveContent, DynamicSimulationParameters parameters) {
+        this.receiver = receiver;
         this.networkUuid = Objects.requireNonNull(networkUuid);
         this.variantId = variantId;
         this.startTime = startTime;
@@ -42,6 +45,9 @@ public class DynamicSimulationRunContext {
         this.curveContent = curveContent;
         this.parameters = parameters;
     }
+
+    public String getReceiver() {
+        return receiver; }
 
     public UUID getNetworkUuid() {
         return networkUuid;
