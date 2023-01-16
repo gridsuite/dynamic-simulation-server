@@ -19,7 +19,6 @@ import com.powsybl.timeseries.TimeSeries;
 import com.powsybl.dynamicsimulation.groovy.GroovyCurvesSupplier;
 import com.powsybl.dynamicsimulation.groovy.GroovyEventModelsSupplier;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
-import com.powsybl.dynamicsimulation.json.DynamicSimulationResultSerializer;
 import org.gridsuite.ds.server.service.notification.NotificationService;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.slf4j.Logger;
@@ -35,7 +34,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -133,11 +131,8 @@ public class DynamicSimulationWorkerService {
                 run(resultContext.getRunContext())
                         .flatMap(result -> updateResult(resultContext.getResultUuid(), result))
                         .doOnSuccess(result -> {
-                            // build json payload
-                            ByteArrayOutputStream bytesOS = new ByteArrayOutputStream();
-                            DynamicSimulationResultSerializer.write(result, bytesOS);
                             Message<String> sendMessage = MessageBuilder
-                                    .withPayload(bytesOS.toString())
+                                    .withPayload("")
                                     .setHeader("resultUuid", resultContext.getResultUuid().toString())
                                     .build();
                             notificationService.emitResultDynamicSimulationMessage(sendMessage);

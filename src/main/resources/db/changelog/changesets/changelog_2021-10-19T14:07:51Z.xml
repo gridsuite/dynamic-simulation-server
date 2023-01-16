@@ -5,7 +5,7 @@
             <column name="result_uuid" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="resultPK"/>
             </column>
-            <column name="result" type="UUID"/>
+            <column name="result" type="BOOLEAN"/>
             <column name="status" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>

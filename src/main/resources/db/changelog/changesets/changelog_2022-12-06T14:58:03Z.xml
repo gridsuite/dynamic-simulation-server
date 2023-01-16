@@ -11,6 +11,9 @@
         </addColumn>
     </changeSet>
     <changeSet author="phamquy (generated)" id="1670338689731-3">
-        <dropColumn columnName="RESULT" tableName="RESULT"/>
+        <dropColumn columnName="result" tableName="result"/>
+        <addColumn tableName="result">
+            <column name="result" type="UUID"/>
+        </addColumn>
     </changeSet>
 </databaseChangeLog>

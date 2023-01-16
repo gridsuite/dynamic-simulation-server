@@ -19,11 +19,16 @@ import com.powsybl.iidm.network.Importers;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.PreloadingStrategy;
+import com.powsybl.timeseries.TimeSeries;
+import com.powsybl.timeseries.TimeSeriesDataType;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.service.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
@@ -41,8 +46,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 
 import static org.gridsuite.ds.server.service.parameters.ParametersService.MODELS_PAR;
 import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.UUID_KEY;
@@ -68,6 +72,8 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     private static final String NETWORK_UUID_NOT_FOUND_STRING = "22222222-0000-0000-0000-000000000000";
     private static final String VARIANT_1_ID = "variant_1";
     private static final String NETWORK_FILE = "IEEE14.iidm";
+
+    private static final Map<UUID, List<TimeSeries>> timeSeriesMockBD= new HashMap<>();
 
     @Autowired
     private WebTestClient webTestClient;
@@ -116,7 +122,26 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
     @Override
     protected void initTimeSeriesServiceMock() throws IOException {
-        given(timeSeriesClient.sendTimeSeries(any())).willReturn(Mono.just(ImmutableMap.of(UUID_KEY, UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID))));
+        Mockito.doAnswer(new Answer<Mono<Map<String, UUID>>>() {
+            @Override
+            public Mono<Map<String, UUID>> answer(final InvocationOnMock invocation) {
+                final Object[] args = invocation.getArguments();
+                List<TimeSeries> data = (List<TimeSeries>) args[0];
+                UUID seriesUuid = null;
+                if (!data.isEmpty()) {
+                    switch (data.get(0).getMetadata().getDataType()) {
+                        case STRING:
+                            seriesUuid = UUID.fromString(TimeSeriesClientTest.TIME_LINE_UUID);
+                            break;
+                        default:
+                            seriesUuid = UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID);
+                            break;
+                    }
+                    timeSeriesMockBD.put(seriesUuid, (List<TimeSeries>) args[0]);
+                }
+                return Mono.just(ImmutableMap.of(UUID_KEY, seriesUuid));
+            }
+        }).when(timeSeriesClient).sendTimeSeries(any());
     }
 
     private String getResult(InputStream resultIS) throws IOException {
@@ -150,20 +175,15 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(DynamicSimulationResultContext.RESULT_UUID).toString()));
 
         // prepare expected result to compare
-        String jsonExpectedResult = getResult(getClass().getResourceAsStream(Paths.get(DATA_IEEE14_BASE_DIR, testBaseDir, OUTPUT, RESULT_JSON).toString()));
+        DynamicSimulationResult expectedResult = DynamicSimulationResultDeserializer.read(getClass().getResourceAsStream(Paths.get(DATA_IEEE14_BASE_DIR, testBaseDir, OUTPUT, RESULT_JSON).toString()));
+        String jsonExpectedTimeSeries = TimeSeries.toJson(new ArrayList(expectedResult.getCurves().values()));
 
-        // export result into file
-        String resultDir = getClass().getResource(Paths.get(DATA_IEEE14_BASE_DIR, testBaseDir, OUTPUT).toString()).getPath();
-        Path resultJsonFile = Paths.get(resultDir).resolve("exported_" + RESULT_JSON);
-        Files.deleteIfExists(resultJsonFile);
-        Files.createFile(resultJsonFile);
-        writeResult(new ByteArrayInputStream(messageSwitch.getPayload()), resultJsonFile);
+        // get timeseries from mock timeseries db
+        UUID timeSeriesUuid = UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID);
+        String jsonResultTImeSeries = TimeSeries.toJson(timeSeriesMockBD.remove(timeSeriesUuid));
 
-        // get the result from exported file
-        String jsonResult = getResult(Files.newInputStream(resultJsonFile));
-
-        // compare result
+        // compare result only timeseries
         ObjectMapper mapper = new ObjectMapper();
-        assertEquals(mapper.readTree(jsonExpectedResult), mapper.readTree(jsonResult));
+        assertEquals(mapper.readTree(jsonExpectedTimeSeries), mapper.readTree(jsonResultTImeSeries));
     }
 }
