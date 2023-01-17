@@ -6,7 +6,6 @@
  */
 package org.gridsuite.ds.server.controller;
 
-import com.google.common.collect.ImmutableMap;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
@@ -22,6 +21,7 @@ import com.powsybl.timeseries.TimeSeries;
 import com.powsybl.timeseries.TimeSeriesIndex;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
+import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.junit.Before;
@@ -45,7 +45,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.UUID_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -100,7 +99,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
     @Override
     protected void initTimeSeriesServiceMock() throws IOException {
-        given(timeSeriesClient.sendTimeSeries(any())).willReturn(Mono.just(ImmutableMap.of(UUID_KEY, UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID))));
+        given(timeSeriesClient.sendTimeSeries(any())).willReturn(Mono.just(new TimeSeriesGroupInfos(UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID))));
     }
 
     @Before

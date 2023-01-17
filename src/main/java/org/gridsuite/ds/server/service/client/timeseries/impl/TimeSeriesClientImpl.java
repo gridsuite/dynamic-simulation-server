@@ -7,6 +7,7 @@
 package org.gridsuite.ds.server.service.client.timeseries.impl;
 
 import com.powsybl.timeseries.TimeSeries;
+import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -17,8 +18,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -33,7 +32,7 @@ public class TimeSeriesClientImpl implements TimeSeriesClient {
     }
 
     @Override
-    public Mono<Map<String, UUID>> sendTimeSeries(List<TimeSeries> timeSeriesList) throws HttpClientErrorException {
+    public Mono<TimeSeriesGroupInfos> sendTimeSeries(List<TimeSeries> timeSeriesList) throws HttpClientErrorException {
         String url = API_VERSION + DELIMITER + TIME_SERIES_END_POINT;
 
         // convert timeseries to json
@@ -46,6 +45,6 @@ public class TimeSeriesClientImpl implements TimeSeriesClient {
                         .build())
                 .body(BodyInserters.fromValue(timeSeriesListJson))
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<Map<String, UUID>>() { });
+                .bodyToMono(new ParameterizedTypeReference<TimeSeriesGroupInfos>() { });
     }
 }

@@ -14,6 +14,7 @@ import lombok.SneakyThrows;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.RecordedRequest;
+import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.AbstractRestClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.impl.TimeSeriesClientImpl;
 import org.jetbrains.annotations.NotNull;
@@ -57,7 +58,7 @@ public class TimeSeriesClientTest extends AbstractRestClientTest {
                     return new MockResponse()
                             .setResponseCode(HttpStatus.OK.value())
                             .addHeader("Content-Type", "application/json; charset=utf-8")
-                            .setBody(objectMapper.writeValueAsString(Map.of(UUID_KEY, UUID.fromString(TIME_SERIES_UUID))));
+                            .setBody(objectMapper.writeValueAsString(new TimeSeriesGroupInfos(UUID.fromString(TIME_SERIES_UUID))));
                 }
                 return new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value());
             }
@@ -89,7 +90,7 @@ public class TimeSeriesClientTest extends AbstractRestClientTest {
         curves.put("NETWORK__BUS____2-BUS____5-1_AC_iSide2", TimeSeries.createDouble("NETWORK__BUS____2-BUS____5-1_AC_iSide2", index, 333.847331, 333.847321, 333.847300, 333.847259));
         curves.put("NETWORK__BUS____1_TN_Upu_value", TimeSeries.createDouble("NETWORK__BUS____1_TN_Upu_value", index, 1.059970, 1.059970, 1.059970, 1.059970));
         List<TimeSeries> timeSeries = new ArrayList<>(curves.values());
-        UUID timeSeriesUuid = timeSeriesClient.sendTimeSeries(timeSeries).block().getOrDefault(UUID_KEY, null);
+        UUID timeSeriesUuid = timeSeriesClient.sendTimeSeries(timeSeries).block().getId();
         assertEquals(TIME_SERIES_UUID, Optional.of(timeSeriesUuid).orElseThrow().toString());
 
     }

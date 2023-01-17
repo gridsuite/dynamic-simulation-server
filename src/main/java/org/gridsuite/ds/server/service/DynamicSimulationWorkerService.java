@@ -38,8 +38,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.UUID_KEY;
-
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
@@ -166,8 +164,8 @@ public class DynamicSimulationWorkerService {
                     timeSeriesClient.sendTimeSeries(Arrays.asList(timeLine)).subscribeOn(Schedulers.boundedElastic())
                 )
                 .map(uuidTuple -> {
-                    UUID timeSeriesUuid = uuidTuple.getT1().getOrDefault(UUID_KEY, null);
-                    UUID timeLineUuid = uuidTuple.getT2().getOrDefault(UUID_KEY, null);
+                    UUID timeSeriesUuid = uuidTuple.getT1().getId();
+                    UUID timeLineUuid = uuidTuple.getT2().getId();
                     DynamicSimulationStatus status = result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED;
 
                     dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
