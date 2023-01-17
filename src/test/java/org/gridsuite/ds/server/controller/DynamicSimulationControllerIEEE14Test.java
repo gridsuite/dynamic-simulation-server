@@ -14,7 +14,6 @@ import com.powsybl.commons.datasource.ResourceDataSource;
 import com.powsybl.commons.datasource.ResourceSet;
 import com.powsybl.dynamicsimulation.DynamicSimulationResult;
 import com.powsybl.dynamicsimulation.json.DynamicSimulationResultDeserializer;
-import com.powsybl.dynamicsimulation.json.DynamicSimulationResultSerializer;
 import com.powsybl.iidm.network.Importers;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
@@ -37,11 +36,9 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.util.StreamUtils;
 import reactor.core.publisher.Mono;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -139,19 +136,6 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
                 return Mono.just(ImmutableMap.of(UUID_KEY, seriesUuid));
             }
         }).when(timeSeriesClient).sendTimeSeries(any());
-    }
-
-    private String getResult(InputStream resultIS) throws IOException {
-        DynamicSimulationResult result = DynamicSimulationResultDeserializer.read(resultIS);
-        ByteArrayOutputStream bytesOS = new ByteArrayOutputStream();
-        DynamicSimulationResultSerializer.write(result, bytesOS);
-        String resultJson = bytesOS.toString();
-        return resultJson;
-    }
-
-    private void writeResult(InputStream resultIS, Path jsonFile) throws IOException {
-        DynamicSimulationResult result = DynamicSimulationResultDeserializer.read(resultIS);
-        DynamicSimulationResultSerializer.write(result, jsonFile);
     }
 
     @Test
