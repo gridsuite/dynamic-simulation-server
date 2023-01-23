@@ -4,14 +4,14 @@
   "stopTime" : 50,
   "extensions" : {
     "DynaWaltzParameters" : {
-      "parametersFile" : "/home/phamquy/Projects/dynawo/test/models.par",
+      "parametersFile" : "",
       "network" : {
-        "parametersFile" : "/home/phamquy/Projects/dynawo/test/network.par",
+        "parametersFile" : "",
         "parametersId" : "NETWORK"
       },
       "solver" : {
         "type" : "IDA",
-        "parametersFile" : "/home/phamquy/Projects/dynawo/test/solvers.par",
+        "parametersFile" : "",
         "parametersId" : "2"
       }
     }
