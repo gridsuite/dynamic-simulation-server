@@ -11,6 +11,9 @@ import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.model.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
+import org.gridsuite.ds.server.service.contexts.DynamicSimulationCancelContext;
+import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
+import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.notification.NotificationService;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.slf4j.Logger;
@@ -104,4 +107,7 @@ public class DynamicSimulationService {
                 .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable)).then();
     }
 
+    public Mono<Void> stop(String receiver, UUID resultUuid) {
+        return Mono.fromRunnable(() -> notificationService.emitCancelDynamicSimulationMessage(new DynamicSimulationCancelContext(receiver, resultUuid).toMessage()));
+    }
 }

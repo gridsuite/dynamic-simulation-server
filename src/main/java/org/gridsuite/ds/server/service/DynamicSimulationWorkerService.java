@@ -19,6 +19,9 @@ import com.powsybl.timeseries.TimeSeries;
 import com.powsybl.dynamicsimulation.groovy.GroovyCurvesSupplier;
 import com.powsybl.dynamicsimulation.groovy.GroovyEventModelsSupplier;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
+import org.gridsuite.ds.server.service.contexts.DynamicSimulationCancelContext;
+import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
+import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.notification.NotificationService;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.slf4j.Logger;
@@ -120,10 +123,7 @@ public class DynamicSimulationWorkerService {
     @Bean
     public Consumer<Message<String>> consumeRun() {
         return message -> {
-            // TODO log to be removed, only for showing thread's name when using block()/toFuture().get()
-            LOGGER.info(" DS-current thread:" + Thread.currentThread().getName());
-
-            LOGGER_BROKER_INPUT.debug("consume {}", message);
+            LOGGER_BROKER_INPUT.debug("consumeRun {}", message);
             DynamicSimulationResultContext resultContext = DynamicSimulationResultContext.fromMessage(message);
             try {
                 run(resultContext.getRunContext())
@@ -137,13 +137,7 @@ public class DynamicSimulationWorkerService {
                             notificationService.emitResultDynamicSimulationMessage(sendMessage);
                             LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
                         })
-                        .toFuture().get();
-
-                // TODO use block() => run on local the thread forked is s.run.dsGroup-2 => OK
-                // But at moment, using toFuture().get() instead of block() in order to avoid fail test in github
-                // IllegalStateException: block()/blockFirst()/blockLast() are blocking, which is not supported in thread parallel-1
-                // reactor.core.publisher.BlockingSingleSubscriber.blockingGet(BlockingSingleSubscriber.java:83)
-                // reactor.core.publisher.Mono.block(Mono.java:1707)
+                        .block();
             } catch (Exception e) {
                 dynamicSimulationWorkerUpdateResult.doUpdateResult(resultContext.getResultUuid(), null, null, DynamicSimulationStatus.NOT_DONE);
                 LOGGER.error("error in consumeRun", e);
@@ -171,6 +165,15 @@ public class DynamicSimulationWorkerService {
                     dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
                     return result;
                 });
+    }
+
+    @Bean
+    public Consumer<Message<String>> consumeCancel() {
+        return message -> {
+            LOGGER_BROKER_INPUT.debug("consumeCancel {}", message);
+            DynamicSimulationCancelContext cancelContext = DynamicSimulationCancelContext.fromMessage(message);
+            // TODO cancel implementation
+        };
     }
 }
 

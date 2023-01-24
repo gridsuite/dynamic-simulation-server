@@ -96,4 +96,12 @@ public class DynamicSimulationController {
         return ResponseEntity.ok().body(result);
     }
 
+    @PutMapping(value = "/results/{resultUuid}/stop", produces = APPLICATION_JSON_VALUE)
+    @Operation(summary = "Stop a dynamic simulation computation")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation has been stopped")})
+    public ResponseEntity<Mono<Void>> stop(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
+                                           @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver) {
+        Mono<Void> result = dynamicSimulationService.stop(receiver, resultUuid);
+        return ResponseEntity.ok().body(result);
+    }
 }

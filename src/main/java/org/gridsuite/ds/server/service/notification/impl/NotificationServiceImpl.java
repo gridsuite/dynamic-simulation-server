@@ -40,4 +40,9 @@ public class NotificationServiceImpl implements NotificationService {
     public void emitResultDynamicSimulationMessage(Message<String> message) {
         sendMessage(message, "publishResult-out-0");
     }
+
+    @Override
+    public void emitCancelDynamicSimulationMessage(Message<String> message) {
+        sendMessage(message, "publishCancel-out-0");
+    }
 }

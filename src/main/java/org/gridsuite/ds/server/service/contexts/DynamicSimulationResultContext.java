@@ -1,12 +1,11 @@
-/**
- * Copyright (c) 2021, RTE (http://www.rte-france.com)
+/*
+ * Copyright (c) 2021-2023, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.ds.server.service;
+package org.gridsuite.ds.server.service.contexts;
 
-import com.powsybl.commons.PowsyblException;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.json.JsonDynamicSimulationParameters;
 import org.springframework.messaging.Message;
@@ -17,6 +16,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Objects;
 import java.util.UUID;
+
+import static org.gridsuite.ds.server.service.contexts.ContextUtils.getNonNullHeader;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -47,14 +48,6 @@ public class DynamicSimulationResultContext {
 
     public DynamicSimulationRunContext getRunContext() {
         return runContext;
-    }
-
-    private static String getNonNullHeader(MessageHeaders headers, String name) {
-        String header = (String) headers.get(name);
-        if (header == null) {
-            throw new PowsyblException("Header '" + name + "' not found");
-        }
-        return header;
     }
 
     public static DynamicSimulationResultContext fromMessage(Message<String> message) {
