@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
+ * TODO: remove and use core one when switching to 5.1.0
  * @author Marcos de Miguel <demiguelm at aia.es>
  */
 public class GroovyEventModelsSupplier implements EventModelsSupplier {

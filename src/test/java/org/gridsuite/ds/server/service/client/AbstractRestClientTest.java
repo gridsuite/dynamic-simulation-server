@@ -11,50 +11,56 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockWebServer;
+import org.gridsuite.ds.server.DynamicSimulationApplication;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
 import org.springframework.http.codec.json.Jackson2JsonEncoder;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @RunWith(SpringRunner.class)
+@SpringBootTest
+@ContextHierarchy({@ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class})})
 public abstract class AbstractRestClientTest {
 
     protected WebClient.Builder webClientBuilder;
 
     protected MockWebServer server;
 
-    protected final ObjectMapper objectMapper = createObjectMapper();
+    @Autowired
+    ObjectMapper objectMapper;
 
-    public final Logger getLogger() {
-        return LoggerFactory.getLogger(this.getClass());
-    }
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     protected abstract Dispatcher getDispatcher();
 
-    public static ObjectMapper createObjectMapper() {
-        var objectMapper = Jackson2ObjectMapperBuilder.json().build();
+    public ObjectMapper getObjectMapper() {
         return objectMapper;
     }
 
-    protected String initMockWebServer(int port) throws RuntimeException {
+    protected String initMockWebServer(int port) {
         server = new MockWebServer();
         try {
             server.start(port);
         } catch (IOException e) {
-            throw new RuntimeException("Can not init the mock server " + this.getClass().getSimpleName(), e);
+            throw new UncheckedIOException("Can not init the mock server " + this.getClass().getSimpleName(), e);
         }
 
         // setup dispatcher
@@ -68,7 +74,7 @@ public abstract class AbstractRestClientTest {
     }
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() {
         webClientBuilder = WebClient.builder();
         ExchangeStrategies strategies = ExchangeStrategies
                 .builder()
@@ -85,7 +91,7 @@ public abstract class AbstractRestClientTest {
         try {
             server.shutdown();
         } catch (Exception e) {
-            getLogger().info("Can not shutdown the mock server " + this.getClass().getSimpleName());
+            logger.info("Can not shutdown the mock server " + this.getClass().getSimpleName());
         }
     }
 }

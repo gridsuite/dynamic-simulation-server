@@ -8,14 +8,13 @@ package org.gridsuite.ds.server.service.parameters;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 
-import java.io.IOException;
-
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public interface ParametersService {
+    String RESOURCE_PATH_DELIMETER = "/";
     String WORKING_DIR_PREFIX = "dynamic_simulation_";
-    String PARAMETERS_DIR = "/parameters";
+    String PARAMETERS_DIR = RESOURCE_PATH_DELIMETER + "parameters";
     String EVENTS_GROOVY = "events.groovy";
     String CURVES_GROOVY = "curves.groovy";
     String MODELS_PAR = "models.par";
@@ -24,9 +23,9 @@ public interface ParametersService {
     String SOLVERS_PAR = "solvers.par";
     String PARAMETERS_JSON = "parameters.json";
 
-    byte[] getEventModel() throws IOException;
+    byte[] getEventModel();
 
-    byte[] getCurveModel() throws IOException;
+    byte[] getCurveModel();
 
-    DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams) throws IOException, RuntimeException;
+    DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams);
 }

@@ -22,10 +22,6 @@ public class DynamicSimulationRunContext {
 
     private final String variantId;
 
-    private final int startTime;
-
-    private final int stopTime;
-
     private final byte[] dynamicModelContent;
 
     private final byte[] eventModelContent;
@@ -34,12 +30,10 @@ public class DynamicSimulationRunContext {
 
     private final DynamicSimulationParameters parameters;
 
-    public DynamicSimulationRunContext(String receiver, UUID networkUuid, String variantId, int startTime, int stopTime, byte[] dynamicModelContent, byte[] eventModelContent, byte[] curveContent, DynamicSimulationParameters parameters) {
+    public DynamicSimulationRunContext(String receiver, UUID networkUuid, String variantId, byte[] dynamicModelContent, byte[] eventModelContent, byte[] curveContent, DynamicSimulationParameters parameters) {
         this.receiver = receiver;
         this.networkUuid = Objects.requireNonNull(networkUuid);
         this.variantId = variantId;
-        this.startTime = startTime;
-        this.stopTime = stopTime;
         this.dynamicModelContent = dynamicModelContent;
         this.eventModelContent = eventModelContent;
         this.curveContent = curveContent;
@@ -55,14 +49,6 @@ public class DynamicSimulationRunContext {
 
     public String getVariantId() {
         return variantId;
-    }
-
-    public int getStartTime() {
-        return startTime;
-    }
-
-    public int getStopTime() {
-        return stopTime;
     }
 
     public byte[] getDynamicModelContent() {

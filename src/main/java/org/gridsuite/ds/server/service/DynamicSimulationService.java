@@ -22,7 +22,6 @@ import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.UUID;
@@ -50,27 +49,27 @@ public class DynamicSimulationService {
 
         return dynamicMappingClient.createFromMapping(mappingName) // get script and parameters file from dynamic mapping server
                 .flatMap(scriptObj -> {
-                    try {
-                        // get all dynamic simulation parameters
-                        String parametersFile = scriptObj.getParametersFile();
-                        DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(parametersFile.getBytes());
+                    // get all dynamic simulation parameters
+                    String parametersFile = scriptObj.getParametersFile();
+                    DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(parametersFile.getBytes(StandardCharsets.UTF_8));
 
-                        String script = scriptObj.getScript();
-                        byte[] dynamicModel = script.getBytes(StandardCharsets.UTF_8);
-                        byte[] eventModel = parametersService.getEventModel();
-                        byte[] curveModel = parametersService.getCurveModel();
+                    // set start and stop times
+                    parameters.setStartTime(startTime);
+                    parameters.setStopTime(stopTime);
 
-                        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(receiver, networkUuid, variantId, startTime, stopTime, dynamicModel, eventModel, curveModel, parameters);
+                    String script = scriptObj.getScript();
+                    byte[] dynamicModel = script.getBytes(StandardCharsets.UTF_8);
+                    byte[] eventModel = parametersService.getEventModel();
+                    byte[] curveModel = parametersService.getCurveModel();
 
-                        return insertStatus(DynamicSimulationStatus.RUNNING.name()) // update status to running status
-                                .map(resultEntity -> {
-                                    Message<String> message = new DynamicSimulationResultContext(resultEntity.getId(), runContext).toMessage();
-                                    notificationService.emitRunDynamicSimulationMessage(message);
-                                    return resultEntity.getId();
-                                });
-                    } catch (IOException e) {
-                        return Mono.error(e);
-                    }
+                    DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(receiver, networkUuid, variantId, dynamicModel, eventModel, curveModel, parameters);
+
+                    return insertStatus(DynamicSimulationStatus.RUNNING.name()) // update status to running status
+                            .map(resultEntity -> {
+                                Message<byte[]> message = new DynamicSimulationResultContext(resultEntity.getId(), runContext).toMessage();
+                                notificationService.emitRunDynamicSimulationMessage(message);
+                                return resultEntity.getId();
+                            });
                 }
         );
     }

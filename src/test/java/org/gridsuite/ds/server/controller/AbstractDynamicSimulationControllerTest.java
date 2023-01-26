@@ -42,6 +42,8 @@ import static org.mockito.Mockito.doAnswer;
         initializers = CustomApplicationContextInitializer.class)
 public abstract class AbstractDynamicSimulationControllerTest {
 
+    public static final String RESOURCE_PATH_DELIMETER = "/";
+
     @MockBean
     protected DynamicMappingClient dynamicMappingClient;
 
@@ -54,7 +56,7 @@ public abstract class AbstractDynamicSimulationControllerTest {
     @SpyBean
     private NotificationService notificationService;
 
-    private ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Before
     public void init() throws IOException {
@@ -71,11 +73,11 @@ public abstract class AbstractDynamicSimulationControllerTest {
         initNotificationServiceMock();
     }
 
-    protected abstract void initNetworkStoreServiceMock() throws IOException;
+    protected abstract void initNetworkStoreServiceMock();
 
-    protected abstract void initDynamicMappingServiceMock() throws IOException;
+    protected abstract void initDynamicMappingServiceMock();
 
-    protected abstract void initTimeSeriesServiceMock() throws IOException;
+    protected abstract void initTimeSeriesServiceMock();
 
     protected void initNotificationServiceMock() {
         // Emit messages in separate threads, like in production.

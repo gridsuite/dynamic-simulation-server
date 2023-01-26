@@ -24,15 +24,14 @@ import static org.gridsuite.ds.server.service.contexts.ContextUtils.getNonNullHe
  */
 public class DynamicSimulationResultContext {
 
-    public static final String RESULT_UUID = "resultUuid";
-    public static final String RECEIVER = "receiver";
-    public static final String NETWORK_UUID = "networkUuid";
-    public static final String VARIANT_ID = "variantId";
-    public static final String START_TIME = "startTime";
-    public static final String STOP_TIME = "stopTime";
-    public static final String DYNAMIC_MODEL_CONTENT = "dynamicModelContent";
-    public static final String EVENT_MODEL_CONTENT = "eventModelContent";
-    public static final String CURVE_CONTENT = "curveContent";
+    public static final String HEADER_RESULT_UUID = "resultUuid";
+    public static final String HEADER_RECEIVER = "receiver";
+    public static final String HEADER_NETWORK_UUID = "networkUuid";
+    public static final String HEADER_VARIANT_ID = "variantId";
+    public static final String HEADER_DYNAMIC_MODEL_CONTENT = "dynamicModelContent";
+    public static final String HEADER_EVENT_MODEL_CONTENT = "eventModelContent";
+    public static final String HEADER_CURVE_CONTENT = "curveContent";
+
     private final UUID resultUuid;
 
     private final DynamicSimulationRunContext runContext;
@@ -50,44 +49,40 @@ public class DynamicSimulationResultContext {
         return runContext;
     }
 
-    public static DynamicSimulationResultContext fromMessage(Message<String> message) {
+    public static DynamicSimulationResultContext fromMessage(Message<byte[]> message) {
         Objects.requireNonNull(message);
 
-        String parametersPayload = message.getPayload();
-        ByteArrayInputStream bytesIS = new ByteArrayInputStream(parametersPayload.getBytes());
+        byte[] parametersPayload = message.getPayload();
+        ByteArrayInputStream bytesIS = new ByteArrayInputStream(parametersPayload);
         DynamicSimulationParameters parameters = JsonDynamicSimulationParameters.read(bytesIS);
 
         MessageHeaders headers = message.getHeaders();
-        UUID resultUuid = UUID.fromString(getNonNullHeader(headers, RESULT_UUID));
-        String receiver = (String) headers.get(RECEIVER);
-        UUID networkUuid = UUID.fromString(getNonNullHeader(headers, NETWORK_UUID));
-        String variantId = (String) headers.get(VARIANT_ID);
-        int startTime = Integer.parseInt(getNonNullHeader(headers, START_TIME));
-        int stopTIme = Integer.parseInt(getNonNullHeader(headers, STOP_TIME));
-        byte[] dynamicModelContent = (byte[]) headers.get(DYNAMIC_MODEL_CONTENT);
-        byte[] eventModelContent = (byte[]) headers.get(EVENT_MODEL_CONTENT);
-        byte[] curveContent = (byte[]) headers.get(CURVE_CONTENT);
+        UUID resultUuid = UUID.fromString(getNonNullHeader(headers, HEADER_RESULT_UUID));
+        String receiver = (String) headers.get(HEADER_RECEIVER);
+        UUID networkUuid = UUID.fromString(getNonNullHeader(headers, HEADER_NETWORK_UUID));
+        String variantId = (String) headers.get(HEADER_VARIANT_ID);
+        byte[] dynamicModelContent = (byte[]) headers.get(HEADER_DYNAMIC_MODEL_CONTENT);
+        byte[] eventModelContent = (byte[]) headers.get(HEADER_EVENT_MODEL_CONTENT);
+        byte[] curveContent = (byte[]) headers.get(HEADER_CURVE_CONTENT);
         // decode the parameters
 
-        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(receiver, networkUuid, variantId, startTime, stopTIme, dynamicModelContent, eventModelContent, curveContent, parameters);
+        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(receiver, networkUuid, variantId, dynamicModelContent, eventModelContent, curveContent, parameters);
         return new DynamicSimulationResultContext(resultUuid, runContext);
     }
 
-    public Message<String> toMessage() {
+    public Message<byte[]> toMessage() {
         DynamicSimulationParameters parameters = runContext.getParameters();
         ByteArrayOutputStream bytesOS = new ByteArrayOutputStream();
         JsonDynamicSimulationParameters.write(parameters, bytesOS);
 
-        return MessageBuilder.withPayload(bytesOS.toString())
-                .setHeader(RESULT_UUID, resultUuid.toString())
-                .setHeader(RECEIVER, runContext.getReceiver())
-                .setHeader(NETWORK_UUID, runContext.getNetworkUuid().toString())
-                .setHeader(VARIANT_ID, runContext.getVariantId())
-                .setHeader(START_TIME, String.valueOf(runContext.getStartTime()))
-                .setHeader(STOP_TIME, String.valueOf(runContext.getStopTime()))
-                .setHeader(DYNAMIC_MODEL_CONTENT, runContext.getDynamicModelContent())
-                .setHeader(EVENT_MODEL_CONTENT, runContext.getEventModelContent())
-                .setHeader(CURVE_CONTENT, runContext.getCurveContent())
+        return MessageBuilder.withPayload(bytesOS.toByteArray())
+                .setHeader(HEADER_RESULT_UUID, resultUuid.toString())
+                .setHeader(HEADER_RECEIVER, runContext.getReceiver())
+                .setHeader(HEADER_NETWORK_UUID, runContext.getNetworkUuid().toString())
+                .setHeader(HEADER_VARIANT_ID, runContext.getVariantId())
+                .setHeader(HEADER_DYNAMIC_MODEL_CONTENT, runContext.getDynamicModelContent())
+                .setHeader(HEADER_EVENT_MODEL_CONTENT, runContext.getEventModelContent())
+                .setHeader(HEADER_CURVE_CONTENT, runContext.getCurveContent())
                 .build();
     }
 

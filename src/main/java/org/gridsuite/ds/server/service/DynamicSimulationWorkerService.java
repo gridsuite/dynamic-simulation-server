@@ -75,7 +75,7 @@ public class DynamicSimulationWorkerService {
 
     public Mono<DynamicSimulationResult> run(DynamicSimulationRunContext context) {
         Objects.requireNonNull(context);
-        LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {},", context.getNetworkUuid(), context.getStartTime(), context.getStopTime());
+        LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {},", context.getNetworkUuid(), context.getParameters().getStartTime(), context.getParameters().getStopTime());
 
         Network network = getNetwork(context.getNetworkUuid());
 
@@ -88,19 +88,12 @@ public class DynamicSimulationWorkerService {
         List<CurveGroovyExtension> curveExtensions = GroovyExtension.find(CurveGroovyExtension.class, DynaWaltzProvider.NAME);
         CurvesSupplier curvesSupplier = new GroovyCurvesSupplier(new ByteArrayInputStream(context.getCurveContent()), curveExtensions);
 
-        DynamicSimulationParameters parameters = context.getParameters();
-        if (parameters == null) {
-            parameters = new DynamicSimulationParameters(context.getStartTime(), context.getStopTime());
-        }
-        parameters.setStartTime(context.getStartTime());
-        parameters.setStopTime(context.getStopTime());
-
         return Mono.fromCompletionStage(runAsync(network,
                 context.getVariantId() != null ? context.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
                 dynamicModelsSupplier,
                 eventModelsSupplier,
                 curvesSupplier,
-                parameters));
+                context.getParameters()));
     }
 
     public CompletableFuture<DynamicSimulationResult> runAsync(Network network,
@@ -121,7 +114,7 @@ public class DynamicSimulationWorkerService {
     }
 
     @Bean
-    public Consumer<Message<String>> consumeRun() {
+    public Consumer<Message<byte[]>> consumeRun() {
         return message -> {
             LOGGER_BROKER_INPUT.debug("consumeRun {}", message);
             DynamicSimulationResultContext resultContext = DynamicSimulationResultContext.fromMessage(message);
@@ -151,7 +144,7 @@ public class DynamicSimulationWorkerService {
 
     public Mono<DynamicSimulationResult> updateResult(UUID resultUuid, DynamicSimulationResult result) {
         Objects.requireNonNull(resultUuid);
-        List<TimeSeries> timeSeries = new ArrayList(result.getCurves().values());
+        List<TimeSeries> timeSeries = new ArrayList<>(result.getCurves().values());
         StringTimeSeries timeLine = result.getTimeLine();
         return Mono.zip(
                     timeSeriesClient.sendTimeSeries(timeSeries).subscribeOn(Schedulers.boundedElastic()),

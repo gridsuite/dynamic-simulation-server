@@ -8,7 +8,6 @@
 package org.gridsuite.ds.server.service.client.dynamicmapping;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
@@ -25,29 +24,34 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
-import java.util.Date;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Objects;
 import java.util.Optional;
 
 import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
-import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.API_VERSION;
+import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.*;
 import static org.gridsuite.ds.server.service.parameters.ParametersService.MODELS_PAR;
-import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.DELIMITER;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public class DynamicMappingClientTest extends AbstractRestClientTest {
+
+    public static final String RESOURCE_PATH_DELIMETER = "/";
+
     // mapping names
     public static final String MAPPING_NAME_01 = "_01";
 
     // directories
-    public static final String DATA_IEEE14_BASE_DIR = "/data/ieee14";
+    public static final String DATA_IEEE14_BASE_DIR = RESOURCE_PATH_DELIMETER + "data" + RESOURCE_PATH_DELIMETER + "ieee14";
     public static final String INPUT = "input";
     public static final String MODELS_GROOVY = "models.groovy";
     private static final int DYNAMIC_MAPPING_PORT = 5036;
+
+    private static final String FIXED_DATE = "01/01/2023";
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
 
     private DynamicMappingClient dynamicMappingClient;
 
@@ -59,7 +63,8 @@ public class DynamicMappingClientTest extends AbstractRestClientTest {
             @Override
             public MockResponse dispatch(@NotNull RecordedRequest recordedRequest) {
                 String path = Objects.requireNonNull(recordedRequest.getPath());
-                String baseUrl = DELIMITER + API_VERSION + DELIMITER + DynamicMappingClient.DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT + DELIMITER;
+                String baseUrl = DELIMITER + API_VERSION + DELIMITER +
+                        DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT + DELIMITER;
                 baseUrl = baseUrl.replace("//", "/");
                 String method = recordedRequest.getMethod();
                 MockResponse response = new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value());
@@ -72,14 +77,17 @@ public class DynamicMappingClientTest extends AbstractRestClientTest {
                         String scriptJson;
                         try {
                             // load models.groovy
-                            String scriptPath = Paths.get(DATA_IEEE14_BASE_DIR, mappingName, INPUT, MODELS_GROOVY).toString();
+                            String inputDir = DATA_IEEE14_BASE_DIR +
+                                    RESOURCE_PATH_DELIMETER + mappingName +
+                                    RESOURCE_PATH_DELIMETER + INPUT;
+                            String scriptPath = inputDir + RESOURCE_PATH_DELIMETER + MODELS_GROOVY;
                             InputStream scriptIS = getClass().getResourceAsStream(scriptPath);
                             byte[] scriptBytes;
                             scriptBytes = StreamUtils.copyToByteArray(scriptIS);
                             String script = new String(scriptBytes, StandardCharsets.UTF_8);
 
                             // load models.par
-                            String parametersFilePath = Paths.get(DATA_IEEE14_BASE_DIR, mappingName, INPUT, MODELS_PAR).toString();
+                            String parametersFilePath = inputDir + RESOURCE_PATH_DELIMETER + MODELS_PAR;
                             InputStream parametersFileIS = getClass().getResourceAsStream(parametersFilePath);
                             byte[] parametersFileBytes;
                             parametersFileBytes = StreamUtils.copyToByteArray(parametersFileIS);
@@ -89,17 +97,19 @@ public class DynamicMappingClientTest extends AbstractRestClientTest {
                                     mappingName + "-script",
                                     mappingName,
                                     script,
-                                    new Date(),
-                                    true,
+                                    dateFormat.parse(FIXED_DATE),
                                     parametersFile);
 
-                            ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+                            ObjectWriter ow = getObjectMapper().writer().withDefaultPrettyPrinter();
                             scriptJson = ow.writeValueAsString(scriptObj);
                         } catch (JsonProcessingException e) {
-                            getLogger().info("Cannot convert to json : ", e);
+                            logger.info("Cannot convert to json : ", e);
                             return new MockResponse().setResponseCode(HttpStatus.NO_CONTENT.value());
                         } catch (IOException e) {
-                            getLogger().info("Cannot read file : ", e);
+                            logger.info("Cannot read file : ", e);
+                            return new MockResponse().setResponseCode(HttpStatus.NO_CONTENT.value());
+                        } catch (ParseException e) {
+                            logger.info("Cannot parse date: ", e);
                             return new MockResponse().setResponseCode(HttpStatus.NO_CONTENT.value());
                         }
 
@@ -123,7 +133,7 @@ public class DynamicMappingClientTest extends AbstractRestClientTest {
 //    }
 
     @Override
-    public void setUp() throws IOException {
+    public void setUp() {
         super.setUp();
 
         // config builder
@@ -137,7 +147,10 @@ public class DynamicMappingClientTest extends AbstractRestClientTest {
         Script createdScript = dynamicMappingClient.createFromMapping(MAPPING_NAME_01).block();
 
         // load models.groovy
-        String scriptPath = Paths.get(DATA_IEEE14_BASE_DIR, mappingName, INPUT, MODELS_GROOVY).toString();
+        String inputDir = DATA_IEEE14_BASE_DIR +
+                RESOURCE_PATH_DELIMETER + mappingName +
+                RESOURCE_PATH_DELIMETER + INPUT;
+        String scriptPath = inputDir + RESOURCE_PATH_DELIMETER + MODELS_GROOVY;
         InputStream scriptIS = getClass().getResourceAsStream(scriptPath);
         byte[] scriptBytes;
         scriptBytes = StreamUtils.copyToByteArray(scriptIS);
@@ -146,7 +159,7 @@ public class DynamicMappingClientTest extends AbstractRestClientTest {
         assertEquals(script, Optional.of(createdScript).orElseThrow().getScript());
 
         // load models.par
-        String parametersFilePath = Paths.get(DATA_IEEE14_BASE_DIR, mappingName, INPUT, MODELS_PAR).toString();
+        String parametersFilePath = inputDir + RESOURCE_PATH_DELIMETER + MODELS_PAR;
         InputStream parametersFileIS = getClass().getResourceAsStream(parametersFilePath);
         byte[] parametersFileBytes;
         parametersFileBytes = StreamUtils.copyToByteArray(parametersFileIS);

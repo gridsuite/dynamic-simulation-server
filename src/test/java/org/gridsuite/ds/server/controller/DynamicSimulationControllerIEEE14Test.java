@@ -38,8 +38,10 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static org.gridsuite.ds.server.service.parameters.ParametersService.MODELS_PAR;
@@ -55,7 +57,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     public static final String MAPPING_NAME_01 = "_01";
 
     // directories
-    public static final String DATA_IEEE14_BASE_DIR = "/data/ieee14";
+    public static final String DATA_IEEE14_BASE_DIR = RESOURCE_PATH_DELIMETER + "data" + RESOURCE_PATH_DELIMETER + "ieee14";
     public static final String INPUT = "input";
     public static final String OUTPUT = "output";
     public static final String MODELS_GROOVY = "models.groovy";
@@ -66,7 +68,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     private static final String VARIANT_1_ID = "variant_1";
     private static final String NETWORK_FILE = "IEEE14.iidm";
 
-    private static final Map<UUID, List<TimeSeries>> TIME_SERIES_MOCK_BD = new HashMap<>();
+    private final Map<UUID, List<TimeSeries>> timeSeriesMockBd = new HashMap<>();
 
     @Autowired
     private WebTestClient webTestClient;
@@ -77,8 +79,14 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     @Autowired
     private InputDestination input;
 
+    @Autowired
+    private ObjectMapper mapper = new ObjectMapper();
+
+    private static final String FIXED_DATE = "01/01/2023";
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+
     @Override
-    protected void initNetworkStoreServiceMock() throws IOException {
+    protected void initNetworkStoreServiceMock() {
         ReadOnlyDataSource dataSource = new ResourceDataSource("IEEE14",
                 new ResourceSet(DATA_IEEE14_BASE_DIR, NETWORK_FILE));
         Network network = Importers.importData("XIIDM", dataSource, null);
@@ -88,33 +96,42 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     }
 
     @Override
-    protected void initDynamicMappingServiceMock() throws IOException {
-        // load models.groovy
-        String scriptPath = Paths.get(DATA_IEEE14_BASE_DIR, MAPPING_NAME_01, INPUT, MODELS_GROOVY).toString();
-        InputStream scriptIS = getClass().getResourceAsStream(scriptPath);
-        byte[] scriptBytes;
-        scriptBytes = StreamUtils.copyToByteArray(scriptIS);
-        String script = new String(scriptBytes, StandardCharsets.UTF_8);
+    protected void initDynamicMappingServiceMock() {
+        try {
+            String inputDir = DATA_IEEE14_BASE_DIR +
+                    RESOURCE_PATH_DELIMETER + MAPPING_NAME_01 +
+                    RESOURCE_PATH_DELIMETER + INPUT;
 
-        // load models.par
-        String parametersFilePath = Paths.get(DATA_IEEE14_BASE_DIR, MAPPING_NAME_01, INPUT, MODELS_PAR).toString();
-        InputStream parametersFileIS = getClass().getResourceAsStream(parametersFilePath);
-        byte[] parametersFileBytes;
-        parametersFileBytes = StreamUtils.copyToByteArray(parametersFileIS);
-        String parametersFile = new String(parametersFileBytes, StandardCharsets.UTF_8);
+            // load models.groovy
+            String scriptPath = inputDir + RESOURCE_PATH_DELIMETER + MODELS_GROOVY;
+            InputStream scriptIS = getClass().getResourceAsStream(scriptPath);
+            byte[] scriptBytes;
+            scriptBytes = StreamUtils.copyToByteArray(scriptIS);
+            String script = new String(scriptBytes, StandardCharsets.UTF_8);
 
-        Script scriptObj =  new Script(
-                MAPPING_NAME_01 + "-script",
-                MAPPING_NAME_01,
-                script,
-                new Date(),
-                true,
-                parametersFile);
-        given(dynamicMappingClient.createFromMapping(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(Mono.just(scriptObj));
+            // load models.par
+            String parametersFilePath = inputDir + RESOURCE_PATH_DELIMETER + MODELS_PAR;
+            InputStream parametersFileIS = getClass().getResourceAsStream(parametersFilePath);
+            byte[] parametersFileBytes;
+            parametersFileBytes = StreamUtils.copyToByteArray(parametersFileIS);
+            String parametersFile = new String(parametersFileBytes, StandardCharsets.UTF_8);
+
+            Script scriptObj =  new Script(
+                    MAPPING_NAME_01 + "-script",
+                    MAPPING_NAME_01,
+                    script,
+                    dateFormat.parse(FIXED_DATE),
+                    parametersFile);
+            given(dynamicMappingClient.createFromMapping(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(Mono.just(scriptObj));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     @Override
-    protected void initTimeSeriesServiceMock() throws IOException {
+    protected void initTimeSeriesServiceMock() {
         Mockito.doAnswer(new Answer<Mono<TimeSeriesGroupInfos>>() {
             @Override
             public Mono<TimeSeriesGroupInfos> answer(final InvocationOnMock invocation) {
@@ -130,7 +147,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
                             seriesUuid = UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID);
                             break;
                     }
-                    TIME_SERIES_MOCK_BD.put(seriesUuid, (List<TimeSeries>) args[0]);
+                    timeSeriesMockBd.put(seriesUuid, (List<TimeSeries>) args[0]);
                 }
                 return Mono.just(new TimeSeriesGroupInfos(seriesUuid));
             }
@@ -138,7 +155,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     }
 
     @Test
-    public void test01() throws IOException {
+    public void test01() {
         String testBaseDir = MAPPING_NAME_01;
 
         //run the dynamic simulation (on a specific variant with variantId=" + VARIANT_1_ID + ")
@@ -152,18 +169,24 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
         Message<byte[]> messageSwitch = output.receive(1000 * 5, "ds.result.destination");
-        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(DynamicSimulationResultContext.RESULT_UUID).toString()));
+        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(DynamicSimulationResultContext.HEADER_RESULT_UUID).toString()));
 
-        // prepare expected result to compare
-        DynamicSimulationResult expectedResult = DynamicSimulationResultDeserializer.read(getClass().getResourceAsStream(Paths.get(DATA_IEEE14_BASE_DIR, testBaseDir, OUTPUT, RESULT_JSON).toString()));
-        String jsonExpectedTimeSeries = TimeSeries.toJson(new ArrayList(expectedResult.getCurves().values()));
+        try {
+            // prepare expected result to compare
+            String outputDir = DATA_IEEE14_BASE_DIR +
+                    RESOURCE_PATH_DELIMETER + testBaseDir +
+                    RESOURCE_PATH_DELIMETER + OUTPUT;
+            DynamicSimulationResult expectedResult = DynamicSimulationResultDeserializer.read(getClass().getResourceAsStream(outputDir + RESOURCE_PATH_DELIMETER + RESULT_JSON));
+            String jsonExpectedTimeSeries = TimeSeries.toJson(new ArrayList<>(expectedResult.getCurves().values()));
 
-        // get timeseries from mock timeseries db
-        UUID timeSeriesUuid = UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID);
-        String jsonResultTImeSeries = TimeSeries.toJson(TIME_SERIES_MOCK_BD.remove(timeSeriesUuid));
+            // get timeseries from mock timeseries db
+            UUID timeSeriesUuid = UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID);
+            String jsonResultTimeSeries = TimeSeries.toJson(timeSeriesMockBd.remove(timeSeriesUuid));
 
-        // compare result only timeseries
-        ObjectMapper mapper = new ObjectMapper();
-        assertEquals(mapper.readTree(jsonExpectedTimeSeries), mapper.readTree(jsonResultTImeSeries));
+            // compare result only timeseries
+            assertEquals(mapper.readTree(jsonExpectedTimeSeries), mapper.readTree(jsonResultTimeSeries));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 }

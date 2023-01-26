@@ -24,13 +24,12 @@ public class Script {
 
     private String name;
 
+    // name of the original mapping
     private String parentName;
 
     private String script;
 
     private Date createdDate;
-
-    private boolean current;
 
     private String parametersFile;
 

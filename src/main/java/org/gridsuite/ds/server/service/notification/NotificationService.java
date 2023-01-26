@@ -12,9 +12,8 @@ import org.springframework.messaging.Message;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public interface NotificationService {
-    void sendMessage(Message<String> message, String bindingName);
 
-    void emitRunDynamicSimulationMessage(Message<String> message);
+    void emitRunDynamicSimulationMessage(Message<byte[]> message);
 
     void emitResultDynamicSimulationMessage(Message<String> message);
 

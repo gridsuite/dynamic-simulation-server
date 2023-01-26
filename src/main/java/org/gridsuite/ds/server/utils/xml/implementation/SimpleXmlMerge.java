@@ -7,6 +7,9 @@
 
 package org.gridsuite.ds.server.utils.xml.implementation;
 
+import com.powsybl.commons.exceptions.UncheckedParserConfigurationException;
+import com.powsybl.commons.exceptions.UncheckedSaxException;
+import com.powsybl.commons.exceptions.UncheckedTransformerException;
 import org.gridsuite.ds.server.utils.xml.XmlMerge;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -26,56 +29,70 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * TODO: to remove when when multi input-files implementation in dynawo finished
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public class SimpleXmlMerge implements XmlMerge {
     @Override
-    public Document merge(InputStream targetIs, InputStream... sourceIsList) throws ParserConfigurationException, IOException, SAXException {
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-        // to be compliant, completely disable DOCTYPE declaration:
-        documentBuilderFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-        documentBuilderFactory.setNamespaceAware(true);
-        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+    public Document merge(InputStream targetIs, InputStream... sourceIsList) {
+        try {
+            DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+            // to be compliant, completely disable DOCTYPE declaration:
+            documentBuilderFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            documentBuilderFactory.setNamespaceAware(true);
+            DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
 
-        // get all root elements of source input
-        List<Element> sourceRootList = new ArrayList<>();
-        for (InputStream sourceIs : sourceIsList) {
-            Document source = documentBuilder.parse(sourceIs);
-            sourceRootList.add(source.getDocumentElement());
-        }
-
-        // get the root element of target input
-        Document target = documentBuilder.parse(targetIs);
-        Element targetRoot = target.getDocumentElement();
-
-        // merge attributes
-        // do nothing at the moment, take the same as target
-
-        // merge child nodes
-        for (Element sourceRoot : sourceRootList) {
-            NodeList sourceChildNodes = sourceRoot.getChildNodes();
-            for (int i = 0; i < sourceChildNodes.getLength(); i++) {
-                Node importedNode = target.importNode(sourceChildNodes.item(i), true);
-                targetRoot.appendChild(importedNode);
+            // get all root elements of source input
+            List<Element> sourceRootList = new ArrayList<>();
+            for (InputStream sourceIs : sourceIsList) {
+                Document source = documentBuilder.parse(sourceIs);
+                sourceRootList.add(source.getDocumentElement());
             }
-        }
 
-        return target;
+            // get the root element of target input
+            Document target = documentBuilder.parse(targetIs);
+            Element targetRoot = target.getDocumentElement();
+
+            // merge attributes
+            // do nothing at the moment, take the same as target
+
+            // merge child nodes
+            for (Element sourceRoot : sourceRootList) {
+                NodeList sourceChildNodes = sourceRoot.getChildNodes();
+                for (int i = 0; i < sourceChildNodes.getLength(); i++) {
+                    Node importedNode = target.importNode(sourceChildNodes.item(i), true);
+                    targetRoot.appendChild(importedNode);
+                }
+            }
+
+            return target;
+        } catch (ParserConfigurationException e) {
+            throw new UncheckedParserConfigurationException(e);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (SAXException e) {
+            throw new UncheckedSaxException(e);
+        }
     }
 
     @Override
-    public void export(Document document, OutputStream os) throws TransformerException {
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        // to be compliant, prohibit the use of all protocols by external entities:
-        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
-        Transformer transformer = transformerFactory.newTransformer();
-        DOMSource source = new DOMSource(document);
-        StreamResult result = new StreamResult(os);
-        transformer.transform(source, result);
+    public void export(Document document, OutputStream os) {
+        try {
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            // to be compliant, prohibit the use of all protocols by external entities:
+            transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource source = new DOMSource(document);
+            StreamResult result = new StreamResult(os);
+            transformer.transform(source, result);
+        } catch (TransformerException e) {
+            throw new UncheckedTransformerException(e);
+        }
     }
 }

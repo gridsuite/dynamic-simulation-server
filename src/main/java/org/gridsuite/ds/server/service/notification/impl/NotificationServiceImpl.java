@@ -25,14 +25,13 @@ public class NotificationServiceImpl implements NotificationService {
     @Autowired
     private StreamBridge publisher;
 
-    @Override
-    public void sendMessage(Message<String> message, String bindingName) {
+    private void sendMessage(Message<?> message, String bindingName) {
         NotificationServiceImpl.OUTPUT_MESSAGE_LOGGER.debug("Sending message : {}", message);
         publisher.send(bindingName, message);
     }
 
     @Override
-    public void emitRunDynamicSimulationMessage(Message<String> message) {
+    public void emitRunDynamicSimulationMessage(Message<byte[]> message) {
         sendMessage(message, "publishRun-out-0");
     }
 

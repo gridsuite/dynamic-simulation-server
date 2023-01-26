@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
+ * TODO: remove and use core one when switching to 5.1.0
  * @author Mathieu Bague <mathieu.bague@rte-france.com>
  */
 public class GroovyCurvesSupplier implements CurvesSupplier {

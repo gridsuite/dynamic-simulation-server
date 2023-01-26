@@ -23,7 +23,6 @@ import org.junit.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.io.IOException;
 import java.util.*;
 
 import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.*;
@@ -58,7 +57,7 @@ public class TimeSeriesClientTest extends AbstractRestClientTest {
                     return new MockResponse()
                             .setResponseCode(HttpStatus.OK.value())
                             .addHeader("Content-Type", "application/json; charset=utf-8")
-                            .setBody(objectMapper.writeValueAsString(new TimeSeriesGroupInfos(UUID.fromString(TIME_SERIES_UUID))));
+                            .setBody(getObjectMapper().writeValueAsString(new TimeSeriesGroupInfos(UUID.fromString(TIME_SERIES_UUID))));
                 }
                 return new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value());
             }
@@ -75,7 +74,7 @@ public class TimeSeriesClientTest extends AbstractRestClientTest {
 //    }
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() {
         super.setUp();
 
         // config builder

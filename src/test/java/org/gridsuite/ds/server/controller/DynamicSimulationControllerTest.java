@@ -76,7 +76,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     private static final boolean RESULT = true;
 
     @Override
-    protected void initNetworkStoreServiceMock() throws IOException {
+    protected void initNetworkStoreServiceMock() {
         ReadOnlyDataSource dataSource = new ResourceDataSource("IEEE14",
                 new ResourceSet("", TEST_FILE));
         Network network = Importers.importData("XIIDM", dataSource, null);
@@ -86,19 +86,18 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     @Override
-    protected void initDynamicMappingServiceMock() throws IOException {
+    protected void initDynamicMappingServiceMock() {
         Script scriptObj =  new Script(
                 MAPPING_NAME + "-script",
                 MAPPING_NAME,
                 "",
                 new Date(),
-                true,
                 "");
         given(dynamicMappingClient.createFromMapping(MAPPING_NAME)).willReturn(Mono.just(scriptObj));
     }
 
     @Override
-    protected void initTimeSeriesServiceMock() throws IOException {
+    protected void initTimeSeriesServiceMock() {
         given(timeSeriesClient.sendTimeSeries(any())).willReturn(Mono.just(new TimeSeriesGroupInfos(UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID))));
     }
 
