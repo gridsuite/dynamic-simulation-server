@@ -160,16 +160,16 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get("resultUuid").toString()));
 
         //get the calculation status
-        EntityExchangeResult<String> entityExchangeResult2 = webTestClient.get()
+        EntityExchangeResult<DynamicSimulationStatus> entityExchangeResult2 = webTestClient.get()
                 .uri("/v1/results/{resultUuid}/status", runUuid)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(String.class)
+                .expectBody(DynamicSimulationStatus.class)
                 .returnResult();
 
         //depending on the execution speed it can be both
-        assertTrue(DynamicSimulationStatus.CONVERGED.name().equals(entityExchangeResult2.getResponseBody())
-                || DynamicSimulationStatus.RUNNING.name().equals(entityExchangeResult2.getResponseBody()));
+        assertTrue(DynamicSimulationStatus.CONVERGED == entityExchangeResult2.getResponseBody()
+                || DynamicSimulationStatus.RUNNING == entityExchangeResult2.getResponseBody());
 
         //get the status of a non-existing simulation and expect a not found
         webTestClient.get()
@@ -202,8 +202,8 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 .uri("/v1/results/{resultUuid}/status", runUuid)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(String.class)
-                .isEqualTo(DynamicSimulationStatus.CONVERGED.name());
+                .expectBody(DynamicSimulationStatus.class)
+                .isEqualTo(DynamicSimulationStatus.CONVERGED);
 
         //delete a result and expect ok
         webTestClient.delete()

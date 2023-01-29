@@ -90,9 +90,9 @@ public class DynamicSimulationService {
                 .orElse(null));
     }
 
-    public Mono<String> getStatus(UUID resultUuid) {
+    public Mono<DynamicSimulationStatus> getStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return Mono.fromCallable(() -> resultRepository.findById(resultUuid).map(ResultEntity::getStatus).orElse(null));
+        return Mono.fromCallable(() -> resultRepository.findById(resultUuid).map(ResultEntity::getStatus).orElse(null)).map(DynamicSimulationStatus::valueOf);
     }
 
     public Mono<Void> deleteResult(UUID resultUuid) {

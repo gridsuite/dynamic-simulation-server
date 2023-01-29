@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.http.MediaType;
@@ -74,8 +75,8 @@ public class DynamicSimulationController {
     @Operation(summary = "Get the dynamic simulation status from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation status"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation status has not been found")})
-    public Mono<ResponseEntity<String>> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        Mono<String> result = dynamicSimulationService.getStatus(resultUuid);
+    public Mono<ResponseEntity<DynamicSimulationStatus>> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        Mono<DynamicSimulationStatus> result = dynamicSimulationService.getStatus(resultUuid);
         return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
