@@ -15,10 +15,8 @@ import org.gridsuite.ds.server.utils.xml.XmlMerge;
 import org.gridsuite.ds.server.utils.xml.implementation.SimpleXmlMerge;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
+
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -88,9 +86,9 @@ public class ParametersServiceImpl implements ParametersService {
         InputStream dynamicParamsIs = new ByteArrayInputStream(dynamicParams);
         InputStream eventsParamsIs = new ByteArrayInputStream(eventsParams);
         XmlMerge xmlMerge = new SimpleXmlMerge();
-        try {
+        try (OutputStream os = Files.newOutputStream(tmpDir.resolve(modelParFileName))) {
             Document mergedDoc = xmlMerge.merge(dynamicParamsIs, eventsParamsIs);
-            xmlMerge.export(mergedDoc, Files.newOutputStream(tmpDir.resolve(modelParFileName)));
+            xmlMerge.export(mergedDoc, os);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
