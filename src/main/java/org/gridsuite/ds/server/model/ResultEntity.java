@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.ds.server.repository;
+package org.gridsuite.ds.server.model;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import javax.persistence.*;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -24,9 +24,10 @@ import java.util.UUID;
 @Entity
 public class ResultEntity extends AbstractManuallyAssignedIdentifierEntity<UUID> implements Serializable {
 
-    public ResultEntity(UUID id, Boolean result, String status) {
+    public ResultEntity(UUID id, UUID timeSeriesId, UUID timeLineId, String status) {
         this.id = id;
-        this.result = result;
+        this.timeSeriesId = timeSeriesId;
+        this.timeLineId = timeLineId;
         this.status = status;
     }
 
@@ -35,8 +36,11 @@ public class ResultEntity extends AbstractManuallyAssignedIdentifierEntity<UUID>
     @GeneratedValue
     private UUID id;
 
-    @Column(name = "result")
-    private Boolean result;
+    @Column(name = "timeSeriesUuid")
+    private UUID timeSeriesId;
+
+    @Column(name = "timeLineUuid")
+    private UUID timeLineId;
 
     @Column(name = "status")
     private String status;

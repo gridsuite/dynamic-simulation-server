@@ -6,6 +6,7 @@
  */
 package org.gridsuite.ds.server.repository;
 
+import org.gridsuite.ds.server.model.ResultEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

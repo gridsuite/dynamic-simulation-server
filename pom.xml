@@ -90,6 +90,8 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- overrides of imports -->
+
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
@@ -98,13 +100,16 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!-- project specific dependencies -->
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
+        <!-- Compilation dependencies -->
         <dependency>
             <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-network-store-iidm-impl</artifactId>
+            <artifactId>powsybl-iidm-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -132,15 +137,15 @@
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-dynamic-simulation-dsl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawaltz</artifactId>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawaltz-dsl</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-dynamic-simulation-dsl</artifactId>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
@@ -187,6 +192,12 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>${h2database.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-commons</artifactId>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>

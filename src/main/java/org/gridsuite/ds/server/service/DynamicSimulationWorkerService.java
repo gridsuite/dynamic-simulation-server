@@ -7,23 +7,25 @@
 package org.gridsuite.ds.server.service;
 
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.dynamicsimulation.DynamicModelsSupplier;
-import com.powsybl.dynamicsimulation.DynamicSimulation;
-import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
-import com.powsybl.dynamicsimulation.DynamicSimulationResult;
-import com.powsybl.dynamicsimulation.groovy.DynamicModelGroovyExtension;
-import com.powsybl.dynamicsimulation.groovy.GroovyDynamicModelsSupplier;
-import com.powsybl.dynamicsimulation.groovy.GroovyExtension;
+import com.powsybl.dynamicsimulation.*;
+import com.powsybl.dynamicsimulation.groovy.*;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import org.gridsuite.ds.server.repository.ResultRepository;
+import com.powsybl.timeseries.StringTimeSeries;
+import com.powsybl.timeseries.TimeSeries;
+import com.powsybl.dynamicsimulation.groovy.GroovyCurvesSupplier;
+import com.powsybl.dynamicsimulation.groovy.GroovyEventModelsSupplier;
+import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
+import org.gridsuite.ds.server.service.contexts.DynamicSimulationCancelContext;
+import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
+import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
+import org.gridsuite.ds.server.service.notification.NotificationService;
+import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
@@ -32,13 +34,10 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.ByteArrayInputStream;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -56,48 +55,54 @@ public class DynamicSimulationWorkerService {
 
     private static final Logger LOGGER_BROKER_INPUT = LoggerFactory.getLogger(CATEGORY_BROKER_INPUT);
 
-    private static final String CATEGORY_BROKER_OUTPUT = DynamicSimulationService.class.getName() + ".output-broker-messages";
-
-    private static final Logger OUTPUT_MESSAGE_LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
-
-    private final ResultRepository resultRepository;
-
     private final NetworkStoreService networkStoreService;
 
-    private FileSystem fileSystem = FileSystems.getDefault();
+    private final NotificationService notificationService;
 
-    @Autowired
-    private StreamBridge publishResult;
+    private final TimeSeriesClient timeSeriesClient;
 
-    private DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult;
+    private final DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult;
 
     public DynamicSimulationWorkerService(NetworkStoreService networkStoreService,
-                                          ResultRepository resultRepository,
+                                          NotificationService notificationService,
+                                          TimeSeriesClient timeSeriesClient,
                                           DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult) {
         this.networkStoreService = networkStoreService;
-        this.resultRepository = resultRepository;
+        this.notificationService = notificationService;
+        this.timeSeriesClient = timeSeriesClient;
         this.dynamicSimulationWorkerUpdateResult = dynamicSimulationWorkerUpdateResult;
     }
 
     public Mono<DynamicSimulationResult> run(DynamicSimulationRunContext context) {
         Objects.requireNonNull(context);
-        LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {},", context.getNetworkUuid(), context.getStartTime(), context.getStopTime());
+        LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {},", context.getNetworkUuid(), context.getParameters().getStartTime(), context.getParameters().getStopTime());
 
         Network network = getNetwork(context.getNetworkUuid());
-        List<DynamicModelGroovyExtension> extensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynaWaltzProvider.NAME);
-        GroovyDynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(new ByteArrayInputStream(context.getDynamicModelContent()), extensions);
-        DynamicSimulationParameters parameters = new DynamicSimulationParameters(context.getStartTime(), context.getStopTime());
+
+        List<DynamicModelGroovyExtension> dynamicModelExtensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynaWaltzProvider.NAME);
+        DynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(new ByteArrayInputStream(context.getDynamicModelContent()), dynamicModelExtensions);
+
+        List<EventModelGroovyExtension> eventModelExtensions = GroovyExtension.find(EventModelGroovyExtension.class, DynaWaltzProvider.NAME);
+        EventModelsSupplier eventModelsSupplier = new GroovyEventModelsSupplier(new ByteArrayInputStream(context.getEventModelContent()), eventModelExtensions);
+
+        List<CurveGroovyExtension> curveExtensions = GroovyExtension.find(CurveGroovyExtension.class, DynaWaltzProvider.NAME);
+        CurvesSupplier curvesSupplier = new GroovyCurvesSupplier(new ByteArrayInputStream(context.getCurveContent()), curveExtensions);
+
         return Mono.fromCompletionStage(runAsync(network,
-            context.getVariantId() != null ? context.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
-            dynamicModelsSupplier,
-            parameters));
+                context.getVariantId() != null ? context.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
+                dynamicModelsSupplier,
+                eventModelsSupplier,
+                curvesSupplier,
+                context.getParameters()));
     }
 
     public CompletableFuture<DynamicSimulationResult> runAsync(Network network,
                                                                String variantId,
                                                                DynamicModelsSupplier dynamicModelsSupplier,
+                                                               EventModelsSupplier eventModelsSupplier,
+                                                               CurvesSupplier curvesSupplier,
                                                                DynamicSimulationParameters dynamicSimulationParameters) {
-        return DynamicSimulation.runAsync(network, dynamicModelsSupplier, n1 -> null, n1 -> null, variantId, dynamicSimulationParameters);
+        return DynamicSimulation.runAsync(network, dynamicModelsSupplier, eventModelsSupplier, curvesSupplier, variantId, dynamicSimulationParameters);
     }
 
     private Network getNetwork(UUID networkUuid) {
@@ -109,40 +114,59 @@ public class DynamicSimulationWorkerService {
     }
 
     @Bean
-    public Consumer<Message<String>> consumeRun() {
+    public Consumer<Message<byte[]>> consumeRun() {
         return message -> {
-            LOGGER_BROKER_INPUT.debug("consume {}", message);
+            LOGGER_BROKER_INPUT.debug("consumeRun {}", message);
+            DynamicSimulationResultContext resultContext = DynamicSimulationResultContext.fromMessage(message);
             try {
-                DynamicSimulationResultContext resultContext = DynamicSimulationResultContext.fromMessage(message);
-
                 run(resultContext.getRunContext())
-                            .flatMap(result -> updateResult(resultContext.getResultUuid(), result.isOk()))
-                            .doOnSuccess(unused -> {
-                                Message<String> sendMessage = MessageBuilder
-                                        .withPayload("")
-                                        .setHeader("resultUuid", resultContext.getResultUuid().toString())
-                                        .build();
-                                sendResultMessage(sendMessage);
-                                LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
-                            }).block();
+                        .flatMap(result -> updateResult(resultContext.getResultUuid(), result))
+                        .doOnSuccess(result -> {
+                            Message<String> sendMessage = MessageBuilder
+                                    .withPayload("")
+                                    .setHeader("resultUuid", resultContext.getResultUuid().toString())
+                                    .setHeader("receiver", resultContext.getRunContext().getReceiver())
+                                    .build();
+                            notificationService.emitResultDynamicSimulationMessage(sendMessage);
+                            LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
+                        })
+                        .block();
             } catch (Exception e) {
+                dynamicSimulationWorkerUpdateResult.doUpdateResult(resultContext.getResultUuid(), null, null, DynamicSimulationStatus.NOT_DONE);
                 LOGGER.error("error in consumeRun", e);
+                // S2142 Restore interrupted state...
+                if (e instanceof InterruptedException) {
+                    Thread.currentThread().interrupt();
+                }
             }
         };
     }
 
-    public Mono<Void> updateResult(UUID resultUuid, Boolean result) {
+    public Mono<DynamicSimulationResult> updateResult(UUID resultUuid, DynamicSimulationResult result) {
         Objects.requireNonNull(resultUuid);
-        return Mono.fromRunnable(() -> dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, result));
+        List<TimeSeries> timeSeries = new ArrayList<>(result.getCurves().values());
+        StringTimeSeries timeLine = result.getTimeLine();
+        return Mono.zip(
+                    timeSeriesClient.sendTimeSeries(timeSeries).subscribeOn(Schedulers.boundedElastic()),
+                    timeSeriesClient.sendTimeSeries(Arrays.asList(timeLine)).subscribeOn(Schedulers.boundedElastic())
+                )
+                .map(uuidTuple -> {
+                    UUID timeSeriesUuid = uuidTuple.getT1().getId();
+                    UUID timeLineUuid = uuidTuple.getT2().getId();
+                    DynamicSimulationStatus status = result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED;
+
+                    dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
+                    return result;
+                });
     }
 
-    public void setFileSystem(FileSystem fs) {
-        this.fileSystem = fs;
-    }
-
-    private void sendResultMessage(Message<String> message) {
-        OUTPUT_MESSAGE_LOGGER.debug("Sending message : {}", message);
-        publishResult.send("publishResult-out-0", message);
+    @Bean
+    public Consumer<Message<String>> consumeCancel() {
+        return message -> {
+            LOGGER_BROKER_INPUT.debug("consumeCancel {}", message);
+            DynamicSimulationCancelContext cancelContext = DynamicSimulationCancelContext.fromMessage(message);
+            // TODO cancel implementation
+        };
     }
 }
 

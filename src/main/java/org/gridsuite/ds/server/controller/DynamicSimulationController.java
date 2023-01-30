@@ -4,30 +4,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.ds.server;
+package org.gridsuite.ds.server.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
-import static org.springframework.http.MediaType.*;
+import static org.gridsuite.ds.server.DynamicSimulationApi.API_VERSION;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 @RestController
-@RequestMapping(value = "/" + DynamicSimulationApi.API_VERSION)
+@RequestMapping(value = "/" + API_VERSION)
 @Tag(name = "Dynamic simulation server")
 public class DynamicSimulationController {
 
@@ -44,17 +45,28 @@ public class DynamicSimulationController {
                                           @RequestParam(name = "variantId", required = false) String variantId,
                                           @DefaultValue("0") @RequestParam("startTime") int startTime,
                                           @RequestParam("stopTime") int stopTime,
-                                          @RequestPart("dynamicModel") FilePart dynamicModel) {
-        Mono<UUID> resultUuid = dynamicSimulationService.runAndSaveResult(networkUuid, variantId, startTime, stopTime, dynamicModel);
+                                          @RequestParam("mappingName") String mappingName,
+                                          @RequestParam(name = "receiver", required = false) String receiver) {
+        Mono<UUID> resultUuid = dynamicSimulationService.runAndSaveResult(receiver, networkUuid, variantId, startTime, stopTime, mappingName);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
-    @GetMapping(value = "/results/{resultUuid}", produces = "application/json")
+    @GetMapping(value = "/results/{resultUuid}/timeseries", produces = "application/json")
     @Operation(summary = "Get a dynamic simulation result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result has not been found")})
-    public Mono<ResponseEntity<Boolean>> getResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        Mono<Boolean> result = dynamicSimulationService.getResult(resultUuid);
+    public Mono<ResponseEntity<UUID>> getTimeSeriesResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        Mono<UUID> result = dynamicSimulationService.getTimeSeriesId(resultUuid);
+        return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping(value = "/results/{resultUuid}/timeline", produces = "application/json")
+    @Operation(summary = "Get a dynamic simulation result from the database")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result"),
+        @ApiResponse(responseCode = "404", description = "Dynamic simulation result has not been found")})
+    public Mono<ResponseEntity<UUID>> getTimeLineResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        Mono<UUID> result = dynamicSimulationService.getTimeLineId(resultUuid);
         return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
@@ -63,8 +75,8 @@ public class DynamicSimulationController {
     @Operation(summary = "Get the dynamic simulation status from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation status"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation status has not been found")})
-    public Mono<ResponseEntity<String>> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        Mono<String> result = dynamicSimulationService.getStatus(resultUuid);
+    public Mono<ResponseEntity<DynamicSimulationStatus>> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        Mono<DynamicSimulationStatus> result = dynamicSimulationService.getStatus(resultUuid);
         return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
@@ -85,4 +97,12 @@ public class DynamicSimulationController {
         return ResponseEntity.ok().body(result);
     }
 
+    @PutMapping(value = "/results/{resultUuid}/stop", produces = APPLICATION_JSON_VALUE)
+    @Operation(summary = "Stop a dynamic simulation computation")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation has been stopped")})
+    public ResponseEntity<Mono<Void>> stop(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
+                                           @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver) {
+        Mono<Void> result = dynamicSimulationService.stop(receiver, resultUuid);
+        return ResponseEntity.ok().body(result);
+    }
 }

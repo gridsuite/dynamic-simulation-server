@@ -18,9 +18,10 @@ public class DynamicSimulationWorkerUpdateResult {
     }
 
     @Transactional
-    public void doUpdateResult(UUID resultUuid, Boolean result) {
-        var res = resultRepository.getOne(resultUuid);
-        res.setResult(result);
-        res.setStatus(DynamicSimulationStatus.COMPLETED.name());
+    public void doUpdateResult(UUID resultUuid, UUID timeSeriesUuid, UUID timeLineUuid, DynamicSimulationStatus status) {
+        var res = resultRepository.findById(resultUuid).orElseThrow();
+        res.setTimeSeriesId(timeSeriesUuid);
+        res.setTimeLineId(timeLineUuid);
+        res.setStatus(status.name());
     }
 }
