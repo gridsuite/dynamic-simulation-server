@@ -7,8 +7,11 @@
 package org.gridsuite.ds.server.service;
 
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.commons.config.PlatformConfig;
+import com.powsybl.commons.io.FileUtil;
 import com.powsybl.dynamicsimulation.*;
 import com.powsybl.dynamicsimulation.groovy.*;
+import com.powsybl.dynawaltz.DynaWaltzParameters;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
@@ -37,6 +40,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.io.ByteArrayInputStream;
+import java.nio.file.FileSystem;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -131,6 +135,13 @@ public class DynamicSimulationWorkerService {
                             LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
                         })
                         .block();
+
+                // clean temporary directory created in the config dir by the ParametersService
+                // TODO to remove when dynawaltz provider support streams for inputs
+                DynaWaltzParameters dynaWaltzParameters = resultContext.getRunContext().getParameters().getExtension(DynaWaltzParameters.class);
+                FileSystem fs = PlatformConfig.defaultConfig().getConfigDir().orElseThrow().getFileSystem();
+                FileUtil.removeDir(fs.getPath(dynaWaltzParameters.getParametersFile()).getParent());
+
             } catch (Exception e) {
                 dynamicSimulationWorkerUpdateResult.doUpdateResult(resultContext.getResultUuid(), null, null, DynamicSimulationStatus.NOT_DONE);
                 LOGGER.error("error in consumeRun", e);
