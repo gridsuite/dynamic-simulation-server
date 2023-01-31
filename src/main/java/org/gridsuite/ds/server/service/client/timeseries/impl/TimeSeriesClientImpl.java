@@ -12,12 +12,12 @@ import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -25,6 +25,7 @@ import java.util.List;
 @Service
 public class TimeSeriesClientImpl implements TimeSeriesClient {
 
+    public static final String BASE_END_POINT_URI = API_VERSION + DELIMITER + TIME_SERIES_END_POINT;
     private final WebClient webClient;
 
     public TimeSeriesClientImpl(WebClient.Builder builder, @Value("${gridsuite.services.timeseries-server.base-uri:http://timeseries-server/}") String baseUri) {
@@ -32,8 +33,7 @@ public class TimeSeriesClientImpl implements TimeSeriesClient {
     }
 
     @Override
-    public Mono<TimeSeriesGroupInfos> sendTimeSeries(List<TimeSeries> timeSeriesList) throws HttpClientErrorException {
-        String url = API_VERSION + DELIMITER + TIME_SERIES_END_POINT;
+    public Mono<TimeSeriesGroupInfos> sendTimeSeries(List<TimeSeries> timeSeriesList) {
 
         // convert timeseries to json
         var timeSeriesListJson = TimeSeries.toJson(timeSeriesList);
@@ -41,10 +41,22 @@ public class TimeSeriesClientImpl implements TimeSeriesClient {
         // call time-series Rest API
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder
-                        .path(url)
+                        .path(BASE_END_POINT_URI)
                         .build())
                 .body(BodyInserters.fromValue(timeSeriesListJson))
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<TimeSeriesGroupInfos>() { });
+    }
+
+    @Override
+    public Mono<Void> deleteTimeSeriesGroup(UUID groupUuid) {
+
+        // call time-series Rest API
+        return webClient.delete()
+                .uri(uriBuilder -> uriBuilder
+                        .path(BASE_END_POINT_URI + DELIMITER + "{groupUuid}")
+                        .build(groupUuid))
+                .retrieve()
+                .bodyToMono(Void.class);
     }
 }

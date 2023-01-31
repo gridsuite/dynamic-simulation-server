@@ -11,6 +11,7 @@ import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.model.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
+import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationCancelContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
@@ -21,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -36,12 +38,14 @@ public class DynamicSimulationService {
     private final ResultRepository resultRepository;
     private final NotificationService notificationService;
     private final DynamicMappingClient dynamicMappingClient;
+    private final TimeSeriesClient timeSeriesClient;
     private final ParametersService parametersService;
 
-    public DynamicSimulationService(ResultRepository resultRepository, NotificationService notificationService, DynamicMappingClient dynamicMappingClient, ParametersService parametersService) {
+    public DynamicSimulationService(ResultRepository resultRepository, NotificationService notificationService, DynamicMappingClient dynamicMappingClient, TimeSeriesClient timeSeriesClient, ParametersService parametersService) {
         this.resultRepository = Objects.requireNonNull(resultRepository);
         this.notificationService = Objects.requireNonNull(notificationService);
         this.dynamicMappingClient = Objects.requireNonNull(dynamicMappingClient);
+        this.timeSeriesClient = Objects.requireNonNull(timeSeriesClient);
         this.parametersService = Objects.requireNonNull(parametersService);
     }
 
@@ -97,8 +101,12 @@ public class DynamicSimulationService {
 
     public Mono<Void> deleteResult(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return Mono.fromRunnable(() -> resultRepository.deleteById(resultUuid))
-                .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable)).then();
+        ResultEntity resultEntity = resultRepository.findById(resultUuid).orElseThrow();
+        // call time series client to delete timeseries and timeline
+        return Mono.zip(timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeSeriesId()).subscribeOn(Schedulers.boundedElastic()),
+                timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeLineId()).subscribeOn(Schedulers.boundedElastic()))
+            .then(Mono.fromRunnable(() -> resultRepository.deleteById(resultUuid))) // then delete result
+            .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable)).then();
     }
 
     public Mono<Void> deleteResults() {

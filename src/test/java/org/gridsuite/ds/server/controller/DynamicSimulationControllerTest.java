@@ -99,6 +99,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     @Override
     protected void initTimeSeriesServiceMock() {
         given(timeSeriesClient.sendTimeSeries(any())).willReturn(Mono.just(new TimeSeriesGroupInfos(UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID))));
+        given(timeSeriesClient.deleteTimeSeriesGroup(any())).willReturn(Mono.empty());
     }
 
     @Before
