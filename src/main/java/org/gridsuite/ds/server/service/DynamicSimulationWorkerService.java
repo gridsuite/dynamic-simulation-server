@@ -40,6 +40,8 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.FileSystem;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -124,7 +126,19 @@ public class DynamicSimulationWorkerService {
             DynamicSimulationResultContext resultContext = DynamicSimulationResultContext.fromMessage(message);
             try {
                 run(resultContext.getRunContext())
-                        .flatMap(result -> updateResult(resultContext.getResultUuid(), result))
+                        .flatMap(result -> {
+                            // clean temporary directory created in the config dir by the ParametersService
+                            // TODO to remove when dynawaltz provider support streams for inputs
+                            DynaWaltzParameters dynaWaltzParameters = resultContext.getRunContext().getParameters().getExtension(DynaWaltzParameters.class);
+                            FileSystem fs = PlatformConfig.defaultConfig().getConfigDir().orElseThrow().getFileSystem();
+                            try {
+                                FileUtil.removeDir(fs.getPath(dynaWaltzParameters.getParametersFile()).getParent());
+                            } catch (IOException e) {
+                                return Mono.error(new UncheckedIOException(e));
+                            }
+
+                            return updateResult(resultContext.getResultUuid(), result);
+                        })
                         .doOnSuccess(result -> {
                             Message<String> sendMessage = MessageBuilder
                                     .withPayload("")
@@ -135,13 +149,6 @@ public class DynamicSimulationWorkerService {
                             LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
                         })
                         .block();
-
-                // clean temporary directory created in the config dir by the ParametersService
-                // TODO to remove when dynawaltz provider support streams for inputs
-                DynaWaltzParameters dynaWaltzParameters = resultContext.getRunContext().getParameters().getExtension(DynaWaltzParameters.class);
-                FileSystem fs = PlatformConfig.defaultConfig().getConfigDir().orElseThrow().getFileSystem();
-                FileUtil.removeDir(fs.getPath(dynaWaltzParameters.getParametersFile()).getParent());
-
             } catch (Exception e) {
                 dynamicSimulationWorkerUpdateResult.doUpdateResult(resultContext.getResultUuid(), null, null, DynamicSimulationStatus.NOT_DONE);
                 LOGGER.error("error in consumeRun", e);
