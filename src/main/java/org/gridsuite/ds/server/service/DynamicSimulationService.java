@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -103,8 +102,8 @@ public class DynamicSimulationService {
         Objects.requireNonNull(resultUuid);
         ResultEntity resultEntity = resultRepository.findById(resultUuid).orElseThrow();
         // call time series client to delete timeseries and timeline
-        return Mono.zip(timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeSeriesId()).subscribeOn(Schedulers.boundedElastic()),
-                timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeLineId()).subscribeOn(Schedulers.boundedElastic()))
+        return timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeSeriesId())
+            .then(timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeLineId()))
             .then(Mono.fromRunnable(() -> resultRepository.deleteById(resultUuid))) // then delete result
             .doOnError(throwable -> LOGGER.error(throwable.toString(), throwable)).then();
     }
