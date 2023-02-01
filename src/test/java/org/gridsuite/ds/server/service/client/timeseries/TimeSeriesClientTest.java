@@ -25,8 +25,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.*;
 
+import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -50,6 +52,7 @@ public class TimeSeriesClientTest extends AbstractRestClientTest {
                 String baseUrl = DELIMITER + API_VERSION + DELIMITER + TIME_SERIES_END_POINT;
                 baseUrl = baseUrl.replace("//", "/");
                 String method = recordedRequest.getMethod();
+                List<String> pathSegments = emptyIfNull(recordedRequest.getRequestUrl().pathSegments());
 
                 // v1/time-series
                 if ("POST".equals(method)
@@ -58,7 +61,17 @@ public class TimeSeriesClientTest extends AbstractRestClientTest {
                             .setResponseCode(HttpStatus.OK.value())
                             .addHeader("Content-Type", "application/json; charset=utf-8")
                             .setBody(getObjectMapper().writeValueAsString(new TimeSeriesGroupInfos(UUID.fromString(TIME_SERIES_UUID))));
+                } else if ("DELETE".equals(method)
+                        && path.matches(baseUrl + ".*")) {
+                    // take the {groupUuid} at the last item
+                    String groupUuid = pathSegments.stream().reduce((first, second) -> second).orElse("");
+                    if (TIME_SERIES_UUID.equals(groupUuid)) {
+                        return new MockResponse()
+                                .setResponseCode(HttpStatus.OK.value())
+                                .addHeader("Content-Type", "application/json; charset=utf-8");
+                    }
                 }
+
                 return new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value());
             }
         };
@@ -92,5 +105,13 @@ public class TimeSeriesClientTest extends AbstractRestClientTest {
         UUID timeSeriesUuid = timeSeriesClient.sendTimeSeries(timeSeries).block().getId();
         assertEquals(TIME_SERIES_UUID, Optional.of(timeSeriesUuid).orElseThrow().toString());
 
+    }
+
+    @Test
+    public void testDeleteTimeSeriesGroup() {
+        timeSeriesClient.deleteTimeSeriesGroup(UUID.fromString(TIME_SERIES_UUID)).block();
+
+        // check result
+        assertTrue(true);
     }
 }

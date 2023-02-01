@@ -8,10 +8,10 @@ package org.gridsuite.ds.server.service.client.timeseries;
 
 import com.powsybl.timeseries.TimeSeries;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
-import org.springframework.web.client.HttpClientErrorException;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -21,5 +21,7 @@ public interface TimeSeriesClient {
     String DELIMITER = "/";
     String TIME_SERIES_END_POINT = "timeseries-group";
 
-    Mono<TimeSeriesGroupInfos> sendTimeSeries(List<TimeSeries> timeSeriesList) throws HttpClientErrorException;
+    Mono<TimeSeriesGroupInfos> sendTimeSeries(List<TimeSeries> timeSeriesList);
+
+    Mono<Void> deleteTimeSeriesGroup(UUID groupUuid);
 }
