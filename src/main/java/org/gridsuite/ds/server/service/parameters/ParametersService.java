@@ -13,6 +13,7 @@ import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
  */
 public interface ParametersService {
     String RESOURCE_PATH_DELIMETER = "/";
+    String TMP_DIR = "tmp";
     String WORKING_DIR_PREFIX = "dynamic_simulation_";
     String PARAMETERS_DIR = RESOURCE_PATH_DELIMETER + "parameters";
     String EVENTS_GROOVY = "events.groovy";

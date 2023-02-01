@@ -50,10 +50,14 @@ public class ParametersServiceImpl implements ParametersService {
     @Override
     public DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams) {
         try (InputStream eventsIs = getClass().getResourceAsStream(PARAMETERS_DIR + RESOURCE_PATH_DELIMETER + EVENTS_PAR)) {
-            // prepare a temp dir for current running simulation
-            Path configDir = PlatformConfig.defaultConfig().getConfigDir().orElseThrow();
+            // prepare a tmp dir for current running simulation
             // TODO to remove when dynawaltz provider support streams for inputs
-            Path workingDir = Files.createTempDirectory(configDir, WORKING_DIR_PREFIX);
+            Path configDir = PlatformConfig.defaultConfig().getConfigDir().orElseThrow();
+            Path tmpPath = configDir.resolve(TMP_DIR);
+            if (!Files.exists(tmpPath)) {
+                Files.createDirectory(tmpPath);
+            }
+            Path workingDir = Files.createTempDirectory(tmpPath, WORKING_DIR_PREFIX);
 
             // merge dynamicParams with events.par then load parametersFile in a runtime tmp directory
             byte[] eventsParams = eventsIs.readAllBytes();
