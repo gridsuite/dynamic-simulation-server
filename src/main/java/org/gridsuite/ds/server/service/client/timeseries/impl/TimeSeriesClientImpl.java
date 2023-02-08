@@ -50,6 +50,9 @@ public class TimeSeriesClientImpl implements TimeSeriesClient {
 
     @Override
     public Mono<Void> deleteTimeSeriesGroup(UUID groupUuid) {
+        if (groupUuid == null) {
+            return Mono.empty();
+        }
 
         // call time-series Rest API
         return webClient.delete()

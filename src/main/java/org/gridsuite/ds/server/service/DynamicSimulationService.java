@@ -100,7 +100,11 @@ public class DynamicSimulationService {
 
     public Mono<Void> deleteResult(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        ResultEntity resultEntity = resultRepository.findById(resultUuid).orElseThrow();
+        ResultEntity resultEntity = resultRepository.findById(resultUuid).orElse(null);
+        if (resultEntity == null) {
+            return Mono.empty();
+        }
+
         // call time series client to delete timeseries and timeline
         return timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeSeriesId())
             .then(timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeLineId()))
