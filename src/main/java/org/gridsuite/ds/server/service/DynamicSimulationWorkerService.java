@@ -149,8 +149,8 @@ public class DynamicSimulationWorkerService {
                             FAIL_MESSAGE + " : " + e.getMessage()).toMessage();
 
                     notificationService.emitFailDynamicSimulationMessage(sendMessage);
-                    // update the result entity with not done status in server's db
-                    dynamicSimulationWorkerUpdateResult.doUpdateResult(resultContext.getResultUuid(), null, null, DynamicSimulationStatus.NOT_DONE);
+                    // delete result entity in server's db
+                    dynamicSimulationWorkerUpdateResult.deleteResult(resultContext.getResultUuid());
                 }
             } finally {
                 // clean temporary directory created in the config dir by the ParametersService
