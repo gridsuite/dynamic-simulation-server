@@ -23,6 +23,7 @@ import com.powsybl.dynamicsimulation.groovy.GroovyCurvesSupplier;
 import com.powsybl.dynamicsimulation.groovy.GroovyEventModelsSupplier;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationCancelContext;
+import org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.notification.NotificationService;
@@ -132,27 +133,24 @@ public class DynamicSimulationWorkerService {
                         .doOnSuccess(result -> {
                             Message<String> sendMessage = MessageBuilder
                                     .withPayload("")
-                                    .setHeader("resultUuid", resultContext.getResultUuid().toString())
-                                    .setHeader("receiver", resultContext.getRunContext().getReceiver())
+                                    .setHeader(DynamicSimulationResultContext.HEADER_RESULT_UUID, resultContext.getResultUuid().toString())
+                                    .setHeader(DynamicSimulationResultContext.HEADER_RECEIVER, resultContext.getRunContext().getReceiver())
                                     .build();
                             notificationService.emitResultDynamicSimulationMessage(sendMessage);
                             LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
                         })
                         .block();
             } catch (Exception e) {
-                LOGGER.error("error in consumeRun", e);
                 if (!(e instanceof CancellationException)) {
+                    LOGGER.error(FAIL_MESSAGE, e);
                     // send fail notification
-                    Message<String> sendMessage = MessageBuilder
-                            .withPayload("")
-                            .setHeader("resultUuid", resultContext.getResultUuid().toString())
-                            .setHeader("receiver", resultContext.getRunContext().getReceiver())
-                            .setHeader("message", FAIL_MESSAGE + " : " + e.getMessage())
-                            .build();
+                    Message<String> sendMessage = new DynamicSimulationFailedContext(resultContext.getRunContext().getReceiver(),
+                            resultContext.getResultUuid(),
+                            FAIL_MESSAGE + " : " + e.getMessage()).toMessage();
 
                     notificationService.emitFailDynamicSimulationMessage(sendMessage);
-                    // delete the result entity in server's db
-                    dynamicSimulationWorkerUpdateResult.deleteResult(resultContext.getResultUuid());
+                    // update the result entity with not done status in server's db
+                    dynamicSimulationWorkerUpdateResult.doUpdateResult(resultContext.getResultUuid(), null, null, DynamicSimulationStatus.NOT_DONE);
                 }
             } finally {
                 // clean temporary directory created in the config dir by the ParametersService
