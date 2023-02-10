@@ -28,7 +28,7 @@ public class DynamicSimulationFailedContext {
     private final String message;
 
     public DynamicSimulationFailedContext(String receiver, UUID resultUuid, String message) {
-        this.receiver = Objects.requireNonNull(receiver);
+        this.receiver = receiver;
         this.resultUuid = Objects.requireNonNull(resultUuid);
         this.message = message;
     }
