@@ -46,11 +46,10 @@
     <properties>
         <java.version>11</java.version>
 
-        <gridsuite-dependencies.version>21</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>22</gridsuite-dependencies.version>
         <jib.from.image>gridsuite/java-dynawo</jib.from.image>
 
         <h2database.version>1.4.200</h2database.version>
-        <powsybl-network-store-client.version>1.0.0-SNAPSHOT</powsybl-network-store-client.version>
         <liquibase-hibernate-package>org.gridsuite.ds.server</liquibase-hibernate-package>
     </properties>
 
@@ -196,8 +195,7 @@
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-commons</artifactId>
-            <type>test-jar</type>
+            <artifactId>powsybl-commons-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
