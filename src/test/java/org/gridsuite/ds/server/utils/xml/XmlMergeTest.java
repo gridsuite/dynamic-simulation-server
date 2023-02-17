@@ -25,7 +25,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import static com.powsybl.commons.ComparisonUtils.compareXml;
+import static com.powsybl.commons.test.ComparisonUtils.compareXml;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
