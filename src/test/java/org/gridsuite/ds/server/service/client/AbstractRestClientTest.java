@@ -55,10 +55,12 @@ public abstract class AbstractRestClientTest {
         return objectMapper;
     }
 
-    protected String initMockWebServer(int port) {
+    protected String initMockWebServer() {
         server = new MockWebServer();
         try {
-            server.start(port);
+            server.start();
+
+            logger.info("Mock server started at port = " + server.getPort());
         } catch (IOException e) {
             throw new UncheckedIOException("Can not init the mock server " + this.getClass().getSimpleName(), e);
         }

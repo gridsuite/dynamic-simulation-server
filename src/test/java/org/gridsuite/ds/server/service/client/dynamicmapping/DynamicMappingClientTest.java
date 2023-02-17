@@ -48,7 +48,6 @@ public class DynamicMappingClientTest extends AbstractRestClientTest {
     public static final String DATA_IEEE14_BASE_DIR = RESOURCE_PATH_DELIMETER + "data" + RESOURCE_PATH_DELIMETER + "ieee14";
     public static final String INPUT = "input";
     public static final String MODELS_GROOVY = "models.groovy";
-    private static final int DYNAMIC_MAPPING_PORT = 5036;
 
     private static final String FIXED_DATE = "01/01/2023";
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
@@ -138,7 +137,7 @@ public class DynamicMappingClientTest extends AbstractRestClientTest {
 
         // config builder
         WebClient.Builder webClientBuilder = WebClient.builder();
-        dynamicMappingClient = new DynamicMappingClientImpl(webClientBuilder, initMockWebServer(DYNAMIC_MAPPING_PORT));
+        dynamicMappingClient = new DynamicMappingClientImpl(webClientBuilder, initMockWebServer());
     }
 
     @Test

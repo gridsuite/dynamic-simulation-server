@@ -13,9 +13,13 @@ import org.springframework.messaging.Message;
  */
 public interface NotificationService {
 
+    String FAIL_MESSAGE = "Dynamic simulation has failed";
+
     void emitRunDynamicSimulationMessage(Message<byte[]> message);
 
     void emitResultDynamicSimulationMessage(Message<String> message);
 
     void emitCancelDynamicSimulationMessage(Message<String> message);
+
+    void emitFailDynamicSimulationMessage(Message<String> message);
 }

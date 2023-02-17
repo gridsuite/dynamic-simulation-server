@@ -23,6 +23,7 @@ import com.powsybl.dynamicsimulation.groovy.GroovyCurvesSupplier;
 import com.powsybl.dynamicsimulation.groovy.GroovyEventModelsSupplier;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationCancelContext;
+import org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.notification.NotificationService;
@@ -43,8 +44,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.util.*;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+
+import static org.gridsuite.ds.server.service.notification.NotificationService.FAIL_MESSAGE;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -129,19 +133,24 @@ public class DynamicSimulationWorkerService {
                         .doOnSuccess(result -> {
                             Message<String> sendMessage = MessageBuilder
                                     .withPayload("")
-                                    .setHeader("resultUuid", resultContext.getResultUuid().toString())
-                                    .setHeader("receiver", resultContext.getRunContext().getReceiver())
+                                    .setHeader(DynamicSimulationResultContext.HEADER_RESULT_UUID, resultContext.getResultUuid().toString())
+                                    .setHeader(DynamicSimulationResultContext.HEADER_RECEIVER, resultContext.getRunContext().getReceiver())
                                     .build();
                             notificationService.emitResultDynamicSimulationMessage(sendMessage);
                             LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
                         })
                         .block();
             } catch (Exception e) {
-                dynamicSimulationWorkerUpdateResult.doUpdateResult(resultContext.getResultUuid(), null, null, DynamicSimulationStatus.NOT_DONE);
-                LOGGER.error("error in consumeRun", e);
-                // S2142 Restore interrupted state...
-                if (e instanceof InterruptedException) {
-                    Thread.currentThread().interrupt();
+                if (!(e instanceof CancellationException)) {
+                    LOGGER.error(FAIL_MESSAGE, e);
+                    // send fail notification
+                    Message<String> sendMessage = new DynamicSimulationFailedContext(resultContext.getRunContext().getReceiver(),
+                            resultContext.getResultUuid(),
+                            FAIL_MESSAGE + " : " + e.getMessage()).toMessage();
+
+                    notificationService.emitFailDynamicSimulationMessage(sendMessage);
+                    // delete result entity in server's db
+                    dynamicSimulationWorkerUpdateResult.deleteResult(resultContext.getResultUuid());
                 }
             } finally {
                 // clean temporary directory created in the config dir by the ParametersService

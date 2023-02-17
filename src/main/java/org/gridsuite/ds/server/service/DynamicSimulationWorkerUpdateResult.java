@@ -24,4 +24,10 @@ public class DynamicSimulationWorkerUpdateResult {
         res.setTimeLineId(timeLineUuid);
         res.setStatus(status.name());
     }
+
+    @Transactional
+    public void deleteResult(UUID resultUuid) {
+        var res = resultRepository.findById(resultUuid).orElseThrow();
+        resultRepository.delete(res);
+    }
 }
