@@ -19,7 +19,6 @@ public interface ParametersService {
     String EVENTS_GROOVY = "events.groovy";
     String CURVES_GROOVY = "curves.groovy";
     String MODELS_PAR = "models.par";
-    String EVENTS_PAR = "events.par";
     String NETWORK_PAR = "network.par";
     String SOLVERS_PAR = "solvers.par";
     String PARAMETERS_JSON = "parameters.json";

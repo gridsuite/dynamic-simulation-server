@@ -9,8 +9,6 @@ import com.powsybl.iidm.network.Load
 import com.powsybl.iidm.network.Generator
 import com.powsybl.dynawaltz.models.automatons.CurrentLimitAutomaton
 import com.powsybl.iidm.network.Branch
-import com.powsybl.dynawaltz.models.automatons.CurrentLimitAutomaton
-import com.powsybl.iidm.network.Branch
 
 for (Load equipment : network.loads) {
           if (true) {
