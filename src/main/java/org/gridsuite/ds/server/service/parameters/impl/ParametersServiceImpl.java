@@ -10,6 +10,7 @@ import com.powsybl.commons.config.PlatformConfig;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.json.JsonDynamicSimulationParameters;
 import com.powsybl.dynawaltz.DynaWaltzParameters;
+import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.springframework.stereotype.Service;
 
@@ -45,7 +46,7 @@ public class ParametersServiceImpl implements ParametersService {
     }
 
     @Override
-    public DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams) {
+    public DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams, DynamicSimulationParametersInfos inputParameters) {
         try {
             // prepare a tmp dir for current running simulation
             // TODO to remove when dynawaltz provider support streams for inputs

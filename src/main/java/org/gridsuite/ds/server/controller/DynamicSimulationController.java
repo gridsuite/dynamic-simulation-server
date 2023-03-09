@@ -11,9 +11,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
-import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,14 +40,12 @@ public class DynamicSimulationController {
 
     @PostMapping(value = "/networks/{networkUuid}/run", produces = "application/json")
     @Operation(summary = "run the dynamic simulation")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "")})
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Run dynamic simulation")})
     public ResponseEntity<Mono<UUID>> run(@PathVariable("networkUuid") UUID networkUuid,
                                           @RequestParam(name = "variantId", required = false) String variantId,
-                                          @DefaultValue("0") @RequestParam("startTime") int startTime,
-                                          @RequestParam("stopTime") int stopTime,
-                                          @RequestParam("mappingName") String mappingName,
-                                          @RequestParam(name = "receiver", required = false) String receiver) {
-        Mono<UUID> resultUuid = dynamicSimulationService.runAndSaveResult(receiver, networkUuid, variantId, startTime, stopTime, mappingName);
+                                          @RequestParam(name = "receiver", required = false) String receiver,
+                                          @RequestBody DynamicSimulationParametersInfos parameters) {
+        Mono<UUID> resultUuid = dynamicSimulationService.runAndSaveResult(receiver, networkUuid, variantId, parameters);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 

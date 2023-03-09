@@ -7,6 +7,7 @@
 package org.gridsuite.ds.server.service;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
+import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.model.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
@@ -48,17 +49,17 @@ public class DynamicSimulationService {
         this.parametersService = Objects.requireNonNull(parametersService);
     }
 
-    public Mono<UUID> runAndSaveResult(String receiver, UUID networkUuid, String variantId, int startTime, int stopTime, String mappingName) {
+    public Mono<UUID> runAndSaveResult(String receiver, UUID networkUuid, String variantId, DynamicSimulationParametersInfos parametersInfos) {
 
-        return dynamicMappingClient.createFromMapping(mappingName) // get script and parameters file from dynamic mapping server
+        return dynamicMappingClient.createFromMapping(parametersInfos.getMapping()) // get script and parameters file from dynamic mapping server
                 .flatMap(scriptObj -> {
                     // get all dynamic simulation parameters
                     String parametersFile = scriptObj.getParametersFile();
-                    DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(parametersFile.getBytes(StandardCharsets.UTF_8));
+                    DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(parametersFile.getBytes(StandardCharsets.UTF_8), parametersInfos);
 
                     // set start and stop times
-                    parameters.setStartTime(startTime);
-                    parameters.setStopTime(stopTime);
+                    parameters.setStartTime(parametersInfos.getStartTime());
+                    parameters.setStopTime(parametersInfos.getStopTime());
 
                     String script = scriptObj.getScript();
                     byte[] dynamicModel = script.getBytes(StandardCharsets.UTF_8);

@@ -7,6 +7,7 @@
 package org.gridsuite.ds.server.service.parameters;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
+import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -27,5 +28,5 @@ public interface ParametersService {
 
     byte[] getCurveModel();
 
-    DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams);
+    DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams, DynamicSimulationParametersInfos inputParameters);
 }
