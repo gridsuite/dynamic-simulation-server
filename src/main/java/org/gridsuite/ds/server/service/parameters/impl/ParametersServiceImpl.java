@@ -7,13 +7,18 @@
 package org.gridsuite.ds.server.service.parameters.impl;
 
 import com.powsybl.commons.config.PlatformConfig;
+import com.powsybl.commons.exceptions.UncheckedXmlStreamException;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.json.JsonDynamicSimulationParameters;
 import com.powsybl.dynawaltz.DynaWaltzParameters;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
+import org.gridsuite.ds.server.dto.dynawaltz.DynaWaltzParametersInfos;
+import org.gridsuite.ds.server.dto.dynawaltz.XmlSerializableParameter;
+import org.gridsuite.ds.server.dto.dynawaltz.solver.SolverInfos;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.springframework.stereotype.Service;
 
+import javax.xml.stream.XMLStreamException;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -74,9 +79,30 @@ public class ParametersServiceImpl implements ParametersService {
             dynaWaltzParameters.setParametersFile(workingDir.resolve(MODELS_PAR).toString());
             dynaWaltzParameters.getNetwork().setParametersFile(workingDir.resolve(NETWORK_PAR).toString());
             dynaWaltzParameters.getSolver().setParametersFile(workingDir.resolve(SOLVERS_PAR).toString());
+
+            // override solver from input parameter
+            DynaWaltzParametersInfos inputDynaWaltzParameters = (DynaWaltzParametersInfos) inputParameters.getExtensions().stream()
+                    .filter(elem -> DynaWaltzParametersInfos.EXTENSION_NAME.equals(elem.getName()))
+                    .findFirst().orElse(null);
+            if (inputDynaWaltzParameters != null) {
+                SolverInfos inputSolver = inputDynaWaltzParameters.getSolvers().stream().filter(elem -> elem.getId().equals(inputDynaWaltzParameters.getSolverId())).findFirst().orElse(null);
+                if (inputSolver != null) {
+                    dynaWaltzParameters.getSolver().setParametersId(inputSolver.getId());
+                    dynaWaltzParameters.getSolver().setType(inputSolver.getType().toSolverType());
+
+                    // TODO to remove when dynawaltz provider support streams for inputs
+                    // export input solver to override default solver par file
+                    Path file = workingDir.resolve(SOLVERS_PAR);
+                    XmlSerializableParameter.writeParameter(file, XmlSerializableParameter.PARAMETER_SET, inputSolver);
+                }
+
+            }
+
             return parameters;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        } catch (XMLStreamException e) {
+            throw new UncheckedXmlStreamException(e);
         }
     }
 }

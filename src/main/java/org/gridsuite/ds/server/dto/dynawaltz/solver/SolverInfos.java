@@ -9,6 +9,7 @@ package org.gridsuite.ds.server.dto.dynawaltz.solver;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.gridsuite.ds.server.dto.dynawaltz.XmlSerializableParameter;
 
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
@@ -18,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 )@JsonSubTypes({
     @JsonSubTypes.Type(value = IdaSolverInfos.class, name = "IDA"),
     @JsonSubTypes.Type(value = SimSolverInfos.class, name = "SIM")})
-public interface SolverInfos {
+public interface SolverInfos extends XmlSerializableParameter {
     String getId();
 
     SolverTypeInfos getType();

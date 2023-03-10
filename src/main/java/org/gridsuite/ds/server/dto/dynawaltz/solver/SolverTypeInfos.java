@@ -7,7 +7,17 @@
 
 package org.gridsuite.ds.server.dto.dynawaltz.solver;
 
+import com.powsybl.dynawaltz.DynaWaltzParameters;
+
 public enum SolverTypeInfos {
     SIM,
-    IDA
+    IDA;
+
+    public DynaWaltzParameters.SolverType toSolverType() {
+        switch (this) {
+            case SIM : return DynaWaltzParameters.SolverType.SIM;
+            case IDA : return DynaWaltzParameters.SolverType.IDA;
+            default : return null;
+        }
+    }
 }

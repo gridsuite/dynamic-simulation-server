@@ -11,12 +11,23 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.ds.server.dto.dynawaltz.XmlSerializableParameter;
+
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 
 @SuperBuilder
 @NoArgsConstructor
 @Getter
 @Setter
 public class IdaSolverInfos extends AbstractSolverInfos {
+
+    public static final String SOLVER_ORDER = "order";
+    public static final String INIT_STEP = "initStep";
+    public static final String MIN_STEP = "minStep";
+    public static final String MAX_STEP = "maxStep";
+    public static final String ABS_ACCURACY = "absAccuracy";
+    public static final String REL_ACCURACY = "relAccuracy";
 
     private int order;
 
@@ -30,4 +41,18 @@ public class IdaSolverInfos extends AbstractSolverInfos {
 
     private double relAccuracy;
 
+    @Override
+    public void writeParameter(XMLStreamWriter writer) throws XMLStreamException {
+        writer.writeStartElement(DYN_BASE_URI, "set");
+        writer.writeAttribute("id", getId());
+
+        XmlSerializableParameter.writeParameter(writer, ParameterType.INT, SOLVER_ORDER, Integer.toString(order));
+        XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, INIT_STEP, Double.toString(initStep));
+        XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, MIN_STEP, Double.toString(minStep));
+        XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, MAX_STEP, Double.toString(maxStep));
+        XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, ABS_ACCURACY, Double.toString(absAccuracy));
+        XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, REL_ACCURACY, Double.toString(relAccuracy));
+
+        writer.writeEndElement();
+    }
 }
