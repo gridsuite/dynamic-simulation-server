@@ -9,7 +9,6 @@ package org.gridsuite.ds.server.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.gridsuite.ds.server.DynamicSimulationApplication;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.model.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
