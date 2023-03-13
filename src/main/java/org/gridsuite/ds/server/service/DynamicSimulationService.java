@@ -24,8 +24,10 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -79,6 +81,17 @@ public class DynamicSimulationService {
 
     public Mono<ResultEntity> insertStatus(String status) {
         return Mono.fromCallable(() -> resultRepository.save(new ResultEntity(null, null, null, status)));
+    }
+
+    public Mono<List<UUID> > updateStatus(List<UUID> resultUuids, String status) {
+        return Mono.fromCallable(() -> {
+            // find result entities
+            List<ResultEntity> resultEntities = resultRepository.findAllById(resultUuids);
+            // set entity with new values
+            resultEntities.forEach(resultEntity -> resultEntity.setStatus(status));
+            // save entities into database
+            return resultRepository.saveAllAndFlush(resultEntities).stream().map(ResultEntity::getId).collect(Collectors.toList());
+        });
     }
 
     public Mono<UUID> getTimeSeriesId(UUID resultUuid) {

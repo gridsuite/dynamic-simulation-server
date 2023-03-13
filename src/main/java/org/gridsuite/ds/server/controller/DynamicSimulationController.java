@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.gridsuite.ds.server.DynamicSimulationApi.API_VERSION;
@@ -77,6 +78,16 @@ public class DynamicSimulationController {
         @ApiResponse(responseCode = "404", description = "Dynamic simulation status has not been found")})
     public Mono<ResponseEntity<DynamicSimulationStatus>> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         Mono<DynamicSimulationStatus> result = dynamicSimulationService.getStatus(resultUuid);
+        return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping(value = "/results/invalidate-status", produces = "application/json")
+    @Operation(summary = "Invalidate the dynamic simulation status from the database")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result uuids have been invalidated"),
+        @ApiResponse(responseCode = "404", description = "Dynamic simulation result has not been found")})
+    public Mono<ResponseEntity<List<UUID>>> invalidateStatus(@Parameter(description = "Result UUIDs") @RequestParam("resultUuid") List<UUID> resultUuids) {
+        Mono<List<UUID>> result = dynamicSimulationService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE.name());
         return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
