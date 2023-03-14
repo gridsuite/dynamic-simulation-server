@@ -7,6 +7,7 @@
 package org.gridsuite.ds.server.service;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
+import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.model.ResultEntity;
@@ -20,13 +21,16 @@ import org.gridsuite.ds.server.service.notification.NotificationService;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -35,13 +39,22 @@ import java.util.UUID;
 public class DynamicSimulationService {
     private static final String CATEGORY_BROKER_OUTPUT = DynamicSimulationService.class.getName() + ".output-broker-messages";
     private static final Logger LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
+
+    private final String defaultProvider;
     private final ResultRepository resultRepository;
     private final NotificationService notificationService;
     private final DynamicMappingClient dynamicMappingClient;
     private final TimeSeriesClient timeSeriesClient;
     private final ParametersService parametersService;
 
-    public DynamicSimulationService(ResultRepository resultRepository, NotificationService notificationService, DynamicMappingClient dynamicMappingClient, TimeSeriesClient timeSeriesClient, ParametersService parametersService) {
+    public DynamicSimulationService(
+            @Value("${dynamic-simulation.default-provider}") String defaultProvider,
+            ResultRepository resultRepository,
+            NotificationService notificationService,
+            DynamicMappingClient dynamicMappingClient,
+            TimeSeriesClient timeSeriesClient,
+            ParametersService parametersService) {
+        this.defaultProvider = Objects.requireNonNull(defaultProvider);
         this.resultRepository = Objects.requireNonNull(resultRepository);
         this.notificationService = Objects.requireNonNull(notificationService);
         this.dynamicMappingClient = Objects.requireNonNull(dynamicMappingClient);
@@ -120,5 +133,15 @@ public class DynamicSimulationService {
 
     public Mono<Void> stop(String receiver, UUID resultUuid) {
         return Mono.fromRunnable(() -> notificationService.emitCancelDynamicSimulationMessage(new DynamicSimulationCancelContext(receiver, resultUuid).toMessage()));
+    }
+
+    public List<String> getProviders() {
+        return DynamicSimulationProvider.findAll().stream()
+                .map(DynamicSimulationProvider::getName)
+                .collect(Collectors.toList());
+    }
+
+    public String getDefaultProvider() {
+        return defaultProvider;
     }
 }
