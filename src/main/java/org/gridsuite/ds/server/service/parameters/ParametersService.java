@@ -28,5 +28,5 @@ public interface ParametersService {
 
     byte[] getCurveModel();
 
-    DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams, DynamicSimulationParametersInfos inputParameters);
+    DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams, String provider, DynamicSimulationParametersInfos inputParameters);
 }

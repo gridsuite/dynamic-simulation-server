@@ -25,6 +25,7 @@ import static org.gridsuite.ds.server.service.contexts.ContextUtils.getNonNullHe
 public class DynamicSimulationResultContext {
 
     public static final String HEADER_RESULT_UUID = "resultUuid";
+    public static final String HEADER_PROVIDER = "provider";
     public static final String HEADER_RECEIVER = "receiver";
     public static final String HEADER_NETWORK_UUID = "networkUuid";
     public static final String HEADER_VARIANT_ID = "variantId";
@@ -58,6 +59,7 @@ public class DynamicSimulationResultContext {
 
         MessageHeaders headers = message.getHeaders();
         UUID resultUuid = UUID.fromString(getNonNullHeader(headers, HEADER_RESULT_UUID));
+        String provider = getNonNullHeader(headers, HEADER_PROVIDER);
         String receiver = (String) headers.get(HEADER_RECEIVER);
         UUID networkUuid = UUID.fromString(getNonNullHeader(headers, HEADER_NETWORK_UUID));
         String variantId = (String) headers.get(HEADER_VARIANT_ID);
@@ -66,7 +68,7 @@ public class DynamicSimulationResultContext {
         byte[] curveContent = (byte[]) headers.get(HEADER_CURVE_CONTENT);
         // decode the parameters
 
-        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(receiver, networkUuid, variantId, dynamicModelContent, eventModelContent, curveContent, parameters);
+        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(provider, receiver, networkUuid, variantId, dynamicModelContent, eventModelContent, curveContent, parameters);
         return new DynamicSimulationResultContext(resultUuid, runContext);
     }
 
@@ -77,6 +79,7 @@ public class DynamicSimulationResultContext {
 
         return MessageBuilder.withPayload(bytesOS.toByteArray())
                 .setHeader(HEADER_RESULT_UUID, resultUuid.toString())
+                .setHeader(HEADER_PROVIDER, runContext.getProvider())
                 .setHeader(HEADER_RECEIVER, runContext.getReceiver())
                 .setHeader(HEADER_NETWORK_UUID, runContext.getNetworkUuid().toString())
                 .setHeader(HEADER_VARIANT_ID, runContext.getVariantId())

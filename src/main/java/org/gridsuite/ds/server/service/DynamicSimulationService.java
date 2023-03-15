@@ -6,6 +6,7 @@
  */
 package org.gridsuite.ds.server.service;
 
+import com.powsybl.commons.PowsyblException;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
@@ -62,13 +63,21 @@ public class DynamicSimulationService {
         this.parametersService = Objects.requireNonNull(parametersService);
     }
 
-    public Mono<UUID> runAndSaveResult(String receiver, UUID networkUuid, String variantId, String mappingName, DynamicSimulationParametersInfos parametersInfos) {
+    public Mono<UUID> runAndSaveResult(String receiver, UUID networkUuid, String variantId, String mappingName, String provider, DynamicSimulationParametersInfos parametersInfos) {
+
+        // check provider => if not found then set default provider
+        String dsProvider = getProviders().stream()
+                .filter(elem -> elem.equals(provider))
+                .findFirst().orElse(getDefaultProvider());
+        if (dsProvider == null) {
+            throw new PowsyblException(String.format("Not found provider %s", provider));
+        }
 
         return dynamicMappingClient.createFromMapping(mappingName) // get script and parameters file from dynamic mapping server
                 .flatMap(scriptObj -> {
                     // get all dynamic simulation parameters
                     String parametersFile = scriptObj.getParametersFile();
-                    DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(parametersFile.getBytes(StandardCharsets.UTF_8), parametersInfos);
+                    DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(parametersFile.getBytes(StandardCharsets.UTF_8), dsProvider, parametersInfos);
 
                     // set start and stop times
                     parameters.setStartTime(parametersInfos.getStartTime());
@@ -79,7 +88,7 @@ public class DynamicSimulationService {
                     byte[] eventModel = parametersService.getEventModel();
                     byte[] curveModel = parametersService.getCurveModel();
 
-                    DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(receiver, networkUuid, variantId, dynamicModel, eventModel, curveModel, parameters);
+                    DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(dsProvider, receiver, networkUuid, variantId, dynamicModel, eventModel, curveModel, parameters);
 
                     return insertStatus(DynamicSimulationStatus.RUNNING.name()) // update status to running status
                             .map(resultEntity -> {
