@@ -46,8 +46,9 @@ public class DynamicSimulationController {
     public ResponseEntity<Mono<UUID>> run(@PathVariable("networkUuid") UUID networkUuid,
                                           @RequestParam(name = "variantId", required = false) String variantId,
                                           @RequestParam(name = "receiver", required = false) String receiver,
+                                          @RequestParam("mappingName") String mappingName,
                                           @RequestBody DynamicSimulationParametersInfos parameters) {
-        Mono<UUID> resultUuid = dynamicSimulationService.runAndSaveResult(receiver, networkUuid, variantId, parameters);
+        Mono<UUID> resultUuid = dynamicSimulationService.runAndSaveResult(receiver, networkUuid, variantId, mappingName, parameters);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 

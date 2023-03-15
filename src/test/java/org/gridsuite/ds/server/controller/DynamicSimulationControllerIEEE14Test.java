@@ -173,11 +173,10 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         DynamicSimulationParametersInfos parameters = new DynamicSimulationParametersInfos();
         parameters.setStartTime(0);
         parameters.setStopTime(50);
-        parameters.setMapping(MAPPING_NAME_01);
 
         //run the dynamic simulation (on a specific variant with variantId=" + VARIANT_1_ID + ")
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
-                .uri("/v1/networks/{networkUuid}/run?", NETWORK_UUID_STRING)
+                .uri("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING)
                 .bodyValue(parameters)
                 .exchange()
                 .expectStatus().isOk()
@@ -220,11 +219,10 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         DynamicSimulationParametersInfos parameters = new DynamicSimulationParametersInfos();
         parameters.setStartTime(0);
         parameters.setStopTime(50);
-        parameters.setMapping(MAPPING_NAME_01);
 
         //run the dynamic simulation
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
-                .uri("/v1/networks/{networkUuid}/run?", NETWORK_UUID_STRING)
+                .uri("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING)
                 .bodyValue(parameters)
                 .exchange()
                 .expectStatus().isOk()

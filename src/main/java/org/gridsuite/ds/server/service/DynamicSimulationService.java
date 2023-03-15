@@ -62,9 +62,9 @@ public class DynamicSimulationService {
         this.parametersService = Objects.requireNonNull(parametersService);
     }
 
-    public Mono<UUID> runAndSaveResult(String receiver, UUID networkUuid, String variantId, DynamicSimulationParametersInfos parametersInfos) {
+    public Mono<UUID> runAndSaveResult(String receiver, UUID networkUuid, String variantId, String mappingName, DynamicSimulationParametersInfos parametersInfos) {
 
-        return dynamicMappingClient.createFromMapping(parametersInfos.getMapping()) // get script and parameters file from dynamic mapping server
+        return dynamicMappingClient.createFromMapping(mappingName) // get script and parameters file from dynamic mapping server
                 .flatMap(scriptObj -> {
                     // get all dynamic simulation parameters
                     String parametersFile = scriptObj.getParametersFile();

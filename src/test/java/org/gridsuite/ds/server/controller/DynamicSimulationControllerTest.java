@@ -139,11 +139,10 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         DynamicSimulationParametersInfos parameters = new DynamicSimulationParametersInfos();
         parameters.setStartTime(0);
         parameters.setStopTime(50);
-        parameters.setMapping(MAPPING_NAME);
 
         //run the dynamic simulation on a specific variant
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
-                .uri("/v1/networks/{networkUuid}/run?variantId=" + VARIANT_1_ID, NETWORK_UUID_STRING)
+                .uri("/v1/networks/{networkUuid}/run?variantId=" + VARIANT_1_ID + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
                 .bodyValue(parameters)
                 .exchange()
                 .expectStatus().isOk()
@@ -157,7 +156,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         //run the dynamic simulation on the implicit default variant
         entityExchangeResult = webTestClient.post()
-                .uri("/v1/networks/{networkUuid}/run?", NETWORK_UUID_STRING)
+                .uri("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
                 .bodyValue(parameters)
                 .exchange()
                 .expectStatus().isOk()
@@ -235,7 +234,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         // network not found
         webTestClient.post()
-                .uri("/v1/networks/{networkUuid}/run?", NETWORK_UUID_NOT_FOUND_STRING)
+                .uri("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_NOT_FOUND_STRING)
                 .bodyValue(parameters)
                 .exchange()
                 .expectStatus().isOk()

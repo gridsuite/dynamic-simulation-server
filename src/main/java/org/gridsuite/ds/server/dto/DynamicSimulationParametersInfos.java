@@ -29,6 +29,5 @@ public class DynamicSimulationParametersInfos {
     private Integer startTime;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Integer stopTime;
-    private String mapping;
     private List<DynamicSimulationExtension> extensions;
 }
