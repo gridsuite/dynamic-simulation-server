@@ -206,6 +206,22 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 .expectBody(DynamicSimulationStatus.class)
                 .isEqualTo(DynamicSimulationStatus.CONVERGED);
 
+        // test invalidate status => i.e. set NOT_DONE
+        // set NOT_DONE
+        webTestClient.put()
+                .uri("/v1/results/invalidate-status?resultUuid=" + runUuid)
+                .exchange()
+                .expectStatus().isOk();
+        // check whether NOT_DONE is persisted
+        DynamicSimulationStatus statusAfterInvalidate = webTestClient.get()
+                .uri("/v1/results/{resultUuid}/status", runUuid)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(DynamicSimulationStatus.class)
+                .returnResult()
+                .getResponseBody();
+        assertEquals(DynamicSimulationStatus.NOT_DONE, statusAfterInvalidate);
+
         //delete a result and expect ok
         webTestClient.delete()
                 .uri("/v1/results/{resultUuid}", runUuid)
@@ -234,5 +250,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         messageSwitch = output.receive(1000, "ds.result.destination");
         assertEquals(null, messageSwitch);
+
     }
 }
