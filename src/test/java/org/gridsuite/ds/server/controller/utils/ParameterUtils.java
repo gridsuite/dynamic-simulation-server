@@ -20,7 +20,7 @@ import java.util.List;
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public class ParameterUtils {
+public final class ParameterUtils {
     private ParameterUtils() {
 
     }
