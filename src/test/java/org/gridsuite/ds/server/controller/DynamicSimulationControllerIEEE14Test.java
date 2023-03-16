@@ -18,6 +18,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.timeseries.TimeSeries;
+import org.gridsuite.ds.server.controller.utils.ParameterUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
@@ -170,9 +171,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         String testBaseDir = MAPPING_NAME_01;
 
         // prepare parameters
-        DynamicSimulationParametersInfos parameters = new DynamicSimulationParametersInfos();
-        parameters.setStartTime(0);
-        parameters.setStopTime(50);
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDynaWaltzParameters();
 
         //run the dynamic simulation (on a specific variant with variantId=" + VARIANT_1_ID + ")
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
@@ -216,9 +215,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any(), any(), any());
 
         // prepare parameters
-        DynamicSimulationParametersInfos parameters = new DynamicSimulationParametersInfos();
-        parameters.setStartTime(0);
-        parameters.setStopTime(50);
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDynaWaltzParameters();
 
         //run the dynamic simulation
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()

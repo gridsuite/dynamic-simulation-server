@@ -19,9 +19,16 @@ import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.StringTimeSeries;
 import com.powsybl.timeseries.TimeSeries;
 import com.powsybl.timeseries.TimeSeriesIndex;
+import org.gridsuite.ds.server.controller.utils.ParameterUtils;
+import org.gridsuite.ds.server.dto.DynamicSimulationExtension;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
+import org.gridsuite.ds.server.dto.dynawaltz.DynaWaltzParametersInfos;
+import org.gridsuite.ds.server.dto.dynawaltz.solver.IdaSolverInfos;
+import org.gridsuite.ds.server.dto.dynawaltz.solver.SimSolverInfos;
+import org.gridsuite.ds.server.dto.dynawaltz.solver.SolverInfos;
+import org.gridsuite.ds.server.dto.dynawaltz.solver.SolverTypeInfos;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
@@ -40,10 +47,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.Assert.assertEquals;
@@ -136,9 +140,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     public void test() {
 
         // prepare parameters
-        DynamicSimulationParametersInfos parameters = new DynamicSimulationParametersInfos();
-        parameters.setStartTime(0);
-        parameters.setStopTime(50);
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDynaWaltzParameters();
 
         //run the dynamic simulation on a specific variant
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
