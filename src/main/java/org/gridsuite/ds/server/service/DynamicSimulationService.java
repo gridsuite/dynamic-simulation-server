@@ -104,6 +104,17 @@ public class DynamicSimulationService {
         return Mono.fromCallable(() -> resultRepository.save(new ResultEntity(null, null, null, status)));
     }
 
+    public Mono<List<UUID> > updateStatus(List<UUID> resultUuids, String status) {
+        return Mono.fromCallable(() -> {
+            // find result entities
+            List<ResultEntity> resultEntities = resultRepository.findAllById(resultUuids);
+            // set entity with new values
+            resultEntities.forEach(resultEntity -> resultEntity.setStatus(status));
+            // save entities into database
+            return resultRepository.saveAllAndFlush(resultEntities).stream().map(ResultEntity::getId).collect(Collectors.toList());
+        });
+    }
+
     public Mono<UUID> getTimeSeriesId(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return Mono.fromCallable(() -> resultRepository.findById(resultUuid).map(ResultEntity::getTimeSeriesId)

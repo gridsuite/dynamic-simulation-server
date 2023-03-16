@@ -83,6 +83,16 @@ public class DynamicSimulationController {
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
+    @PutMapping(value = "/results/invalidate-status", produces = "application/json")
+    @Operation(summary = "Invalidate the dynamic simulation status from the database")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result uuids have been invalidated"),
+        @ApiResponse(responseCode = "404", description = "Dynamic simulation result has not been found")})
+    public Mono<ResponseEntity<List<UUID>>> invalidateStatus(@Parameter(description = "Result UUIDs") @RequestParam("resultUuid") List<UUID> resultUuids) {
+        Mono<List<UUID>> result = dynamicSimulationService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE.name());
+        return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
     @DeleteMapping(value = "/results/{resultUuid}")
     @Operation(summary = "Delete a dynamic simulation result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result has been deleted")})
