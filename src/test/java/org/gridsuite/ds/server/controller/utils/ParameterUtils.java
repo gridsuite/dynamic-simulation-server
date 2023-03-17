@@ -31,9 +31,9 @@ public final class ParameterUtils {
         parameters.setStopTime(50);
 
         IdaSolverInfos idaSolver = new IdaSolverInfos();
-        idaSolver.setId("1");
+        idaSolver.setId("2");
         idaSolver.setType(SolverTypeInfos.IDA);
-        idaSolver.setOrder(1);
+        idaSolver.setOrder(2);
         idaSolver.setInitStep(0.000001);
         idaSolver.setMinStep(0.000001);
         idaSolver.setMaxStep(10);

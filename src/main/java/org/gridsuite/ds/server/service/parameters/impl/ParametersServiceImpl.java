@@ -95,6 +95,7 @@ public class ParametersServiceImpl implements ParametersService {
                         // TODO to remove when dynawaltz provider support streams for inputs
                         // export input solver to override default solver par file
                         Path file = workingDir.resolve(SOLVERS_PAR);
+                        Files.deleteIfExists(file);
                         XmlSerializableParameter.writeParameter(file, XmlSerializableParameter.PARAMETER_SET, inputSolver);
                     }
 
