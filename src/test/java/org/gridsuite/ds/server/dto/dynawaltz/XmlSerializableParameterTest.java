@@ -45,7 +45,6 @@ import static com.powsybl.commons.test.ComparisonUtils.compareXml;
 @ContextHierarchy({@ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class})})
 public class XmlSerializableParameterTest {
 
-
     public static final String RESOURCE_PATH_DELIMETER = "/";
     public static final String DATA_XML = RESOURCE_PATH_DELIMETER + "data" + RESOURCE_PATH_DELIMETER + "xml";
     public static final String PAR_SCHEMA = "parameters.xsd";
@@ -96,7 +95,7 @@ public class XmlSerializableParameterTest {
         simSolver.setLinearSolverName("KLU");
         simSolver.setRecalculateStep(false);
 
-        SolverInfos [] solvers = {idaSolver, simSolver};
+        SolverInfos[] solvers = {idaSolver, simSolver};
 
         // export solvers to par file
         String resultDir = getClass().getResource(DATA_XML + RESOURCE_PATH_DELIMETER + OUTPUT).getPath();
