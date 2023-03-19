@@ -17,6 +17,9 @@ import org.gridsuite.ds.server.dto.dynawaltz.XmlSerializableParameter;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+/**
+ * @author Thang PHAM <quyet-thang.pham at rte-france.com>
+ */
 @SuperBuilder
 @NoArgsConstructor
 @Getter

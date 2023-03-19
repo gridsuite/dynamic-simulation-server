@@ -16,6 +16,9 @@ import org.gridsuite.ds.server.dto.dynawaltz.solver.SolverInfos;
 
 import java.util.List;
 
+/**
+ * @author Thang PHAM <quyet-thang.pham at rte-france.com>
+ */
 @SuperBuilder
 @AllArgsConstructor
 @Getter
@@ -29,5 +32,4 @@ public class DynaWaltzParametersInfos implements DynamicSimulationExtension {
     public DynaWaltzParametersInfos() {
         name = EXTENSION_NAME;
     }
-
 }

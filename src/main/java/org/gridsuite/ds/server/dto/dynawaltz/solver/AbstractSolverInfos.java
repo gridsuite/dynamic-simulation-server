@@ -12,6 +12,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * @author Thang PHAM <quyet-thang.pham at rte-france.com>
+ */
 @SuperBuilder
 @NoArgsConstructor
 @Getter

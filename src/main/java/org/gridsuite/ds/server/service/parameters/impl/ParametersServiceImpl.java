@@ -98,7 +98,6 @@ public class ParametersServiceImpl implements ParametersService {
                         Files.deleteIfExists(file);
                         XmlSerializableParameter.writeParameter(file, XmlSerializableParameter.PARAMETER_SET, inputSolver);
                     }
-
                 }
             }
 

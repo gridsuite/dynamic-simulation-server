@@ -11,6 +11,9 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.gridsuite.ds.server.dto.dynawaltz.XmlSerializableParameter;
 
+/**
+ * @author Thang PHAM <quyet-thang.pham at rte-france.com>
+ */
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         property = "type",
@@ -23,5 +26,4 @@ public interface SolverInfos extends XmlSerializableParameter {
     String getId();
 
     SolverTypeInfos getType();
-
 }

@@ -6,7 +6,6 @@
  */
 package org.gridsuite.ds.server.service;
 
-import com.powsybl.commons.PowsyblException;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
@@ -69,9 +68,6 @@ public class DynamicSimulationService {
         String dsProvider = getProviders().stream()
                 .filter(elem -> elem.equals(provider))
                 .findFirst().orElse(getDefaultProvider());
-        if (dsProvider == null) {
-            throw new PowsyblException(String.format("Not found provider %s", provider));
-        }
 
         return dynamicMappingClient.createFromMapping(mappingName) // get script and parameters file from dynamic mapping server
                 .flatMap(scriptObj -> {

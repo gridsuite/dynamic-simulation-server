@@ -9,6 +9,9 @@ package org.gridsuite.ds.server.dto.dynawaltz.solver;
 
 import com.powsybl.dynawaltz.DynaWaltzParameters;
 
+/**
+ * @author Thang PHAM <quyet-thang.pham at rte-france.com>
+ */
 public enum SolverTypeInfos {
     SIM,
     IDA;

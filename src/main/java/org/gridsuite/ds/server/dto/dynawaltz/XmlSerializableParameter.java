@@ -19,6 +19,9 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 
+/**
+ * @author Thang PHAM <quyet-thang.pham at rte-france.com>
+ */
 public interface XmlSerializableParameter {
     String DYN_BASE_URI = "http://www.rte-france.com/dynawo";
     String PARAMETER_SET = "parametersSet";
@@ -27,7 +30,7 @@ public interface XmlSerializableParameter {
         DOUBLE,
         INT,
         BOOL,
-        STRING;
+        STRING
     }
 
     void writeParameter(XMLStreamWriter writer) throws XMLStreamException;

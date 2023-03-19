@@ -11,6 +11,9 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.gridsuite.ds.server.dto.dynawaltz.DynaWaltzParametersInfos;
 
+/**
+ * @author Thang PHAM <quyet-thang.pham at rte-france.com>
+ */
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         property = "name",
@@ -20,5 +23,4 @@ import org.gridsuite.ds.server.dto.dynawaltz.DynaWaltzParametersInfos;
     @JsonSubTypes.Type(value = DynaWaltzParametersInfos.class, name = "DynaWaltzParameters")})
 public interface DynamicSimulationExtension {
     String getName();
-
 }
