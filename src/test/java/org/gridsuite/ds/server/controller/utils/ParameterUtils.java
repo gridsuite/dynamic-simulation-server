@@ -10,6 +10,7 @@ package org.gridsuite.ds.server.controller.utils;
 import org.gridsuite.ds.server.dto.DynamicSimulationExtension;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.dynawaltz.DynaWaltzParametersInfos;
+import org.gridsuite.ds.server.dto.dynawaltz.network.NetworkInfos;
 import org.gridsuite.ds.server.dto.dynawaltz.solver.IdaSolverInfos;
 import org.gridsuite.ds.server.dto.dynawaltz.solver.SimSolverInfos;
 import org.gridsuite.ds.server.dto.dynawaltz.solver.SolverInfos;
@@ -30,6 +31,7 @@ public final class ParameterUtils {
         parameters.setStartTime(0);
         parameters.setStopTime(50);
 
+        // solvers
         IdaSolverInfos idaSolver = new IdaSolverInfos();
         idaSolver.setId("2");
         idaSolver.setType(SolverTypeInfos.IDA);
@@ -54,7 +56,31 @@ public final class ParameterUtils {
         simSolver.setRecalculateStep(false);
 
         List<SolverInfos> solvers = List.of(idaSolver, simSolver);
-        DynaWaltzParametersInfos dynaWaltzParametersInfos = new DynaWaltzParametersInfos(DynaWaltzParametersInfos.EXTENSION_NAME, solvers.get(0).getId(), solvers);
+
+        // network
+        NetworkInfos network = new NetworkInfos();
+        network.setCapacitorNoReclosingDelay(300);
+        network.setDanglingLineCurrentLimitMaxTimeOperation(90);
+        network.setLineCurrentLimitMaxTimeOperation(90);
+        network.setLoadTp(90);
+        network.setLoadTq(90);
+        network.setLoadAlpha(1);
+        network.setLoadAlphaLong(0);
+        network.setLoadBeta(2);
+        network.setLoadBetaLong(0);
+        network.setLoadIsControllable(false);
+        network.setLoadIsRestorative(false);
+        network.setLoadZPMax(100);
+        network.setLoadZQMax(100);
+        network.setReactanceNoReclosingDelay(0);
+        network.setTransformerCurrentLimitMaxTimeOperation(90);
+        network.setTransformerT1StHT(60);
+        network.setTransformerT1StTHT(30);
+        network.setTransformerTNextHT(10);
+        network.setTransformerTNextTHT(10);
+        network.setTransformerTolV(0.015);
+
+        DynaWaltzParametersInfos dynaWaltzParametersInfos = new DynaWaltzParametersInfos(DynaWaltzParametersInfos.EXTENSION_NAME, solvers.get(0).getId(), solvers, network);
         List<DynamicSimulationExtension> extensions = List.of(dynaWaltzParametersInfos);
 
         parameters.setExtensions(extensions);
