@@ -7,13 +7,11 @@
 
 package org.gridsuite.ds.server.controller.utils;
 
-import org.gridsuite.ds.server.dto.DynamicSimulationExtension;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
-import org.gridsuite.ds.server.dto.dynawaltz.DynaWaltzParametersInfos;
-import org.gridsuite.ds.server.dto.dynawaltz.solver.IdaSolverInfos;
-import org.gridsuite.ds.server.dto.dynawaltz.solver.SimSolverInfos;
-import org.gridsuite.ds.server.dto.dynawaltz.solver.SolverInfos;
-import org.gridsuite.ds.server.dto.dynawaltz.solver.SolverTypeInfos;
+import org.gridsuite.ds.server.dto.solver.IdaSolverInfos;
+import org.gridsuite.ds.server.dto.solver.SimSolverInfos;
+import org.gridsuite.ds.server.dto.solver.SolverInfos;
+import org.gridsuite.ds.server.dto.solver.SolverTypeInfos;
 
 import java.util.List;
 
@@ -25,7 +23,7 @@ public final class ParameterUtils {
 
     }
 
-    public static DynamicSimulationParametersInfos getDynaWaltzParameters() {
+    public static DynamicSimulationParametersInfos getDynamicSimulationParameters() {
         DynamicSimulationParametersInfos parameters = new DynamicSimulationParametersInfos();
         parameters.setStartTime(0);
         parameters.setStopTime(50);
@@ -54,10 +52,10 @@ public final class ParameterUtils {
         simSolver.setRecalculateStep(false);
 
         List<SolverInfos> solvers = List.of(idaSolver, simSolver);
-        DynaWaltzParametersInfos dynaWaltzParametersInfos = new DynaWaltzParametersInfos(DynaWaltzParametersInfos.EXTENSION_NAME, solvers.get(0).getId(), solvers);
-        List<DynamicSimulationExtension> extensions = List.of(dynaWaltzParametersInfos);
 
-        parameters.setExtensions(extensions);
+        parameters.setSolverId(idaSolver.getId());
+        parameters.setSolvers(solvers);
+
         return parameters;
     }
 }

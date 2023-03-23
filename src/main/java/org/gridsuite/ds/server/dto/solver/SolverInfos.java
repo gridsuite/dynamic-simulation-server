@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.ds.server.dto.dynawaltz.solver;
+package org.gridsuite.ds.server.dto.solver;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.gridsuite.ds.server.dto.dynawaltz.XmlSerializableParameter;
+import org.gridsuite.ds.server.dto.XmlSerializableParameter;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>

@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.gridsuite.ds.server.dto.solver.SolverInfos;
 
 import java.util.List;
 
@@ -29,5 +30,6 @@ public class DynamicSimulationParametersInfos {
     private Integer startTime;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Integer stopTime;
-    private List<DynamicSimulationExtension> extensions;
+    private String solverId;
+    private List<SolverInfos> solvers;
 }
