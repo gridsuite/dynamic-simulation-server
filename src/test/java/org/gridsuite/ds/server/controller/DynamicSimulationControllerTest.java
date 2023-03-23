@@ -134,7 +134,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     public void test() {
 
         // prepare parameters
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDynaWaltzParameters();
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDynamicSimulationParameters();
 
         //run the dynamic simulation on a specific variant
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
