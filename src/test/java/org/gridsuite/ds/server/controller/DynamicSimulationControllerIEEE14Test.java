@@ -171,7 +171,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         String testBaseDir = MAPPING_NAME_01;
 
         // prepare parameters
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDynaWaltzParameters();
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDynamicSimulationParameters();
 
         //run the dynamic simulation (on a specific variant with variantId=" + VARIANT_1_ID + ")
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
@@ -215,7 +215,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any(), any(), any());
 
         // prepare parameters
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDynaWaltzParameters();
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDynamicSimulationParameters();
 
         //run the dynamic simulation
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()

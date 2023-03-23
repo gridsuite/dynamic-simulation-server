@@ -5,15 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.ds.server.dto.dynawaltz;
+package org.gridsuite.ds.server.dto;
 
 import com.powsybl.commons.exceptions.UncheckedSaxException;
 import org.gridsuite.ds.server.DynamicSimulationApplication;
-import org.gridsuite.ds.server.dto.dynawaltz.network.NetworkInfos;
-import org.gridsuite.ds.server.dto.dynawaltz.solver.IdaSolverInfos;
-import org.gridsuite.ds.server.dto.dynawaltz.solver.SimSolverInfos;
-import org.gridsuite.ds.server.dto.dynawaltz.solver.SolverInfos;
-import org.gridsuite.ds.server.dto.dynawaltz.solver.SolverTypeInfos;
+import org.gridsuite.ds.server.dto.solver.IdaSolverInfos;
+import org.gridsuite.ds.server.dto.solver.SimSolverInfos;
+import org.gridsuite.ds.server.dto.solver.SolverInfos;
+import org.gridsuite.ds.server.dto.solver.SolverTypeInfos;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;

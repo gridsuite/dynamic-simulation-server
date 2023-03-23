@@ -5,13 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.ds.server.dto.dynawaltz.solver;
+package org.gridsuite.ds.server.dto.solver;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.ds.server.dto.dynawaltz.XmlSerializableParameter;
+import org.gridsuite.ds.server.dto.XmlSerializableParameter;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;

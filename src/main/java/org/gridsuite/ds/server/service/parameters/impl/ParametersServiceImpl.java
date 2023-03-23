@@ -13,10 +13,9 @@ import com.powsybl.dynamicsimulation.json.JsonDynamicSimulationParameters;
 import com.powsybl.dynawaltz.DynaWaltzParameters;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
-import org.gridsuite.ds.server.dto.dynawaltz.DynaWaltzParametersInfos;
-import org.gridsuite.ds.server.dto.dynawaltz.XmlSerializableParameter;
-import org.gridsuite.ds.server.dto.dynawaltz.network.NetworkInfos;
-import org.gridsuite.ds.server.dto.dynawaltz.solver.SolverInfos;
+import org.gridsuite.ds.server.dto.XmlSerializableParameter;
+import org.gridsuite.ds.server.dto.network.NetworkInfos;
+import org.gridsuite.ds.server.dto.solver.SolverInfos;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.springframework.stereotype.Service;
 
@@ -83,35 +82,29 @@ public class ParametersServiceImpl implements ParametersService {
                 dynaWaltzParameters.getNetwork().setParametersFile(workingDir.resolve(NETWORK_PAR).toString());
                 dynaWaltzParameters.getSolver().setParametersFile(workingDir.resolve(SOLVERS_PAR).toString());
 
-                // lookup DynaWaltz extension
-                DynaWaltzParametersInfos inputDynaWaltzParameters = (DynaWaltzParametersInfos) inputParameters.getExtensions().stream()
-                        .filter(elem -> DynaWaltzParametersInfos.EXTENSION_NAME.equals(elem.getName()))
-                        .findFirst().orElse(null);
-                if (inputDynaWaltzParameters != null) {
-                    // override solver from input parameter
-                    SolverInfos inputSolver = inputDynaWaltzParameters.getSolvers().stream().filter(elem -> elem.getId().equals(inputDynaWaltzParameters.getSolverId())).findFirst().orElse(null);
-                    if (inputSolver != null) {
-                        dynaWaltzParameters.getSolver().setParametersId(inputSolver.getId());
-                        dynaWaltzParameters.getSolver().setType(inputSolver.getType().toSolverType());
+                // override solver from input parameter
+                SolverInfos inputSolver = inputParameters.getSolvers().stream().filter(elem -> elem.getId().equals(inputParameters.getSolverId())).findFirst().orElse(null);
+                if (inputSolver != null) {
+                    dynaWaltzParameters.getSolver().setParametersId(inputSolver.getId());
+                    dynaWaltzParameters.getSolver().setType(inputSolver.getType().toSolverType());
 
-                        // TODO to remove when dynawaltz provider support streams for inputs
-                        // export input solver to override default solver par file
-                        Path file = workingDir.resolve(SOLVERS_PAR);
-                        Files.deleteIfExists(file);
-                        XmlSerializableParameter.writeParameter(file, XmlSerializableParameter.PARAMETER_SET, inputSolver);
-                    }
+                    // TODO to remove when dynawaltz provider support streams for inputs
+                    // export input solver to override default solver par file
+                    Path file = workingDir.resolve(SOLVERS_PAR);
+                    Files.deleteIfExists(file);
+                    XmlSerializableParameter.writeParameter(file, XmlSerializableParameter.PARAMETER_SET, inputSolver);
+                }
 
-                    // override network from input parameters
-                    NetworkInfos network = inputDynaWaltzParameters.getNetwork();
-                    if (network != null) {
-                        dynaWaltzParameters.getNetwork().setParametersId(network.getId());
+                // override network from input parameters
+                NetworkInfos network = inputParameters.getNetwork();
+                if (network != null) {
+                    dynaWaltzParameters.getNetwork().setParametersId(network.getId());
 
-                        // TODO to remove when dynawaltz provider support streams for inputs
-                        // export input network to override default network par file
-                        Path file = workingDir.resolve(NETWORK_PAR);
-                        Files.deleteIfExists(file);
-                        XmlSerializableParameter.writeParameter(file, XmlSerializableParameter.PARAMETER_SET, network);
-                    }
+                    // TODO to remove when dynawaltz provider support streams for inputs
+                    // export input network to override default network par file
+                    Path file = workingDir.resolve(NETWORK_PAR);
+                    Files.deleteIfExists(file);
+                    XmlSerializableParameter.writeParameter(file, XmlSerializableParameter.PARAMETER_SET, network);
                 }
             }
 
