@@ -9,6 +9,7 @@ package org.gridsuite.ds.server.dto;
 
 import com.powsybl.commons.exceptions.UncheckedSaxException;
 import org.gridsuite.ds.server.DynamicSimulationApplication;
+import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.dto.solver.IdaSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SimSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
