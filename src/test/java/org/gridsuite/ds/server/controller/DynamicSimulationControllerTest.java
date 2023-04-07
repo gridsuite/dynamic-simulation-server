@@ -19,6 +19,8 @@ import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.StringTimeSeries;
 import com.powsybl.timeseries.TimeSeries;
 import com.powsybl.timeseries.TimeSeriesIndex;
+import org.gridsuite.ds.server.controller.utils.ParameterUtils;
+import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
@@ -39,10 +41,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.Assert.assertEquals;
@@ -120,9 +119,9 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 "CLA_2_4 - CLA : arming by over-current constraint");
 
         doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(RESULT, "", curves, timeLine)))
-                .when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any(), any());
+                .when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any(), any(), any());
         doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(RESULT, "", curves, timeLine)))
-                .when(dynamicSimulationWorkerService).runAsync(any(), isNull(), any(), any(), any(), any());
+                .when(dynamicSimulationWorkerService).runAsync(any(), any(), isNull(), any(), any(), any(), any());
     }
 
     private static MockMultipartFile createMockMultipartFile(String fileName) throws IOException {
@@ -134,9 +133,13 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     @Test
     public void test() {
 
+        // prepare parameters
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDynamicSimulationParameters();
+
         //run the dynamic simulation on a specific variant
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
-                .uri("/v1/networks/{networkUuid}/run?variantId=" + VARIANT_1_ID + "&startTime=0&stopTime=100" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
+                .uri("/v1/networks/{networkUuid}/run?variantId=" + VARIANT_1_ID + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
+                .bodyValue(parameters)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(UUID.class)
@@ -149,7 +152,8 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         //run the dynamic simulation on the implicit default variant
         entityExchangeResult = webTestClient.post()
-                .uri("/v1/networks/{networkUuid}/run?startTime=0&stopTime=100" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
+                .uri("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
+                .bodyValue(parameters)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(UUID.class)
@@ -242,7 +246,8 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         // network not found
         webTestClient.post()
-                .uri("/v1/networks/{networkUuid}/run?startTime=0&stopTime=100" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_NOT_FOUND_STRING)
+                .uri("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_NOT_FOUND_STRING)
+                .bodyValue(parameters)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(UUID.class)

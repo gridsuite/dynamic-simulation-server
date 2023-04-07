@@ -7,12 +7,18 @@
 package org.gridsuite.ds.server.service.parameters.impl;
 
 import com.powsybl.commons.config.PlatformConfig;
+import com.powsybl.commons.exceptions.UncheckedXmlStreamException;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.json.JsonDynamicSimulationParameters;
 import com.powsybl.dynawaltz.DynaWaltzParameters;
+import com.powsybl.dynawaltz.DynaWaltzProvider;
+import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
+import org.gridsuite.ds.server.dto.XmlSerializableParameter;
+import org.gridsuite.ds.server.dto.solver.SolverInfos;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.springframework.stereotype.Service;
 
+import javax.xml.stream.XMLStreamException;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,7 +51,7 @@ public class ParametersServiceImpl implements ParametersService {
     }
 
     @Override
-    public DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams) {
+    public DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams, String provider, DynamicSimulationParametersInfos inputParameters) {
         try {
             // prepare a tmp dir for current running simulation
             // TODO to remove when dynawaltz provider support streams for inputs
@@ -69,13 +75,31 @@ public class ParametersServiceImpl implements ParametersService {
             // load parameter file then config paths
             DynamicSimulationParameters parameters = JsonDynamicSimulationParameters.read(getClass().getResourceAsStream(PARAMETERS_DIR + RESOURCE_PATH_DELIMETER + PARAMETERS_JSON));
             // TODO: Powsybl side - create an explicit dependency to DynaWaltz class and keep dynamic simulation abstraction all over this micro service
-            DynaWaltzParameters dynaWaltzParameters = parameters.getExtension(DynaWaltzParameters.class);
-            dynaWaltzParameters.setParametersFile(workingDir.resolve(MODELS_PAR).toString());
-            dynaWaltzParameters.getNetwork().setParametersFile(workingDir.resolve(NETWORK_PAR).toString());
-            dynaWaltzParameters.getSolver().setParametersFile(workingDir.resolve(SOLVERS_PAR).toString());
+            if (DynaWaltzProvider.NAME.equals(provider)) {
+                DynaWaltzParameters dynaWaltzParameters = parameters.getExtension(DynaWaltzParameters.class);
+                dynaWaltzParameters.setParametersFile(workingDir.resolve(MODELS_PAR).toString());
+                dynaWaltzParameters.getNetwork().setParametersFile(workingDir.resolve(NETWORK_PAR).toString());
+                dynaWaltzParameters.getSolver().setParametersFile(workingDir.resolve(SOLVERS_PAR).toString());
+
+                // override solver from input parameter
+                SolverInfos inputSolver = inputParameters.getSolvers().stream().filter(elem -> elem.getId().equals(inputParameters.getSolverId())).findFirst().orElse(null);
+                if (inputSolver != null) {
+                    dynaWaltzParameters.getSolver().setParametersId(inputSolver.getId());
+                    dynaWaltzParameters.getSolver().setType(inputSolver.getType().toSolverType());
+
+                    // TODO to remove when dynawaltz provider support streams for inputs
+                    // export input solver to override default solver par file
+                    Path file = workingDir.resolve(SOLVERS_PAR);
+                    Files.deleteIfExists(file);
+                    XmlSerializableParameter.writeParameter(file, XmlSerializableParameter.PARAMETER_SET, inputSolver);
+                }
+            }
+
             return parameters;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        } catch (XMLStreamException e) {
+            throw new UncheckedXmlStreamException(e);
         }
     }
 }

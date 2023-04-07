@@ -34,3 +34,7 @@ powsybl:
 powsybl-ws:
   database:
     name: ds
+
+# default values for dynamic simulation providers is "DynaWaltz"
+dynamic-simulation:
+  default-provider: DynaWaltz

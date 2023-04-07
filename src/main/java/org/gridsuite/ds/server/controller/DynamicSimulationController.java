@@ -11,9 +11,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
-import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import static org.gridsuite.ds.server.DynamicSimulationApi.API_VERSION;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -41,14 +42,14 @@ public class DynamicSimulationController {
 
     @PostMapping(value = "/networks/{networkUuid}/run", produces = "application/json")
     @Operation(summary = "run the dynamic simulation")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "")})
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Run dynamic simulation")})
     public ResponseEntity<Mono<UUID>> run(@PathVariable("networkUuid") UUID networkUuid,
                                           @RequestParam(name = "variantId", required = false) String variantId,
-                                          @DefaultValue("0") @RequestParam("startTime") int startTime,
-                                          @RequestParam("stopTime") int stopTime,
+                                          @RequestParam(name = "receiver", required = false) String receiver,
                                           @RequestParam("mappingName") String mappingName,
-                                          @RequestParam(name = "receiver", required = false) String receiver) {
-        Mono<UUID> resultUuid = dynamicSimulationService.runAndSaveResult(receiver, networkUuid, variantId, startTime, stopTime, mappingName);
+                                          @RequestParam(name = "provider", required = false) String provider,
+                                          @RequestBody DynamicSimulationParametersInfos parameters) {
+        Mono<UUID> resultUuid = dynamicSimulationService.runAndSaveResult(receiver, networkUuid, variantId, mappingName, provider, parameters);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
@@ -115,5 +116,20 @@ public class DynamicSimulationController {
                                            @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver) {
         Mono<Void> result = dynamicSimulationService.stop(receiver, resultUuid);
         return ResponseEntity.ok().body(result);
+    }
+
+    @GetMapping(value = "/providers", produces = APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get all dynamic simulation providers")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Dynamic simulation providers have been found")})
+    public ResponseEntity<List<String>> getProviders() {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+                .body(dynamicSimulationService.getProviders());
+    }
+
+    @GetMapping(value = "/default-provider", produces = TEXT_PLAIN_VALUE)
+    @Operation(summary = "Get dynamic simulation default provider")
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "The dynamic simulation default provider has been found"))
+    public ResponseEntity<String> getDefaultProvider() {
+        return ResponseEntity.ok().body(dynamicSimulationService.getDefaultProvider());
     }
 }

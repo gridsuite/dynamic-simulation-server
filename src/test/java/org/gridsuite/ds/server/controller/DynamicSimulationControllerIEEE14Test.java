@@ -18,6 +18,8 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.timeseries.TimeSeries;
+import org.gridsuite.ds.server.controller.utils.ParameterUtils;
+import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
@@ -168,9 +170,13 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     public void test01() {
         String testBaseDir = MAPPING_NAME_01;
 
+        // prepare parameters
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDynamicSimulationParameters();
+
         //run the dynamic simulation (on a specific variant with variantId=" + VARIANT_1_ID + ")
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
-                .uri("/v1/networks/{networkUuid}/run?&startTime=0&stopTime=50" + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING)
+                .uri("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING)
+                .bodyValue(parameters)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(UUID.class)
@@ -206,11 +212,15 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         doAnswer((InvocationOnMock invocation) -> {
             throw new RuntimeException(TEST_EXCEPTION_MESSAGE);
         }).
-        when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any(), any());
+        when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any(), any(), any());
+
+        // prepare parameters
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDynamicSimulationParameters();
 
         //run the dynamic simulation
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
-                .uri("/v1/networks/{networkUuid}/run?&startTime=0&stopTime=50" + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING)
+                .uri("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING)
+                .bodyValue(parameters)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(UUID.class)

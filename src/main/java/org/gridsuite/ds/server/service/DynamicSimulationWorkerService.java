@@ -98,6 +98,7 @@ public class DynamicSimulationWorkerService {
         CurvesSupplier curvesSupplier = new GroovyCurvesSupplier(new ByteArrayInputStream(context.getCurveContent()), curveExtensions);
 
         return Mono.fromCompletionStage(runAsync(network,
+                context.getProvider(),
                 context.getVariantId() != null ? context.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
                 dynamicModelsSupplier,
                 eventModelsSupplier,
@@ -106,12 +107,14 @@ public class DynamicSimulationWorkerService {
     }
 
     public CompletableFuture<DynamicSimulationResult> runAsync(Network network,
+                                                               String provider,
                                                                String variantId,
                                                                DynamicModelsSupplier dynamicModelsSupplier,
                                                                EventModelsSupplier eventModelsSupplier,
                                                                CurvesSupplier curvesSupplier,
                                                                DynamicSimulationParameters dynamicSimulationParameters) {
-        return DynamicSimulation.runAsync(network, dynamicModelsSupplier, eventModelsSupplier, curvesSupplier, variantId, dynamicSimulationParameters);
+        DynamicSimulation.Runner runner = DynamicSimulation.find(provider);
+        return runner.runAsync(network, dynamicModelsSupplier, eventModelsSupplier, curvesSupplier, variantId, dynamicSimulationParameters);
     }
 
     private Network getNetwork(UUID networkUuid) {
