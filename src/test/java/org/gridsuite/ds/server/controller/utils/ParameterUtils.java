@@ -25,8 +25,8 @@ public final class ParameterUtils {
 
     public static DynamicSimulationParametersInfos getDynamicSimulationParameters() {
         DynamicSimulationParametersInfos parameters = new DynamicSimulationParametersInfos();
-        parameters.setStartTime(0);
-        parameters.setStopTime(50);
+        parameters.setStartTime(0.0);
+        parameters.setStopTime(50.0);
 
         IdaSolverInfos idaSolver = new IdaSolverInfos();
         idaSolver.setId("2");
