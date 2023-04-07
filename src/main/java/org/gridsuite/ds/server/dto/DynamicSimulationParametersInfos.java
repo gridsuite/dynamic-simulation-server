@@ -27,9 +27,9 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DynamicSimulationParametersInfos {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private Double startTime;
+    private Integer startTime;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private Double stopTime;
+    private Integer stopTime;
     private String solverId;
     private List<SolverInfos> solvers;
 }

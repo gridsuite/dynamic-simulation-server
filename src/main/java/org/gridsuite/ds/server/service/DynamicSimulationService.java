@@ -76,8 +76,8 @@ public class DynamicSimulationService {
                     DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(parametersFile.getBytes(StandardCharsets.UTF_8), dsProvider, parametersInfos);
 
                     // set start and stop times
-                    parameters.setStartTime(parametersInfos.getStartTime().intValue());
-                    parameters.setStopTime(parametersInfos.getStopTime().intValue());
+                    parameters.setStartTime(parametersInfos.getStartTime());
+                    parameters.setStopTime(parametersInfos.getStopTime());
 
                     String script = scriptObj.getScript();
                     byte[] dynamicModel = script.getBytes(StandardCharsets.UTF_8);
