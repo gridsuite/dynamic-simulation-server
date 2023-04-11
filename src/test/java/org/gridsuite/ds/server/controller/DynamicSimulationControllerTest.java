@@ -79,6 +79,11 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     private static final boolean RESULT = true;
 
     @Override
+    public OutputDestination getOutputDestination() {
+        return output;
+    }
+
+    @Override
     protected void initNetworkStoreServiceMock() {
         ReadOnlyDataSource dataSource = new ResourceDataSource("IEEE14",
                 new ResourceSet("", TEST_FILE));
@@ -151,8 +156,8 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        Message<byte[]> messageSwitch = output.receive(1000 * 5, "ds.result.destination");
-        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get("resultUuid").toString()));
+        Message<byte[]> messageSwitch = output.receive(1000 * 5, dsResultDestination);
+        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
 
         //run the dynamic simulation on the implicit default variant
         entityExchangeResult = webTestClient.post()
@@ -165,8 +170,8 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        messageSwitch = output.receive(1000, "ds.result.destination");
-        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get("resultUuid").toString()));
+        messageSwitch = output.receive(1000, dsResultDestination);
+        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
 
         //get the calculation status
         EntityExchangeResult<DynamicSimulationStatus> entityExchangeResult2 = webTestClient.get()
@@ -259,7 +264,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        messageSwitch = output.receive(1000 * 5, "ds.failed.destination");
+        messageSwitch = output.receive(1000 * 5, dsFailedDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
         assertEquals(FAIL_MESSAGE + " : " + HttpStatus.NOT_FOUND, messageSwitch.getHeaders().get(HEADER_MESSAGE));
     }

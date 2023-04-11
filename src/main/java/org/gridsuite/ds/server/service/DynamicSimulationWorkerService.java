@@ -97,7 +97,6 @@ public class DynamicSimulationWorkerService {
         List<CurveGroovyExtension> curveExtensions = GroovyExtension.find(CurveGroovyExtension.class, DynaWaltzProvider.NAME);
         CurvesSupplier curvesSupplier = new GroovyCurvesSupplier(new ByteArrayInputStream(context.getCurveContent()), curveExtensions);
 
-        LOGGER.info("Provider in run = ", context.getProvider());
         return Mono.fromCompletionStage(runAsync(network,
                 context.getProvider(),
                 context.getVariantId() != null ? context.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
@@ -114,7 +113,6 @@ public class DynamicSimulationWorkerService {
                                                                EventModelsSupplier eventModelsSupplier,
                                                                CurvesSupplier curvesSupplier,
                                                                DynamicSimulationParameters dynamicSimulationParameters) {
-        LOGGER.info("Provider = ", provider);
         DynamicSimulation.Runner runner = DynamicSimulation.find(provider);
         return runner.runAsync(network, dynamicModelsSupplier, eventModelsSupplier, curvesSupplier, variantId, dynamicSimulationParameters);
     }
