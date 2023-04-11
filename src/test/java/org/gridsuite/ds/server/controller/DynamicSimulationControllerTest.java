@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.messaging.Message;
 import org.springframework.mock.web.MockMultipartFile;
@@ -44,6 +45,9 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.HEADER_MESSAGE;
+import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.HEADER_RESULT_UUID;
+import static org.gridsuite.ds.server.service.notification.NotificationService.FAIL_MESSAGE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -245,7 +249,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 .expectStatus().isOk();
 
         // network not found
-        webTestClient.post()
+        entityExchangeResult = webTestClient.post()
                 .uri("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_NOT_FOUND_STRING)
                 .bodyValue(parameters)
                 .exchange()
@@ -253,8 +257,10 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 .expectBody(UUID.class)
                 .returnResult();
 
-        messageSwitch = output.receive(1000, "ds.result.destination");
-        assertEquals(null, messageSwitch);
+        runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
+        messageSwitch = output.receive(1000 * 5, "ds.failed.destination");
+        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
+        assertEquals(FAIL_MESSAGE + " : " + HttpStatus.NOT_FOUND, messageSwitch.getHeaders().get(HEADER_MESSAGE));
     }
 }
