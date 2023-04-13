@@ -98,6 +98,11 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
 
     @Override
+    public OutputDestination getOutputDestination() {
+        return output;
+    }
+
+    @Override
     protected void initNetworkStoreServiceMock() {
         ReadOnlyDataSource dataSource = new ResourceDataSource("IEEE14",
                 new ResourceSet(DATA_IEEE14_BASE_DIR, NETWORK_FILE));
@@ -184,7 +189,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
         UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        Message<byte[]> messageSwitch = output.receive(1000 * 5, "ds.result.destination");
+        Message<byte[]> messageSwitch = output.receive(1000 * 5, dsResultDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(DynamicSimulationResultContext.HEADER_RESULT_UUID).toString()));
 
         try {
@@ -229,7 +234,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
         // Message failed must be sent
-        Message<byte[]> messageSwitch = output.receive(1000 * 5, "ds.failed.destination");
+        Message<byte[]> messageSwitch = output.receive(1000 * 5, dsFailedDestination);
 
         // check uuid and failed message
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
