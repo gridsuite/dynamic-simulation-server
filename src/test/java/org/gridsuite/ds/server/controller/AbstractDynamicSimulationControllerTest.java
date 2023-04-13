@@ -12,6 +12,7 @@ import org.gridsuite.ds.server.DynamicSimulationApplication;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.gridsuite.ds.server.service.notification.NotificationService;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -20,15 +21,18 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.reactive.config.EnableWebFlux;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.doAnswer;
 
 /**
@@ -41,6 +45,9 @@ import static org.mockito.Mockito.doAnswer;
 @ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class},
         initializers = CustomApplicationContextInitializer.class)
 public abstract class AbstractDynamicSimulationControllerTest {
+
+    protected final String dsResultDestination = "ds.result.destination";
+    protected final String dsFailedDestination = "ds.failed.destination";
 
     public static final String RESOURCE_PATH_DELIMETER = "/";
 
@@ -72,6 +79,19 @@ public abstract class AbstractDynamicSimulationControllerTest {
         // NotificationService mock
         initNotificationServiceMock();
     }
+
+    @After
+    public void tearDown() {
+        OutputDestination output = getOutputDestination();
+        List<String> destinations = List.of(dsFailedDestination, dsResultDestination);
+
+        destinations.forEach(destination -> assertNull("Should not be any messages in queue " + destination + " : ", output.receive(100, destination)));
+
+        // purge in order to not fail the other tests
+        output.clear();
+    }
+
+    protected abstract OutputDestination getOutputDestination();
 
     protected abstract void initNetworkStoreServiceMock();
 
