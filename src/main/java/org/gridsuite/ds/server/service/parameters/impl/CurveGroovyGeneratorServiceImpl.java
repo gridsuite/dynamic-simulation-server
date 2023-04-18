@@ -34,7 +34,7 @@ public class CurveGroovyGeneratorServiceImpl implements CurveGroovyGeneratorServ
             curvesTemplate = IOUtils.toString(new ClassPathResource(CURVES_TEMPLATE_DIR + RESOURCE_PATH_DELIMETER + "curves.st").getInputStream(), Charset.defaultCharset());
             curveTemplate = IOUtils.toString(new ClassPathResource(CURVES_TEMPLATE_DIR + RESOURCE_PATH_DELIMETER + "curve.st").getInputStream(), Charset.defaultCharset());
         } catch (IOException e) {
-            throw new PowsyblException("Unable to load templates for groovy script generation !!");
+            throw new PowsyblException("Unable to load templates for groovy script generation : " + e.getMessage());
         }
         // config root template
         ST curvesST = new ST(curvesTemplate);

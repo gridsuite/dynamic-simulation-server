@@ -17,7 +17,12 @@ import java.util.List;
 public interface CurveGroovyGeneratorService {
     String VARIABLE_PATH_DELIMETER = "/";
     String RESOURCE_PATH_DELIMETER = "/";
-    String CURVES_TEMPLATE_DIR = "template/curve";
+    String CURVES_TEMPLATE_DIR = "templates/curve";
 
+    /**
+     * Generate a script groovy which contains curves
+     * @param curves given list of curves
+     * @return a script groovy which contains curves
+     */
     String generate(List<CurveInfos> curves);
 }
