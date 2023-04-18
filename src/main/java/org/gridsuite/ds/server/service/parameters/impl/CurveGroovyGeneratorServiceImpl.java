@@ -48,7 +48,7 @@ public class CurveGroovyGeneratorServiceImpl implements CurveGroovyGeneratorServ
                     return "\""  + variablePaths[variablePaths.length - 1] + "\"";
                 }, Collectors.joining(", "))));
 
-        String [] curveStringList = variablesByEquipmentIdMap.entrySet().stream().map(variablesByEquipmentId -> {
+        String[] curveStringList = variablesByEquipmentIdMap.entrySet().stream().map(variablesByEquipmentId -> {
             ST curveST = new ST(curveTemplate);
             curveST.add("dynamicModelId", "\"" + variablesByEquipmentId.getKey() + "\"");
             curveST.add("variables", variablesByEquipmentId.getValue());
