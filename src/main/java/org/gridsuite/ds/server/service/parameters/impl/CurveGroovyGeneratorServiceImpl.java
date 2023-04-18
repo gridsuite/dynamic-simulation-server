@@ -41,12 +41,7 @@ public class CurveGroovyGeneratorServiceImpl implements CurveGroovyGeneratorServ
 
         // group curves info by equipmentId
         Map<String, String> variablesByEquipmentIdMap = curveInfosList.stream()
-                .collect(Collectors.groupingBy(CurveInfos::getEquipmentId, Collectors.mapping(curveInfo -> {
-                    // format of complete variable id : modelName/<variableSetGroup>/<variableSet>/variableId
-                    String[] variablePaths = curveInfo.getVariableId().split(VARIABLE_PATH_DELIMETER);
-                    // get only the last, i.e. variable id
-                    return "\""  + variablePaths[variablePaths.length - 1] + "\"";
-                }, Collectors.joining(", "))));
+                .collect(Collectors.groupingBy(CurveInfos::getEquipmentId, Collectors.mapping(curveInfo -> ("\""  + curveInfo.getVariableId()+ "\""), Collectors.joining(", "))));
 
         String[] curveStringList = variablesByEquipmentIdMap.entrySet().stream().map(variablesByEquipmentId -> {
             ST curveST = new ST(curveTemplate);
