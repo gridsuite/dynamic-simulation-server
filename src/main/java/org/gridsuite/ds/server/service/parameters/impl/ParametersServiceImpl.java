@@ -14,12 +14,18 @@ import com.powsybl.dynawaltz.DynaWaltzParameters;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.XmlSerializableParameter;
+import org.gridsuite.ds.server.dto.curve.CurveInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
+import org.gridsuite.ds.server.service.parameters.CurveGroovyGeneratorService;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -29,6 +35,15 @@ import java.util.List;
  */
 @Service
 public class ParametersServiceImpl implements ParametersService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ParametersServiceImpl.class);
+
+    private final CurveGroovyGeneratorService curveGroovyGeneratorService;
+
+    @Autowired
+    public ParametersServiceImpl(CurveGroovyGeneratorService curveGroovyGeneratorService) {
+        this.curveGroovyGeneratorService = curveGroovyGeneratorService;
+    }
 
     @Override
     public byte[] getEventModel() {
@@ -41,13 +56,17 @@ public class ParametersServiceImpl implements ParametersService {
     }
 
     @Override
-    public byte[] getCurveModel() {
-        try (InputStream is = getClass().getResourceAsStream(PARAMETERS_DIR + RESOURCE_PATH_DELIMETER + CURVES_GROOVY)) {
+    public byte[] getCurveModel(List<CurveInfos> curves) {
+        String generatedGroovyCurves = curveGroovyGeneratorService.generate(curves);
+        LOGGER.info(generatedGroovyCurves);
+        return generatedGroovyCurves.getBytes(StandardCharsets.UTF_8);
+
+        /*try (InputStream is = getClass().getResourceAsStream(PARAMETERS_DIR + RESOURCE_PATH_DELIMETER + CURVES_GROOVY)) {
             // read the curves.groovy in the "parameters" resources
             return is.readAllBytes();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
-        }
+        }*/
     }
 
     @Override

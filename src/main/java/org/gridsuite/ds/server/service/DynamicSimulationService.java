@@ -82,7 +82,8 @@ public class DynamicSimulationService {
                     String script = scriptObj.getScript();
                     byte[] dynamicModel = script.getBytes(StandardCharsets.UTF_8);
                     byte[] eventModel = parametersService.getEventModel();
-                    byte[] curveModel = parametersService.getCurveModel();
+
+                    byte[] curveModel = parametersService.getCurveModel(parametersInfos.getCurves());
 
                     DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(dsProvider, receiver, networkUuid, variantId, dynamicModel, eventModel, curveModel, parameters);
 

@@ -51,6 +51,7 @@
 
         <h2database.version>1.4.200</h2database.version>
         <liquibase-hibernate-package>org.gridsuite.ds.server</liquibase-hibernate-package>
+        <string-template.version>4.3.1</string-template.version>
     </properties>
 
     <build>
@@ -109,6 +110,11 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-iidm-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>ST4</artifactId>
+            <version>${string-template.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
