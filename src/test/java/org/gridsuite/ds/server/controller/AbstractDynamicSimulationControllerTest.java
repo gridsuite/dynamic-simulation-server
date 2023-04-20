@@ -17,6 +17,8 @@ import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -45,6 +47,8 @@ import static org.mockito.Mockito.doAnswer;
 @ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class},
         initializers = CustomApplicationContextInitializer.class)
 public abstract class AbstractDynamicSimulationControllerTest {
+
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     protected final String dsResultDestination = "ds.result.destination";
     protected final String dsFailedDestination = "ds.failed.destination";
