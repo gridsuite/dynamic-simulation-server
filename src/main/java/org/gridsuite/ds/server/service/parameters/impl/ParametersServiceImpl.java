@@ -57,16 +57,19 @@ public class ParametersServiceImpl implements ParametersService {
 
     @Override
     public byte[] getCurveModel(List<CurveInfos> curves) {
-        String generatedGroovyCurves = curveGroovyGeneratorService.generate(curves);
-        LOGGER.info(generatedGroovyCurves);
-        return generatedGroovyCurves.getBytes(StandardCharsets.UTF_8);
-
-        /*try (InputStream is = getClass().getResourceAsStream(PARAMETERS_DIR + RESOURCE_PATH_DELIMETER + CURVES_GROOVY)) {
-            // read the curves.groovy in the "parameters" resources
-            return is.readAllBytes();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }*/
+        if (curves != null) {
+            String generatedGroovyCurves = curveGroovyGeneratorService.generate(curves);
+            LOGGER.info(generatedGroovyCurves);
+            return generatedGroovyCurves.getBytes(StandardCharsets.UTF_8);
+        } else {
+            // TODO remove reading from hard file
+            try (InputStream is = getClass().getResourceAsStream(PARAMETERS_DIR + RESOURCE_PATH_DELIMETER + CURVES_GROOVY)) {
+                // read the curves.groovy in the "parameters" resources
+                return is.readAllBytes();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
     }
 
     @Override
