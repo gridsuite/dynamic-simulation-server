@@ -136,7 +136,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
             parametersFileBytes = StreamUtils.copyToByteArray(parametersFileIS);
             String parametersFile = new String(parametersFileBytes, StandardCharsets.UTF_8);
 
-            Script scriptObj =  new Script(
+            Script scriptObj = new Script(
                     MAPPING_NAME_01 + "-script",
                     MAPPING_NAME_01,
                     script,
