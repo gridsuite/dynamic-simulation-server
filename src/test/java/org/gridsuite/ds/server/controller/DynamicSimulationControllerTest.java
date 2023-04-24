@@ -95,7 +95,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
     @Override
     protected void initDynamicMappingServiceMock() {
-        Script scriptObj =  new Script(
+        Script scriptObj = new Script(
                 MAPPING_NAME + "-script",
                 MAPPING_NAME,
                 "",
