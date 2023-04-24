@@ -62,13 +62,13 @@ public final class ParameterUtils {
 
     public static List<CurveInfos> getCurveInfosList() {
         return List.of(
-                new CurveInfos("_LOAD___2_EC", "", "load_PPu", ""),
-                new CurveInfos("_LOAD___2_EC", "", "load_QPu", ""),
-                new CurveInfos("_GEN____3_SM", "", "generator_omegaPu", ""),
-                new CurveInfos("_GEN____3_SM", "", "generator_PGen", ""),
-                new CurveInfos("_GEN____3_SM", "", "generator_QGen", ""),
-                new CurveInfos("_GEN____3_SM", "", "generator_UStatorPu", ""),
-                new CurveInfos("_GEN____3_SM", "", "voltageRegulator_EfdPu", "")
+                new CurveInfos("_LOAD___2_EC", "load_PPu"),
+                new CurveInfos("_LOAD___2_EC", "load_QPu"),
+                new CurveInfos("_GEN____3_SM", "generator_omegaPu"),
+                new CurveInfos("_GEN____3_SM", "generator_PGen"),
+                new CurveInfos("_GEN____3_SM", "generator_QGen"),
+                new CurveInfos("_GEN____3_SM", "generator_UStatorPu"),
+                new CurveInfos("_GEN____3_SM", "voltageRegulator_EfdPu")
         );
     }
 }

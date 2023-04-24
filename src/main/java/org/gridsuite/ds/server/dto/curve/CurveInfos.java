@@ -23,7 +23,5 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CurveInfos {
     private String equipmentId;
-    private String equipmentName;
     private String variableId;
-    private String variableName;
 }
