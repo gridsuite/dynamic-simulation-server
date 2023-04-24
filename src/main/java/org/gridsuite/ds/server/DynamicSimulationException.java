@@ -11,7 +11,7 @@ import java.util.Objects;
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
-class DynamicSimulationException  extends RuntimeException {
+class DynamicSimulationException extends RuntimeException {
 
     public enum Type {
         DATABASE_DRIVER_NOT_FOUND,
