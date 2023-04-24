@@ -92,7 +92,7 @@ public class DynamicMappingClientTest extends AbstractRestClientTest {
                             parametersFileBytes = StreamUtils.copyToByteArray(parametersFileIS);
                             String parametersFile = new String(parametersFileBytes, StandardCharsets.UTF_8);
 
-                            Script scriptObj =  new Script(
+                            Script scriptObj = new Script(
                                     mappingName + "-script",
                                     mappingName,
                                     script,
