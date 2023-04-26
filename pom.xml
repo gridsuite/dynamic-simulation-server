@@ -47,7 +47,7 @@
         <java.version>11</java.version>
 
         <gridsuite-dependencies.version>23</gridsuite-dependencies.version>
-        <jib.from.image>gridsuite/java-dynawo</jib.from.image>
+        <jib.from.image>powsybl/java-dynawo</jib.from.image>
 
         <h2database.version>1.4.200</h2database.version>
         <liquibase-hibernate-package>org.gridsuite.ds.server</liquibase-hibernate-package>

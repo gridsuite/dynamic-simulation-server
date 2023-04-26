@@ -17,6 +17,11 @@ jobs:
       image: powsybl/java-dynawo:1.4.0
 
     steps:
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v4.5
+        with:
+          maven-version: 5.13.0
+
       - name: Checkout sources
         uses: actions/checkout@v1
 
