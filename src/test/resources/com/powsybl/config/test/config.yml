@@ -1,5 +1,5 @@
 dynawaltz:
   # to remove when implementing test with container
-  homeDir: /home/runner/work/dynamic-simulation-server/dynawo
+  homeDir: /dynawo
   debug: true
 
