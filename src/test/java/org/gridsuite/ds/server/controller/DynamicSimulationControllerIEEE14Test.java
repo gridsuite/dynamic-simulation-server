@@ -69,7 +69,8 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     public static final String INPUT = "input";
     public static final String OUTPUT = "output";
     public static final String MODELS_GROOVY = "models.groovy";
-    public static final String RESULT_JSON = "result.json";
+    public static final String RESULT_IDA_JSON = "result_IDA.json";
+    public static final String RESULT_SIM_JSON = "result_SIM.json";
 
     private static final String NETWORK_UUID_STRING = "11111111-0000-0000-0000-000000000000";
     private static final String NETWORK_UUID_NOT_FOUND_STRING = "22222222-0000-0000-0000-000000000000";
@@ -178,6 +179,9 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         // prepare parameters
         DynamicSimulationParametersInfos parameters = ParameterUtils.getDynamicSimulationParameters();
 
+        // Test SIM solver (IDA solver will be ignored to test at moment due to the non-determinist on different OSs, Debian vs Ubuntu)
+        parameters.setSolverId(parameters.getSolvers().get(1).getId());
+
         //run the dynamic simulation (on a specific variant with variantId=" + VARIANT_1_ID + ")
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
                 .uri("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING)
@@ -197,7 +201,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
             String outputDir = DATA_IEEE14_BASE_DIR +
                     RESOURCE_PATH_DELIMETER + testBaseDir +
                     RESOURCE_PATH_DELIMETER + OUTPUT;
-            DynamicSimulationResult expectedResult = DynamicSimulationResultDeserializer.read(getClass().getResourceAsStream(outputDir + RESOURCE_PATH_DELIMETER + RESULT_JSON));
+            DynamicSimulationResult expectedResult = DynamicSimulationResultDeserializer.read(getClass().getResourceAsStream(outputDir + RESOURCE_PATH_DELIMETER + RESULT_SIM_JSON));
             String jsonExpectedTimeSeries = TimeSeries.toJson(new ArrayList<>(expectedResult.getCurves().values()));
 
             // get timeseries from mock timeseries db
