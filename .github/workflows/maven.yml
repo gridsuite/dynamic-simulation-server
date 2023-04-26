@@ -11,7 +11,10 @@ on:
 jobs:
   build:
 
-    runs-on: powsybl/java-dynawo:1.4.0
+    runs-on: ubuntu-latest
+
+    container:
+      image: powsybl/java-dynawo:1.4.0
 
     steps:
       - name: Set up JDK 11
