@@ -15,6 +15,7 @@ jobs:
 
     container:
       image: powsybl/java-dynawo:1.4.0
+      options: --user root
 
     steps:
       - name: Set up Maven
