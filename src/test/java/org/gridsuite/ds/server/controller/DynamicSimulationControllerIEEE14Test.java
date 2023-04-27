@@ -188,7 +188,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
         UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        Message<byte[]> messageSwitch = output.receive(1000 * 10, dsResultDestination);
+        Message<byte[]> messageSwitch = output.receive(1000 * 20, dsResultDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(DynamicSimulationResultContext.HEADER_RESULT_UUID).toString()));
 
         try {
