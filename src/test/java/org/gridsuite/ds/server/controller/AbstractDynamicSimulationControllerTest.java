@@ -112,8 +112,12 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
 
     private void initDynamicSimulationWorkerServiceSpy() {
         // setup spy bean
-        doAnswer((InvocationOnMock invocation) -> computationManager).
-                when(dynamicSimulationWorkerService).getComputationManager();
+        doAnswer((InvocationOnMock invocation) -> {
+            // call real method for the reason of code coverage
+            invocation.callRealMethod();
+            // but return the DockerLocalComputationManager configured in the parent abstract class
+            return computationManager;
+        }).when(dynamicSimulationWorkerService).getComputationManager();
 
     }
 

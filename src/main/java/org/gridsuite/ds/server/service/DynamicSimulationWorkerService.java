@@ -11,7 +11,6 @@ import com.powsybl.commons.config.PlatformConfig;
 import com.powsybl.commons.io.FileUtil;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.computation.local.LocalComputationManager;
-import com.powsybl.computation.local.test.DockerLocalComputationManager;
 import com.powsybl.dynamicsimulation.*;
 import com.powsybl.dynamicsimulation.groovy.*;
 import com.powsybl.dynawaltz.DynaWaltzParameters;
@@ -121,7 +120,7 @@ public class DynamicSimulationWorkerService {
     }
 
     /**
-     * Use this method to mock with {@link DockerLocalComputationManager} in case of integration tests with test container
+     * Use this method to mock with DockerLocalComputationManager in case of integration tests with test container
      * @return a computation manager
      */
     public ComputationManager getComputationManager() {
