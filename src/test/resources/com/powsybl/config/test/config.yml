@@ -1,5 +1,5 @@
 dynawaltz:
-  # to remove when implementing test with container
+  # home dir references to directory inside the container java-dynawo
   homeDir: /dynawo
   debug: true
 
