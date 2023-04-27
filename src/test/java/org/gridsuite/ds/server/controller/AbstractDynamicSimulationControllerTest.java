@@ -9,6 +9,7 @@ package org.gridsuite.ds.server.controller;
 import com.powsybl.network.store.client.NetworkStoreService;
 import org.gridsuite.ds.server.CustomApplicationContextInitializer;
 import org.gridsuite.ds.server.DynamicSimulationApplication;
+import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.gridsuite.ds.server.service.notification.NotificationService;
@@ -44,7 +45,7 @@ import static org.mockito.Mockito.doAnswer;
 @SpringBootTest
 @ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class},
         initializers = CustomApplicationContextInitializer.class)
-public abstract class AbstractDynamicSimulationControllerTest {
+public abstract class AbstractDynamicSimulationControllerTest extends AbstractDynawoTest {
 
     protected final String dsResultDestination = "ds.result.destination";
     protected final String dsFailedDestination = "ds.failed.destination";
@@ -63,10 +64,15 @@ public abstract class AbstractDynamicSimulationControllerTest {
     @SpyBean
     private NotificationService notificationService;
 
+    @SpyBean
+    protected DynamicSimulationWorkerService dynamicSimulationWorkerService;
+
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Before
-    public void init() throws IOException {
+    public void setUp() throws IOException {
+        super.setUp();
+
         // NetworkStoreService mock
         initNetworkStoreServiceMock();
 
@@ -78,10 +84,15 @@ public abstract class AbstractDynamicSimulationControllerTest {
 
         // NotificationService mock
         initNotificationServiceMock();
+
+        // DynamicSimulationWorkerService spy
+        initDynamicSimulationWorkerServiceSpy();
     }
 
     @After
     public void tearDown() {
+        super.tearDown();
+
         OutputDestination output = getOutputDestination();
         List<String> destinations = List.of(dsFailedDestination, dsResultDestination);
 
@@ -98,6 +109,13 @@ public abstract class AbstractDynamicSimulationControllerTest {
     protected abstract void initDynamicMappingServiceMock();
 
     protected abstract void initTimeSeriesServiceMock();
+
+    private void initDynamicSimulationWorkerServiceSpy() {
+        // setup spy bean
+        doAnswer((InvocationOnMock invocation) -> computationManager).
+                when(dynamicSimulationWorkerService).getComputationManager();
+
+    }
 
     protected void initNotificationServiceMock() {
         // Emit messages in separate threads, like in production.

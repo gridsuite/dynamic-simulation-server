@@ -24,12 +24,10 @@ import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
-import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.http.HttpStatus;
@@ -67,9 +65,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
     @Autowired
     private InputDestination input;
-
-    @SpyBean
-    private DynamicSimulationWorkerService dynamicSimulationWorkerService;
 
     private static final String MAPPING_NAME = "IEEE14";
     private static final String NETWORK_UUID_STRING = "11111111-0000-0000-0000-000000000000";
@@ -111,8 +106,8 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     @Before
-    public void init() throws IOException {
-        super.init();
+    public void setUp() throws IOException {
+        super.setUp();
 
         // mock DynamicSimulationWorkerService
         Map<String, TimeSeries> curves = new HashMap<>();
