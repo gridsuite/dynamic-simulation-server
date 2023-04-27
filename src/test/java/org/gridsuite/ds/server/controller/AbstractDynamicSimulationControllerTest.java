@@ -35,6 +35,7 @@ import java.util.concurrent.Executors;
 
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -112,13 +113,7 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
 
     private void initDynamicSimulationWorkerServiceSpy() {
         // setup spy bean
-        doAnswer((InvocationOnMock invocation) -> {
-            // call real method for the reason of code coverage
-            invocation.callRealMethod();
-            // but return the DockerLocalComputationManager configured in the parent abstract class
-            return computationManager;
-        }).when(dynamicSimulationWorkerService).getComputationManager();
-
+        when(dynamicSimulationWorkerService.getComputationManager()).thenReturn(computationManager);
     }
 
     protected void initNotificationServiceMock() {
