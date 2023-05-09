@@ -26,7 +26,6 @@ public abstract class AbstractDynawoTest {
 
     private static final String DOCKER_IMAGE_ID = "powsybl/java-dynawo:" + DYNAWO_VERSION;
 
-
     // TODO wait junit5 to use @TempDir
     //@TempDir
     //public final Path localDir;
