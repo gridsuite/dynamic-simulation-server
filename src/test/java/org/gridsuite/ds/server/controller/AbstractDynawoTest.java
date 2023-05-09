@@ -12,10 +12,11 @@ import com.powsybl.computation.local.test.ComputationDockerConfig;
 import com.powsybl.computation.local.test.DockerLocalComputationManager;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -25,16 +26,22 @@ public abstract class AbstractDynawoTest {
 
     private static final String DOCKER_IMAGE_ID = "powsybl/java-dynawo:" + DYNAWO_VERSION;
 
+
     // TODO wait junit5 to use @TempDir
-    private final Path localDir = Paths.get("/tmp");
+    //@TempDir
+    //public final Path localDir;
 
     protected ComputationManager computationManager;
+
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Before
     public void setUp() throws IOException {
         Path dockerDir = Path.of("/home/powsybl");
         ComputationDockerConfig config = new ComputationDockerConfig()
                 .setDockerImageId(DOCKER_IMAGE_ID);
+        Path localDir = tempFolder.getRoot().toPath();
         computationManager = new DockerLocalComputationManager(localDir, dockerDir, config);
     }
 
