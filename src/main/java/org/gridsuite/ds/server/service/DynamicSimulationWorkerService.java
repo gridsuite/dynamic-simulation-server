@@ -9,6 +9,8 @@ package org.gridsuite.ds.server.service;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.config.PlatformConfig;
 import com.powsybl.commons.io.FileUtil;
+import com.powsybl.computation.ComputationManager;
+import com.powsybl.computation.local.LocalComputationManager;
 import com.powsybl.dynamicsimulation.*;
 import com.powsybl.dynamicsimulation.groovy.*;
 import com.powsybl.dynawaltz.DynaWaltzParameters;
@@ -114,7 +116,15 @@ public class DynamicSimulationWorkerService {
                                                                CurvesSupplier curvesSupplier,
                                                                DynamicSimulationParameters dynamicSimulationParameters) {
         DynamicSimulation.Runner runner = DynamicSimulation.find(provider);
-        return runner.runAsync(network, dynamicModelsSupplier, eventModelsSupplier, curvesSupplier, variantId, dynamicSimulationParameters);
+        return runner.runAsync(network, dynamicModelsSupplier, eventModelsSupplier, curvesSupplier, variantId, getComputationManager(), dynamicSimulationParameters);
+    }
+
+    /**
+     * Use this method to mock with DockerLocalComputationManager in case of integration tests with test container
+     * @return a computation manager
+     */
+    public ComputationManager getComputationManager() {
+        return LocalComputationManager.getDefault();
     }
 
     private Network getNetwork(UUID networkUuid) {
