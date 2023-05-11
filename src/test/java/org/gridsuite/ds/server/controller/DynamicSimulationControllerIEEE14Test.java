@@ -22,7 +22,6 @@ import org.gridsuite.ds.server.controller.utils.ParameterUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
-import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
@@ -31,7 +30,6 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.messaging.Message;
@@ -69,7 +67,8 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     public static final String INPUT = "input";
     public static final String OUTPUT = "output";
     public static final String MODELS_GROOVY = "models.groovy";
-    public static final String RESULT_JSON = "result.json";
+    public static final String RESULT_IDA_JSON = "result_IDA.json";
+    public static final String RESULT_SIM_JSON = "result_SIM.json";
 
     private static final String NETWORK_UUID_STRING = "11111111-0000-0000-0000-000000000000";
     private static final String NETWORK_UUID_NOT_FOUND_STRING = "22222222-0000-0000-0000-000000000000";
@@ -87,9 +86,6 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
     @Autowired
     private InputDestination input;
-
-    @SpyBean
-    private DynamicSimulationWorkerService dynamicSimulationWorkerService;
 
     @Autowired
     private ObjectMapper mapper = new ObjectMapper();
@@ -178,6 +174,9 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         // prepare parameters
         DynamicSimulationParametersInfos parameters = ParameterUtils.getDynamicSimulationParameters();
 
+        // Test SIM solver (IDA solver will be ignored to test at moment due to the non-determinist on different OSs, Debian vs Ubuntu)
+        parameters.setSolverId(parameters.getSolvers().get(1).getId());
+
         //run the dynamic simulation (on a specific variant with variantId=" + VARIANT_1_ID + ")
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
                 .uri("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING)
@@ -189,7 +188,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
         UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        Message<byte[]> messageSwitch = output.receive(1000 * 5, dsResultDestination);
+        Message<byte[]> messageSwitch = output.receive(1000 * 60, dsResultDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(DynamicSimulationResultContext.HEADER_RESULT_UUID).toString()));
 
         try {
@@ -197,7 +196,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
             String outputDir = DATA_IEEE14_BASE_DIR +
                     RESOURCE_PATH_DELIMETER + testBaseDir +
                     RESOURCE_PATH_DELIMETER + OUTPUT;
-            DynamicSimulationResult expectedResult = DynamicSimulationResultDeserializer.read(getClass().getResourceAsStream(outputDir + RESOURCE_PATH_DELIMETER + RESULT_JSON));
+            DynamicSimulationResult expectedResult = DynamicSimulationResultDeserializer.read(getClass().getResourceAsStream(outputDir + RESOURCE_PATH_DELIMETER + RESULT_SIM_JSON));
             String jsonExpectedTimeSeries = TimeSeries.toJson(new ArrayList<>(expectedResult.getCurves().values()));
 
             // get timeseries from mock timeseries db

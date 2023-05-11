@@ -19,14 +19,6 @@ jobs:
         with:
           java-version: 11
 
-      - name: Setup Dynawo
-        env:
-          DYNAWO_VERSION: 1.4.0
-        run: |
-          wget https://github.com/dynawo/dynawo/releases/download/v${DYNAWO_VERSION}/Dynawo_Linux_v${DYNAWO_VERSION}.zip
-          unzip Dynawo_Linux_v${DYNAWO_VERSION}.zip -d ..
-          rm -f Dynawo_Linux_v${DYNAWO_VERSION}.zip
-
       - name: Checkout sources
         uses: actions/checkout@v1
 
