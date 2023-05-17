@@ -9,6 +9,7 @@ package org.gridsuite.ds.server.dto;
 
 import com.powsybl.commons.exceptions.UncheckedSaxException;
 import org.gridsuite.ds.server.DynamicSimulationApplication;
+import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.dto.solver.IdaSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SimSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
@@ -52,6 +53,9 @@ public class XmlSerializableParameterTest {
     public static final String OUTPUT = "output";
     public static final String EXPECTED_SOLVERS = "expected_solvers.par";
     public static final String EXPORTED_SOLVERS = "exported_solvers.par";
+
+    public static final String EXPECTED_NETWORK = "expected_network.par";
+    public static final String EXPORTED_NETWORK = "exported_network.par";
 
     private void validate(String schemaFile, String expectedXmlFile, Path actualXmlFile) {
         try {
@@ -105,5 +109,39 @@ public class XmlSerializableParameterTest {
 
         // compare two file
         validate(DATA_XML + RESOURCE_PATH_DELIMETER + PAR_SCHEMA, DATA_XML + RESOURCE_PATH_DELIMETER + OUTPUT + RESOURCE_PATH_DELIMETER + EXPECTED_SOLVERS, exportedSolversFile);
+    }
+
+    @Test
+    public void testWriteParameterGivenNetwork() throws IOException, XMLStreamException {
+        NetworkInfos network = new NetworkInfos();
+        network.setCapacitorNoReclosingDelay(300);
+        network.setDanglingLineCurrentLimitMaxTimeOperation(90);
+        network.setLineCurrentLimitMaxTimeOperation(90);
+        network.setLoadTp(90);
+        network.setLoadTq(90);
+        network.setLoadAlpha(1);
+        network.setLoadAlphaLong(0);
+        network.setLoadBeta(2);
+        network.setLoadBetaLong(0);
+        network.setLoadIsControllable(false);
+        network.setLoadIsRestorative(false);
+        network.setLoadZPMax(100);
+        network.setLoadZQMax(100);
+        network.setReactanceNoReclosingDelay(0);
+        network.setTransformerCurrentLimitMaxTimeOperation(90);
+        network.setTransformerT1StHT(60);
+        network.setTransformerT1StTHT(30);
+        network.setTransformerTNextHT(10);
+        network.setTransformerTNextTHT(10);
+        network.setTransformerTolV(0.015);
+
+        // export network to par file
+        String resultDir = getClass().getResource(DATA_XML + RESOURCE_PATH_DELIMETER + OUTPUT).getPath();
+        Path exportedNetworkFile = Paths.get(resultDir).resolve(EXPORTED_NETWORK);
+        Files.deleteIfExists(exportedNetworkFile);
+        XmlSerializableParameter.writeParameter(exportedNetworkFile, XmlSerializableParameter.PARAMETER_SET, network);
+
+        // compare two file
+        validate(DATA_XML + RESOURCE_PATH_DELIMETER + PAR_SCHEMA, DATA_XML + RESOURCE_PATH_DELIMETER + OUTPUT + RESOURCE_PATH_DELIMETER + EXPECTED_NETWORK, exportedNetworkFile);
     }
 }

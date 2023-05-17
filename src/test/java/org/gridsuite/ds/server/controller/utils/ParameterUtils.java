@@ -13,6 +13,7 @@ import org.gridsuite.ds.server.dto.solver.IdaSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SimSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
 import org.gridsuite.ds.server.dto.solver.SolverTypeInfos;
+import org.gridsuite.ds.server.dto.network.NetworkInfos;
 
 import java.util.List;
 
@@ -29,6 +30,7 @@ public final class ParameterUtils {
         parameters.setStartTime(0.0);
         parameters.setStopTime(50.0);
 
+        // solvers
         IdaSolverInfos idaSolver = new IdaSolverInfos();
         idaSolver.setId("2");
         idaSolver.setType(SolverTypeInfos.IDA);
@@ -56,6 +58,31 @@ public final class ParameterUtils {
 
         parameters.setSolverId(idaSolver.getId());
         parameters.setSolvers(solvers);
+
+        // network
+        NetworkInfos network = new NetworkInfos();
+        network.setCapacitorNoReclosingDelay(300);
+        network.setDanglingLineCurrentLimitMaxTimeOperation(90);
+        network.setLineCurrentLimitMaxTimeOperation(90);
+        network.setLoadTp(90);
+        network.setLoadTq(90);
+        network.setLoadAlpha(1);
+        network.setLoadAlphaLong(0);
+        network.setLoadBeta(2);
+        network.setLoadBetaLong(0);
+        network.setLoadIsControllable(false);
+        network.setLoadIsRestorative(false);
+        network.setLoadZPMax(100);
+        network.setLoadZQMax(100);
+        network.setReactanceNoReclosingDelay(0);
+        network.setTransformerCurrentLimitMaxTimeOperation(90);
+        network.setTransformerT1StHT(60);
+        network.setTransformerT1StTHT(30);
+        network.setTransformerTNextHT(10);
+        network.setTransformerTNextTHT(10);
+        network.setTransformerTolV(0.015);
+
+        parameters.setNetwork(network);
 
         return parameters;
     }

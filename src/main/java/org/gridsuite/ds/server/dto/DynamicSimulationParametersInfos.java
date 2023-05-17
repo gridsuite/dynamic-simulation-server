@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
+import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
 
 import java.util.List;
@@ -33,5 +34,6 @@ public class DynamicSimulationParametersInfos {
     private Double stopTime;
     private String solverId;
     private List<SolverInfos> solvers;
+    private NetworkInfos network;
     private List<CurveInfos> curves;
 }
