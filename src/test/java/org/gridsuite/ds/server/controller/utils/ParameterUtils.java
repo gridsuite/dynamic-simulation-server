@@ -8,6 +8,7 @@
 package org.gridsuite.ds.server.controller.utils;
 
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
+import org.gridsuite.ds.server.dto.curve.CurveInfos;
 import org.gridsuite.ds.server.dto.solver.IdaSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SimSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
@@ -84,5 +85,17 @@ public final class ParameterUtils {
         parameters.setNetwork(network);
 
         return parameters;
+    }
+
+    public static List<CurveInfos> getCurveInfosList() {
+        return List.of(
+                new CurveInfos("_LOAD___2_EC", "load_PPu"),
+                new CurveInfos("_LOAD___2_EC", "load_QPu"),
+                new CurveInfos("_GEN____3_SM", "generator_omegaPu"),
+                new CurveInfos("_GEN____3_SM", "generator_PGen"),
+                new CurveInfos("_GEN____3_SM", "generator_QGen"),
+                new CurveInfos("_GEN____3_SM", "generator_UStatorPu"),
+                new CurveInfos("_GEN____3_SM", "voltageRegulator_EfdPu")
+        );
     }
 }

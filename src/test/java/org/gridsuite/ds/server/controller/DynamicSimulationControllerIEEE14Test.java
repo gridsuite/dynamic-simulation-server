@@ -18,8 +18,11 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.timeseries.TimeSeries;
+import com.powsybl.timeseries.TimeSeriesMetadata;
+import org.gridsuite.ds.server.controller.utils.FileUtils;
 import org.gridsuite.ds.server.controller.utils.ParameterUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
+import org.gridsuite.ds.server.dto.curve.CurveInfos;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
@@ -38,19 +41,19 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.util.StreamUtils;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.HEADER_MESSAGE;
 import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.HEADER_RESULT_UUID;
 import static org.gridsuite.ds.server.service.notification.NotificationService.FAIL_MESSAGE;
 import static org.gridsuite.ds.server.service.parameters.ParametersService.MODELS_PAR;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doAnswer;
@@ -203,11 +206,54 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
             UUID timeSeriesUuid = UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID);
             String jsonResultTimeSeries = TimeSeries.toJson(timeSeriesMockBd.remove(timeSeriesUuid));
 
+            // export result to file
+            FileUtils.writeStringToFile(this, outputDir + RESOURCE_PATH_DELIMETER + "exported_" + RESULT_SIM_JSON, jsonResultTimeSeries);
+
             // compare result only timeseries
             assertEquals(mapper.readTree(jsonExpectedTimeSeries), mapper.readTree(jsonResultTimeSeries));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    @Test
+    public void test01GivenCurves() {
+
+        // prepare parameters
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDynamicSimulationParameters();
+
+        // given curves
+        List<CurveInfos> curveInfosList = ParameterUtils.getCurveInfosList();
+        parameters.setCurves(curveInfosList);
+
+        //run the dynamic simulation (on a specific variant with variantId=" + VARIANT_1_ID + ")
+        EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
+                .uri("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING)
+                .bodyValue(parameters)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(UUID.class)
+                .returnResult();
+
+        UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
+
+        Message<byte[]> messageSwitch = output.receive(1000 * 5, dsResultDestination);
+        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(DynamicSimulationResultContext.HEADER_RESULT_UUID).toString()));
+
+        // expected seriesNames
+        List<String> expectedSeriesNames = curveInfosList.stream().map(curveInfos -> curveInfos.getEquipmentId() + "_" + curveInfos.getVariableId()).collect(Collectors.toList());
+
+        // get timeseries from mock timeseries db
+        UUID timeSeriesUuid = UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID);
+        List<TimeSeries> resultTimeSeries = timeSeriesMockBd.remove(timeSeriesUuid);
+        // result seriesNames
+        List<String> seriesNames = resultTimeSeries.stream().map(TimeSeries::getMetadata).map(TimeSeriesMetadata::getName).collect(Collectors.toList());
+
+        // compare result only series' names
+        expectedSeriesNames.forEach(expectedSeriesName -> {
+            logger.info(String.format("Check time series %s exists or not : %b", expectedSeriesName, seriesNames.contains(expectedSeriesName)));
+            assertTrue(seriesNames.contains(expectedSeriesName));
+        });
     }
 
     @Test
