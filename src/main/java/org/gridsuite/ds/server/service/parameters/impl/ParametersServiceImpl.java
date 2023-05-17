@@ -14,6 +14,7 @@ import com.powsybl.dynawaltz.DynaWaltzParameters;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.XmlSerializableParameter;
+import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.springframework.stereotype.Service;
@@ -92,6 +93,18 @@ public class ParametersServiceImpl implements ParametersService {
                     Path file = workingDir.resolve(SOLVERS_PAR);
                     Files.deleteIfExists(file);
                     XmlSerializableParameter.writeParameter(file, XmlSerializableParameter.PARAMETER_SET, inputSolver);
+                }
+
+                // override network from input parameters
+                NetworkInfos network = inputParameters.getNetwork();
+                if (network != null) {
+                    dynaWaltzParameters.getNetwork().setParametersId(network.getId());
+
+                    // TODO to remove when dynawaltz provider support streams for inputs
+                    // export input network to override default network par file
+                    Path file = workingDir.resolve(NETWORK_PAR);
+                    Files.deleteIfExists(file);
+                    XmlSerializableParameter.writeParameter(file, XmlSerializableParameter.PARAMETER_SET, network);
                 }
             }
 
