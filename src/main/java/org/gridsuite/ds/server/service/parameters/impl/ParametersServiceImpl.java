@@ -12,6 +12,8 @@ import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.json.JsonDynamicSimulationParameters;
 import com.powsybl.dynawaltz.DynaWaltzParameters;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
+import com.powsybl.dynawaltz.xml.ParametersXml;
+import com.powsybl.dynawaltz.parameters.ParametersSet;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.XmlSerializableParameter;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
@@ -99,16 +101,18 @@ public class ParametersServiceImpl implements ParametersService {
             DynamicSimulationParameters parameters = JsonDynamicSimulationParameters.read(getClass().getResourceAsStream(PARAMETERS_DIR + RESOURCE_PATH_DELIMETER + PARAMETERS_JSON));
             // TODO: Powsybl side - create an explicit dependency to DynaWaltz class and keep dynamic simulation abstraction all over this micro service
             if (DynaWaltzProvider.NAME.equals(provider)) {
+                List<ParametersSet> modelsParameters = ParametersXml.load(workingDir.resolve(MODELS_PAR));
+
                 DynaWaltzParameters dynaWaltzParameters = parameters.getExtension(DynaWaltzParameters.class);
-                dynaWaltzParameters.setParametersFile(workingDir.resolve(MODELS_PAR).toString());
-                dynaWaltzParameters.getNetwork().setParametersFile(workingDir.resolve(NETWORK_PAR).toString());
-                dynaWaltzParameters.getSolver().setParametersFile(workingDir.resolve(SOLVERS_PAR).toString());
+                dynaWaltzParameters.setModelsParameters(modelsParameters);
 
                 // override solver from input parameter
                 SolverInfos inputSolver = inputParameters.getSolvers().stream().filter(elem -> elem.getId().equals(inputParameters.getSolverId())).findFirst().orElse(null);
                 if (inputSolver != null) {
-                    dynaWaltzParameters.getSolver().setParametersId(inputSolver.getId());
-                    dynaWaltzParameters.getSolver().setType(inputSolver.getType().toSolverType());
+                    ParametersSet solverParameters = ParametersXml.load(workingDir.resolve(SOLVERS_PAR), inputSolver.getId());
+                    dynaWaltzParameters.setSolverType(inputSolver.getType().toSolverType());
+
+                    dynaWaltzParameters.setSolverParameters(solverParameters);
 
                     // TODO to remove when dynawaltz provider support streams for inputs
                     // export input solver to override default solver par file
@@ -120,7 +124,9 @@ public class ParametersServiceImpl implements ParametersService {
                 // override network from input parameters
                 NetworkInfos network = inputParameters.getNetwork();
                 if (network != null) {
-                    dynaWaltzParameters.getNetwork().setParametersId(network.getId());
+                    ParametersSet networkParameters = ParametersXml.load(workingDir.resolve(NETWORK_PAR), network.getId());
+
+                    dynaWaltzParameters.setNetworkParameters(networkParameters);
 
                     // TODO to remove when dynawaltz provider support streams for inputs
                     // export input network to override default network par file

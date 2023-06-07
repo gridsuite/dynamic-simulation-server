@@ -5,17 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import com.powsybl.iidm.network.Line
+import com.powsybl.iidm.network.Branch
 
-
-for (Line line : network.lines) {
-    if (line.id == "_BUS____1-BUS____5-1_AC") {
-        EventQuadripoleDisconnection {
-            staticId line.id
-            eventModelId "DISCONNECT_LINE"
-            startTime 1
-            disconnectOrigin false
-            disconnectExtremity true
-        }
-    }
+Disconnect {
+    staticId "_BUS____1-BUS____5-1_AC"
+    eventModelId "DISCONNECT_LINE"
+    startTime 1
+    disconnectOnly Branch.Side.TWO
 }
