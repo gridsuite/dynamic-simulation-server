@@ -41,15 +41,18 @@ for (Generator equipment : network.generators) {
 }
 
 CurrentLimitAutomaton {
-     staticId "_BUS____2-BUS____4-1_AC"
+     iMeasurement "_BUS____2-BUS____4-1_AC"
      dynamicModelId "CurrentLimitAutomaton24"
      parameterSetId "CLA_2_4"
-     side Branch.Side.TWO
+     iMeasurementSide Branch.Side.TWO
+     controlledQuadripole "_BUS____2-BUS____4-1_AC"
 }
 
 CurrentLimitAutomaton {
-     staticId "_BUS____2-BUS____5-1_AC"
+     iMeasurement "_BUS____2-BUS____5-1_AC"
      dynamicModelId "CurrentLimitAutomaton25"
      parameterSetId "CLA_2_5"
-     side Branch.Side.TWO
+     iMeasurementSide Branch.Side.TWO
+     controlledQuadripole "_BUS____2-BUS____5-1_AC"
+
 }
