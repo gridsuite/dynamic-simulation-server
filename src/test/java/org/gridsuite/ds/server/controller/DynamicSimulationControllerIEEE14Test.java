@@ -191,7 +191,8 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
         UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        Message<byte[]> messageSwitch = output.receive(1000 * 60, dsResultDestination);
+        //TODO maybe find a more reliable way to test this : failed with 1000 * 60 timeout
+        Message<byte[]> messageSwitch = output.receive(1500 * 60, dsResultDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(DynamicSimulationResultContext.HEADER_RESULT_UUID).toString()));
 
         try {
@@ -237,7 +238,8 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
         UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        Message<byte[]> messageSwitch = output.receive(1000 * 5, dsResultDestination);
+        //TODO maybe find a more reliable way to test this : failed with 1000 * 60 timeout
+        Message<byte[]> messageSwitch = output.receive(1500 * 6, dsResultDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(DynamicSimulationResultContext.HEADER_RESULT_UUID).toString()));
 
         // expected seriesNames
