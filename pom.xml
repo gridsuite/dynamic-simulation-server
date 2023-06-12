@@ -147,10 +147,12 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawaltz</artifactId>
+            <version>1.14.0</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawaltz-dsl</artifactId>
+            <version>1.14.0</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
