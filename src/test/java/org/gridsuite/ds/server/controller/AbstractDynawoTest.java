@@ -22,7 +22,7 @@ import java.nio.file.Path;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public abstract class AbstractDynawoTest {
-    private static final String DYNAWO_VERSION = "1.4.0";
+    private static final String DYNAWO_VERSION = "2.0.0";
 
     private static final String DOCKER_IMAGE_ID = "powsybl/java-dynawo:" + DYNAWO_VERSION;
 
