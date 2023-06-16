@@ -7,6 +7,8 @@
 
 package org.gridsuite.ds.server.dto;
 
+import com.powsybl.dynawaltz.xml.XmlStreamWriterFactory;
+
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.*;
