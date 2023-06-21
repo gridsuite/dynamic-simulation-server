@@ -6,12 +6,14 @@
  */
 package org.gridsuite.ds.server.service.parameters.impl;
 
-import com.powsybl.commons.config.PlatformConfig;
 import com.powsybl.commons.exceptions.UncheckedXmlStreamException;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.json.JsonDynamicSimulationParameters;
 import com.powsybl.dynawaltz.DynaWaltzParameters;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
+import com.powsybl.dynawaltz.xml.ParametersXml;
+import com.powsybl.dynawaltz.parameters.ParametersSet;
+import org.apache.commons.lang3.ArrayUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.XmlSerializableParameter;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
@@ -27,8 +29,6 @@ import org.springframework.stereotype.Service;
 import javax.xml.stream.XMLStreamException;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -76,63 +76,48 @@ public class ParametersServiceImpl implements ParametersService {
     @Override
     public DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams, String provider, DynamicSimulationParametersInfos inputParameters) {
         try {
-            // prepare a tmp dir for current running simulation
-            // TODO to remove when dynawaltz provider support streams for inputs
-            Path configDir = PlatformConfig.defaultConfig().getConfigDir().orElseThrow();
-            Path tmpPath = configDir.resolve(TMP_DIR);
-            if (!Files.exists(tmpPath)) {
-                Files.createDirectory(tmpPath);
-            }
-            Path workingDir = Files.createTempDirectory(tmpPath, WORKING_DIR_PREFIX);
-
-            // load model par
-            Files.copy(new ByteArrayInputStream(dynamicParams), workingDir.resolve(MODELS_PAR));
-
-            // load two others files
-            for (String parFileName : List.of(NETWORK_PAR, SOLVERS_PAR)) {
-                try (InputStream parIs = getClass().getResourceAsStream(PARAMETERS_DIR + RESOURCE_PATH_DELIMETER + parFileName)) {
-                    Files.copy(parIs, workingDir.resolve(parFileName));
-                }
-            }
-
-            // load parameter file then config paths
+            // load parameter file
             DynamicSimulationParameters parameters = JsonDynamicSimulationParameters.read(getClass().getResourceAsStream(PARAMETERS_DIR + RESOURCE_PATH_DELIMETER + PARAMETERS_JSON));
             // TODO: Powsybl side - create an explicit dependency to DynaWaltz class and keep dynamic simulation abstraction all over this micro service
             if (DynaWaltzProvider.NAME.equals(provider)) {
+                // --- MODEL PAR --- //
+                List<ParametersSet> modelsParameters = !ArrayUtils.isEmpty(dynamicParams) ? ParametersXml.load(new ByteArrayInputStream(dynamicParams)) : List.of();
+
                 DynaWaltzParameters dynaWaltzParameters = parameters.getExtension(DynaWaltzParameters.class);
-                dynaWaltzParameters.setParametersFile(workingDir.resolve(MODELS_PAR).toString());
-                dynaWaltzParameters.getNetwork().setParametersFile(workingDir.resolve(NETWORK_PAR).toString());
-                dynaWaltzParameters.getSolver().setParametersFile(workingDir.resolve(SOLVERS_PAR).toString());
+                dynaWaltzParameters.setModelsParameters(modelsParameters);
+
+                // --- SOLVER PAR --- //
+                // default solver parameters
+                ParametersSet solverParameters = ParametersXml.load(getClass().getResourceAsStream(PARAMETERS_DIR + RESOURCE_PATH_DELIMETER + SOLVERS_PAR), "1");
+                dynaWaltzParameters.setSolverType(DynaWaltzParameters.SolverType.IDA);
 
                 // override solver from input parameter
                 SolverInfos inputSolver = inputParameters.getSolvers().stream().filter(elem -> elem.getId().equals(inputParameters.getSolverId())).findFirst().orElse(null);
                 if (inputSolver != null) {
-                    dynaWaltzParameters.getSolver().setParametersId(inputSolver.getId());
-                    dynaWaltzParameters.getSolver().setType(inputSolver.getType().toSolverType());
-
-                    // TODO to remove when dynawaltz provider support streams for inputs
-                    // export input solver to override default solver par file
-                    Path file = workingDir.resolve(SOLVERS_PAR);
-                    Files.deleteIfExists(file);
-                    XmlSerializableParameter.writeParameter(file, XmlSerializableParameter.PARAMETER_SET, inputSolver);
+                    ByteArrayOutputStream os = new ByteArrayOutputStream();
+                    XmlSerializableParameter.writeParameter(os, XmlSerializableParameter.PARAMETER_SET, inputSolver);
+                    solverParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), inputSolver.getId());
+                    dynaWaltzParameters.setSolverType(inputSolver.getType().toSolverType());
                 }
+
+                dynaWaltzParameters.setSolverParameters(solverParameters);
+
+                // --- NETWORK PAR --- //
+                // default network parameters
+                ParametersSet networkParameters = ParametersXml.load(getClass().getResourceAsStream(PARAMETERS_DIR + RESOURCE_PATH_DELIMETER + NETWORK_PAR), NetworkInfos.NETWORK_ID);
 
                 // override network from input parameters
                 NetworkInfos network = inputParameters.getNetwork();
                 if (network != null) {
-                    dynaWaltzParameters.getNetwork().setParametersId(network.getId());
-
-                    // TODO to remove when dynawaltz provider support streams for inputs
-                    // export input network to override default network par file
-                    Path file = workingDir.resolve(NETWORK_PAR);
-                    Files.deleteIfExists(file);
-                    XmlSerializableParameter.writeParameter(file, XmlSerializableParameter.PARAMETER_SET, network);
+                    ByteArrayOutputStream os = new ByteArrayOutputStream();
+                    XmlSerializableParameter.writeParameter(os, XmlSerializableParameter.PARAMETER_SET, network);
+                    networkParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), network.getId());
                 }
+
+                dynaWaltzParameters.setNetworkParameters(networkParameters);
             }
 
             return parameters;
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         } catch (XMLStreamException e) {
             throw new UncheckedXmlStreamException(e);
         }

@@ -4,16 +4,6 @@
   "stopTime" : 50,
   "extensions" : {
     "DynaWaltzParameters" : {
-      "parametersFile" : "",
-      "network" : {
-        "parametersFile" : "",
-        "parametersId" : "NETWORK"
-      },
-      "solver" : {
-        "type" : "IDA",
-        "parametersFile" : "",
-        "parametersId" : "2"
-      }
     }
   }
 }

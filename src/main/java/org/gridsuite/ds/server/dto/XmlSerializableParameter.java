@@ -11,8 +11,7 @@ import com.powsybl.dynawaltz.xml.XmlStreamWriterFactory;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.IOException;
-import java.io.Writer;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,21 +47,34 @@ public interface XmlSerializableParameter {
         Objects.requireNonNull(objects);
         try (Writer writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW)) {
             XMLStreamWriter xmlWriter = XmlStreamWriterFactory.newInstance(writer);
-            try {
-                xmlWriter.writeStartDocument(StandardCharsets.UTF_8.toString(), "1.0");
-                xmlWriter.setPrefix("", DYN_BASE_URI);
-                xmlWriter.writeStartElement(DYN_BASE_URI, rootElementName);
-                xmlWriter.writeNamespace("", DYN_BASE_URI);
+            writeParameter(xmlWriter, rootElementName, objects);
+        }
+    }
 
-                for (XmlSerializableParameter object : objects) {
-                    object.writeParameter(xmlWriter);
-                }
+    static void writeParameter(OutputStream os, String rootElementName, XmlSerializableParameter... objects) throws XMLStreamException {
+        Objects.requireNonNull(os);
+        Objects.requireNonNull(rootElementName);
+        Objects.requireNonNull(objects);
 
-                xmlWriter.writeEndElement();
-                xmlWriter.writeEndDocument();
-            } finally {
-                xmlWriter.close();
+        XMLStreamWriter xmlWriter = XmlStreamWriterFactory.newInstance(os);
+        writeParameter(xmlWriter, rootElementName, objects);
+    }
+
+    private static void writeParameter(XMLStreamWriter xmlWriter, String rootElementName, XmlSerializableParameter... objects) throws XMLStreamException {
+        try {
+            xmlWriter.writeStartDocument(StandardCharsets.UTF_8.toString(), "1.0");
+            xmlWriter.setPrefix("", DYN_BASE_URI);
+            xmlWriter.writeStartElement(DYN_BASE_URI, rootElementName);
+            xmlWriter.writeNamespace("", DYN_BASE_URI);
+
+            for (XmlSerializableParameter object : objects) {
+                object.writeParameter(xmlWriter);
             }
+
+            xmlWriter.writeEndElement();
+            xmlWriter.writeEndDocument();
+        } finally {
+            xmlWriter.close();
         }
     }
 }

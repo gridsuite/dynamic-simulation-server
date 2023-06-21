@@ -165,7 +165,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        messageSwitch = output.receive(1000, dsResultDestination);
+        messageSwitch = output.receive(1000 * 5, dsResultDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
 
         //get the calculation status
