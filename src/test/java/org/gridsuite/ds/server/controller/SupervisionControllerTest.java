@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
  * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
  */
 @RunWith(SpringRunner.class)
-@AutoConfigureWebTestClient(timeout = "PT360S")
+@AutoConfigureWebTestClient
 @SpringBootTest
 public class SupervisionControllerTest {
 
