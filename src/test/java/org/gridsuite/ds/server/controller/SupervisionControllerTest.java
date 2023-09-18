@@ -37,7 +37,7 @@ public class SupervisionControllerTest {
             .expectBody(Integer.class).returnResult();
 
         int resultCount = entityExchangeResult.getResponseBody();
-        assertEquals(resultCount, 0);
+        assertEquals(0, resultCount);
 
     }
 
