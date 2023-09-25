@@ -37,8 +37,6 @@ public class EventInfos {
 
     private String eventType;
 
-    private int eventOrder;
-
     private List<EventPropertyInfos> properties = new ArrayList<>();
 
 }

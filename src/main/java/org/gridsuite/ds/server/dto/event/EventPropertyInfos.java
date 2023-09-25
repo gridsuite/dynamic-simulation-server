@@ -7,11 +7,14 @@
 
 package org.gridsuite.ds.server.dto.event;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.ds.server.utils.PropertyType;
+
+import java.util.UUID;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -21,6 +24,9 @@ import org.gridsuite.ds.server.utils.PropertyType;
 @Getter
 @Setter
 public class EventPropertyInfos {
+
+    @JsonProperty("uuid")
+    private UUID id;
 
     private String name;
 
