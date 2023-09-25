@@ -58,9 +58,6 @@ public class EventGroovyGeneratorServiceImpl implements EventGroovyGeneratorServ
         eventST.add("eventType", event.getEventType());
 
         // --- add properties ---
-        // static id property
-        eventST.add("staticId", event.getEquipmentId());
-        // other properties
         String[] propertyStringList = event.getProperties().stream()
                 .map(property -> generateEventProperty(eventPropertyTemplate, property))
                 .filter(property -> !StringUtils.isEmpty(property)).toArray(String[]::new);
