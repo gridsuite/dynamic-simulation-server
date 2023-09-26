@@ -171,6 +171,17 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         }).when(timeSeriesClient).sendTimeSeries(any());
     }
 
+    @Override
+    public void tearDown() {
+        super.tearDown();
+
+        // delete all results
+        webTestClient.delete()
+                .uri("/v1/results")
+                .exchange()
+                .expectStatus().isOk();
+    }
+
     @Test
     public void test01() {
         String testBaseDir = MAPPING_NAME_01;
