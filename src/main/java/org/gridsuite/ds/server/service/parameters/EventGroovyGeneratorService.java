@@ -7,21 +7,21 @@
 
 package org.gridsuite.ds.server.service.parameters;
 
-import org.gridsuite.ds.server.dto.curve.CurveInfos;
+import org.gridsuite.ds.server.dto.event.EventInfos;
 
 import java.util.List;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public interface CurveGroovyGeneratorService {
+public interface EventGroovyGeneratorService {
     String RESOURCE_PATH_DELIMETER = "/";
-    String CURVES_TEMPLATE_DIR = "templates/curve";
+    String EVENTS_TEMPLATE_DIR = "templates/event";
 
     /**
-     * Generate a script groovy which contains curves
-     * @param curves given list of curves
-     * @return a script groovy which contains curves
+     * Generate a script groovy which contains events
+     * @param events given list of events
+     * @return a script groovy which contains events
      */
-    String generate(List<CurveInfos> curves);
+    String generate(List<EventInfos> events);
 }

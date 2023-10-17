@@ -79,10 +79,10 @@ public class DynamicSimulationService {
                     parameters.setStartTime(parametersInfos.getStartTime().intValue()); // TODO remove intValue() when correct startTime to double in powsyble
                     parameters.setStopTime(parametersInfos.getStopTime().intValue()); // TODO remove intValue() when correct stopTime to double in powsyble
 
+                    // groovy scripts
                     String script = scriptObj.getScript();
                     byte[] dynamicModel = script.getBytes(StandardCharsets.UTF_8);
-                    byte[] eventModel = parametersService.getEventModel();
-
+                    byte[] eventModel = parametersService.getEventModel(parametersInfos.getEvents());
                     byte[] curveModel = parametersService.getCurveModel(parametersInfos.getCurves());
 
                     DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(dsProvider, receiver, networkUuid, variantId, dynamicModel, eventModel, curveModel, parameters);

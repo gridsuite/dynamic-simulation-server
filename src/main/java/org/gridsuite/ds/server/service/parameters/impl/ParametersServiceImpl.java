@@ -17,9 +17,11 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.XmlSerializableParameter;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
+import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
 import org.gridsuite.ds.server.service.parameters.CurveGroovyGeneratorService;
+import org.gridsuite.ds.server.service.parameters.EventGroovyGeneratorService;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,18 +43,28 @@ public class ParametersServiceImpl implements ParametersService {
 
     private final CurveGroovyGeneratorService curveGroovyGeneratorService;
 
+    private final EventGroovyGeneratorService eventGroovyGeneratorService;
+
     @Autowired
-    public ParametersServiceImpl(CurveGroovyGeneratorService curveGroovyGeneratorService) {
+    public ParametersServiceImpl(CurveGroovyGeneratorService curveGroovyGeneratorService, EventGroovyGeneratorService eventGroovyGeneratorService) {
         this.curveGroovyGeneratorService = curveGroovyGeneratorService;
+        this.eventGroovyGeneratorService = eventGroovyGeneratorService;
     }
 
     @Override
-    public byte[] getEventModel() {
-        try (InputStream is = getClass().getResourceAsStream(PARAMETERS_DIR + RESOURCE_PATH_DELIMETER + EVENTS_GROOVY)) {
-            // read the events.groovy in the "parameters" resources
-            return is.readAllBytes();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+    public byte[] getEventModel(List<EventInfos> events) {
+        if (events != null) {
+            String generatedGroovyEvents = eventGroovyGeneratorService.generate(events);
+            LOGGER.info(generatedGroovyEvents);
+            return generatedGroovyEvents.getBytes(StandardCharsets.UTF_8);
+        } else {
+            // TODO remove reading from hard file
+            try (InputStream is = getClass().getResourceAsStream(PARAMETERS_DIR + RESOURCE_PATH_DELIMETER + EVENTS_GROOVY)) {
+                // read the events.groovy in the "parameters" resources
+                return is.readAllBytes();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
     }
 

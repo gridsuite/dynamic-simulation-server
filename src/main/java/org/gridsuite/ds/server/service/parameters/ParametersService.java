@@ -9,6 +9,7 @@ package org.gridsuite.ds.server.service.parameters;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
+import org.gridsuite.ds.server.dto.event.EventInfos;
 
 import java.util.List;
 
@@ -27,7 +28,7 @@ public interface ParametersService {
     String SOLVERS_PAR = "solvers.par";
     String PARAMETERS_JSON = "parameters.json";
 
-    byte[] getEventModel();
+    byte[] getEventModel(List<EventInfos> events);
 
     byte[] getCurveModel(List<CurveInfos> curves);
 

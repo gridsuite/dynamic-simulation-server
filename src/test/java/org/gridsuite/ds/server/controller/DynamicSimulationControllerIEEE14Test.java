@@ -24,6 +24,7 @@ import org.gridsuite.ds.server.controller.utils.ParameterUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
+import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
@@ -170,6 +171,17 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         }).when(timeSeriesClient).sendTimeSeries(any());
     }
 
+    @Override
+    public void tearDown() {
+        super.tearDown();
+
+        // delete all results
+        webTestClient.delete()
+                .uri("/v1/results")
+                .exchange()
+                .expectStatus().isOk();
+    }
+
     @Test
     public void test01() {
         String testBaseDir = MAPPING_NAME_01;
@@ -218,7 +230,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     }
 
     @Test
-    public void test01GivenCurves() {
+    public void test01GivenCurvesAndEvents() {
 
         // prepare parameters
         DynamicSimulationParametersInfos parameters = ParameterUtils.getDynamicSimulationParameters();
@@ -226,6 +238,10 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         // given curves
         List<CurveInfos> curveInfosList = ParameterUtils.getCurveInfosList();
         parameters.setCurves(curveInfosList);
+
+        // given events
+        List<EventInfos> eventInfosList = ParameterUtils.getEventInfosList();
+        parameters.setEvents(eventInfosList);
 
         //run the dynamic simulation (on a specific variant with variantId=" + VARIANT_1_ID + ")
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
