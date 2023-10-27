@@ -104,6 +104,7 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
         destinations.forEach(destination -> assertNull("Should not be any messages in queue " + destination + " : ", output.receive(100, destination)));
 
         // purge in order to not fail the other tests
+        logger.info("Purge output channel");
         output.clear();
     }
 
