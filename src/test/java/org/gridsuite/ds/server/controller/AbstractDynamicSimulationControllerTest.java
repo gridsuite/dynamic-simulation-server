@@ -101,11 +101,13 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
         OutputDestination output = getOutputDestination();
         List<String> destinations = List.of(dsFailedDestination, dsResultDestination);
 
-        destinations.forEach(destination -> assertNull("Should not be any messages in queue " + destination + " : ", output.receive(100, destination)));
-
-        // purge in order to not fail the other tests
-        logger.info("Purge output channel");
-        output.clear();
+        try {
+            destinations.forEach(destination -> assertNull("Should not be any messages in queue " + destination + " : ", output.receive(100, destination)));
+        }
+        finally {
+            // purge in order to not fail the other tests
+            output.clear();
+        }
     }
 
     protected abstract OutputDestination getOutputDestination();
