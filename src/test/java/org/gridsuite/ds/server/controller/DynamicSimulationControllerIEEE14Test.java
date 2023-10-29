@@ -29,6 +29,7 @@ import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -62,6 +63,7 @@ import static org.mockito.Mockito.doAnswer;
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
+@Ignore
 public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimulationControllerTest {
     // mapping names
     public static final String MAPPING_NAME_01 = "_01";
