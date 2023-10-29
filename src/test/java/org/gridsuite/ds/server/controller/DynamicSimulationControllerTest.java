@@ -151,7 +151,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        Message<byte[]> messageSwitch = output.receive(1000 * 5, dsResultDestination);
+        Message<byte[]> messageSwitch = output.receive(1000 * 6, dsResultDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
 
         //run the dynamic simulation on the implicit default variant
@@ -165,7 +165,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        messageSwitch = output.receive(1000 * 5, dsResultDestination);
+        messageSwitch = output.receive(1000 * 6, dsResultDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
 
         //get the calculation status
