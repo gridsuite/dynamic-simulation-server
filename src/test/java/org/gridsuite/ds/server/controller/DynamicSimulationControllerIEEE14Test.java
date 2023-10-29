@@ -29,7 +29,6 @@ import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
