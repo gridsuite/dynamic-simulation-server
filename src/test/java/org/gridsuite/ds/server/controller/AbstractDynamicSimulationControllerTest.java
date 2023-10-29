@@ -102,7 +102,7 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
         List<String> destinations = List.of(dsFailedDestination, dsResultDestination);
 
         try {
-            destinations.forEach(destination -> assertNull("Should not be any messages in queue " + destination + " : ", output.receive(1000, destination)));
+            destinations.forEach(destination -> assertNull("Should not be any messages in queue " + destination + " : ", output.receive(1000 * 10, destination)));
         } finally {
             // purge in order to not fail the other tests
             output.clear();
