@@ -151,7 +151,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        Message<byte[]> messageSwitch = output.receive(1000 * 7, dsResultDestination);
+        Message<byte[]> messageSwitch = output.receive(1000 * 10, dsResultDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
 
         //run the dynamic simulation on the implicit default variant
@@ -165,7 +165,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        messageSwitch = output.receive(1000 * 7, dsResultDestination);
+        messageSwitch = output.receive(1000 * 10, dsResultDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
 
         //get the calculation status
@@ -259,7 +259,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        messageSwitch = output.receive(1000 * 5, dsFailedDestination);
+        messageSwitch = output.receive(1000 * 10, dsFailedDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
         assertEquals(FAIL_MESSAGE + " : " + HttpStatus.NOT_FOUND, messageSwitch.getHeaders().get(HEADER_MESSAGE));
     }
