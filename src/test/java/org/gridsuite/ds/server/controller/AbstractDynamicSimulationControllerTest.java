@@ -9,6 +9,7 @@ package org.gridsuite.ds.server.controller;
 import com.powsybl.network.store.client.NetworkStoreService;
 import org.gridsuite.ds.server.CustomApplicationContextInitializer;
 import org.gridsuite.ds.server.DynamicSimulationApplication;
+import org.gridsuite.ds.server.controller.utils.TestUtils;
 import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
@@ -35,7 +36,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
@@ -101,10 +101,11 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
         OutputDestination output = getOutputDestination();
         List<String> destinations = List.of(dsFailedDestination, dsResultDestination);
 
-        destinations.forEach(destination -> assertNull("Should not be any messages in queue " + destination + " : ", output.receive(100, destination)));
-
-        // purge in order to not fail the other tests
-        output.clear();
+        try {
+            TestUtils.assertQueuesEmptyThenClear(destinations, output);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Error while checking message queues empty", e);
+        }
     }
 
     protected abstract OutputDestination getOutputDestination();
