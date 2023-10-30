@@ -259,7 +259,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
 
-        messageSwitch = output.receive(1000 * 10, dsFailedDestination);
+        messageSwitch = output.receive(1000 * 5, dsFailedDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
         assertEquals(FAIL_MESSAGE + " : " + HttpStatus.NOT_FOUND, messageSwitch.getHeaders().get(HEADER_MESSAGE));
     }
