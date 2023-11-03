@@ -5,54 +5,51 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import com.powsybl.iidm.network.Load
 import com.powsybl.iidm.network.Generator
+import com.powsybl.iidm.network.Load
 import com.powsybl.dynawaltz.models.automatons.CurrentLimitAutomaton
 import com.powsybl.iidm.network.Branch
 
-for (Load equipment : network.loads) {
-          if (true) {
-                 LoadAlphaBeta {
-                     staticId equipment.id
-                     parameterSetId  "LAB"
-                 }
-    }
-
-}
-
 for (Generator equipment : network.generators) {
-          if (equipment.terminal.voltageLevel.nominalV == 13.800000) {
-                 GeneratorSynchronousThreeWindingsProportionalRegulations {
-                     staticId equipment.id
-                     parameterSetId  "IEEE14" + equipment.id
-                 }
-      } else      if (equipment.terminal.voltageLevel.nominalV == 69.000000) {
-                 GeneratorSynchronousFourWindingsProportionalRegulations {
-                     staticId equipment.id
-                     parameterSetId  "IEEE14" + equipment.id
-                 }
-      } else      if (true) {
-                 GeneratorPQ {
-                     staticId equipment.id
-                     parameterSetId  "GPQ"
-                 }
+    if (equipment.terminal.voltageLevel.nominalV == 13.800000) {
+        GeneratorSynchronousThreeWindingsProportionalRegulations {
+            staticId equipment.id
+            parameterSetId  "IEEE14" + equipment.id
+        }
+    } else      if (equipment.terminal.voltageLevel.nominalV == 69.000000) {
+        GeneratorSynchronousFourWindingsProportionalRegulations {
+            staticId equipment.id
+            parameterSetId  "IEEE14" + equipment.id
+        }
+    } else      if (true) {
+        GeneratorPQ {
+            staticId equipment.id
+            parameterSetId  "GPQ"
+        }
     }
+}
 
+for (Load equipment : network.loads) {
+    if (true) {
+        LoadAlphaBeta {
+            staticId equipment.id
+            parameterSetId  "LAB"
+        }
+    }
 }
 
 CurrentLimitAutomaton {
-     iMeasurement "_BUS____2-BUS____4-1_AC"
-     dynamicModelId "CurrentLimitAutomaton24"
-     parameterSetId "CLA_2_4"
-     iMeasurementSide Branch.Side.TWO
-     controlledQuadripole "_BUS____2-BUS____4-1_AC"
+    parameterSetId "CLA_2_4"
+    dynamicModelId "CLA_1"
+    iMeasurement "_BUS____2-BUS____4-1_AC"
+    iMeasurementSide Branch.Side.TWO
+    controlledQuadripole "_BUS____2-BUS____4-1_AC"
 }
 
 CurrentLimitAutomaton {
-     iMeasurement "_BUS____2-BUS____5-1_AC"
-     dynamicModelId "CurrentLimitAutomaton25"
-     parameterSetId "CLA_2_5"
-     iMeasurementSide Branch.Side.TWO
-     controlledQuadripole "_BUS____2-BUS____5-1_AC"
-
+    parameterSetId "CLA_2_5"
+    dynamicModelId "CLA_2"
+    iMeasurement "_BUS____2-BUS____5-1_AC"
+    iMeasurementSide Branch.Side.TWO
+    controlledQuadripole "_BUS____2-BUS____5-1_AC"
 }
