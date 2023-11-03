@@ -8,16 +8,6 @@
         <reference type="DOUBLE" name="load_U0Pu" origData="IIDM" origName="v_pu"/>
         <reference type="DOUBLE" name="load_UPhase0" origData="IIDM" origName="angle_pu"/>
     </set>
-    <set id="GPQ">
-        <par type="DOUBLE" name="generator_AlphaPuPNom" value="25"/>
-        <reference type="DOUBLE" name="generator_PNom" origData="IIDM" origName="pMax"/>
-        <reference type="DOUBLE" name="generator_PMin" origData="IIDM" origName="pMin"/>
-        <reference type="DOUBLE" name="generator_PMax" origData="IIDM" origName="pMax"/>
-        <reference type="DOUBLE" name="generator_P0Pu" origData="IIDM" origName="p_pu"/>
-        <reference type="DOUBLE" name="generator_Q0Pu" origData="IIDM" origName="q_pu"/>
-        <reference type="DOUBLE" name="generator_U0Pu" origData="IIDM" origName="v_pu"/>
-        <reference type="DOUBLE" name="generator_UPhase0" origData="IIDM" origName="angle_pu"/>
-    </set>
     <set id="IEEE14_GEN____6_SM">
         <par type="DOUBLE" name="generator_UNom" value="15"/>
         <par type="DOUBLE" name="generator_SNom" value="80"/>
@@ -64,6 +54,7 @@
         <reference type="DOUBLE" name="generator_P0Pu" origData="IIDM" origName="p_pu"/>
         <reference type="DOUBLE" name="generator_Q0Pu" origData="IIDM" origName="q_pu"/>
         <reference type="DOUBLE" name="generator_UPhase0" origData="IIDM" origName="angle_pu"/>
+        <par type="BOOL" name="generator_UseApproximation" value="true"/>
         <reference type="DOUBLE" name="generator_U0Pu" origData="IIDM" origName="v_pu"/>
     </set>
     <set id="IEEE14_GEN____8_SM">
@@ -112,6 +103,7 @@
         <reference type="DOUBLE" name="generator_P0Pu" origData="IIDM" origName="p_pu"/>
         <reference type="DOUBLE" name="generator_Q0Pu" origData="IIDM" origName="q_pu"/>
         <reference type="DOUBLE" name="generator_UPhase0" origData="IIDM" origName="angle_pu"/>
+        <par type="BOOL" name="generator_UseApproximation" value="true"/>
         <reference type="DOUBLE" name="generator_U0Pu" origData="IIDM" origName="v_pu"/>
     </set>
     <set id="IEEE14_GEN____1_SM">
@@ -162,6 +154,7 @@
         <reference type="DOUBLE" name="generator_P0Pu" origData="IIDM" origName="p_pu"/>
         <reference type="DOUBLE" name="generator_Q0Pu" origData="IIDM" origName="q_pu"/>
         <reference type="DOUBLE" name="generator_UPhase0" origData="IIDM" origName="angle_pu"/>
+        <par type="BOOL" name="generator_UseApproximation" value="true"/>
         <reference type="DOUBLE" name="generator_U0Pu" origData="IIDM" origName="v_pu"/>
     </set>
     <set id="IEEE14_GEN____2_SM">
@@ -212,6 +205,7 @@
         <reference type="DOUBLE" name="generator_P0Pu" origData="IIDM" origName="p_pu"/>
         <reference type="DOUBLE" name="generator_Q0Pu" origData="IIDM" origName="q_pu"/>
         <reference type="DOUBLE" name="generator_UPhase0" origData="IIDM" origName="angle_pu"/>
+        <par type="BOOL" name="generator_UseApproximation" value="true"/>
         <reference type="DOUBLE" name="generator_U0Pu" origData="IIDM" origName="v_pu"/>
     </set>
     <set id="IEEE14_GEN____3_SM">
@@ -262,18 +256,27 @@
         <reference type="DOUBLE" name="generator_P0Pu" origData="IIDM" origName="p_pu"/>
         <reference type="DOUBLE" name="generator_Q0Pu" origData="IIDM" origName="q_pu"/>
         <reference type="DOUBLE" name="generator_UPhase0" origData="IIDM" origName="angle_pu"/>
+        <par type="BOOL" name="generator_UseApproximation" value="true"/>
         <reference type="DOUBLE" name="generator_U0Pu" origData="IIDM" origName="v_pu"/>
     </set>
+    <set id="GPQ">
+        <par type="DOUBLE" name="generator_AlphaPuPNom" value="25"/>
+        <reference type="DOUBLE" name="generator_PNom" origData="IIDM" origName="pMax"/>
+        <reference type="DOUBLE" name="generator_PMin" origData="IIDM" origName="pMin"/>
+        <reference type="DOUBLE" name="generator_PMax" origData="IIDM" origName="pMax"/>
+        <reference type="DOUBLE" name="generator_P0Pu" origData="IIDM" origName="p_pu"/>
+        <reference type="DOUBLE" name="generator_Q0Pu" origData="IIDM" origName="q_pu"/>
+        <reference type="DOUBLE" name="generator_U0Pu" origData="IIDM" origName="v_pu"/>
+        <reference type="DOUBLE" name="generator_UPhase0" origData="IIDM" origName="angle_pu"/>
+    </set>
     <set id="CLA_2_4">
-	<!--<reference type="DOUBLE" name="currentLimitAutomaton_OrderToEmit" origData="IIDM" origName=""/>-->
-	<par type="INT" name="currentLimitAutomaton_OrderToEmit" value="3"/>
+        <par type="INT" name="currentLimitAutomaton_OrderToEmit" value="3"/>
         <par type="BOOL" name="currentLimitAutomaton_Running" value="true"/>
         <par type="DOUBLE" name="currentLimitAutomaton_IMax" value="1000"/>
         <par type="DOUBLE" name="currentLimitAutomaton_tLagBeforeActing" value="10"/>
     </set>
     <set id="CLA_2_5">
-	<!--<reference type="DOUBLE" name="currentLimitAutomaton_OrderToEmit" origData="IIDM" origName=""/>-->
-	<par type="INT" name="currentLimitAutomaton_OrderToEmit" value="1"/>
+        <par type="INT" name="currentLimitAutomaton_OrderToEmit" value="1"/>
         <par type="BOOL" name="currentLimitAutomaton_Running" value="true"/>
         <par type="DOUBLE" name="currentLimitAutomaton_IMax" value="600"/>
         <par type="DOUBLE" name="currentLimitAutomaton_tLagBeforeActing" value="5"/>
