@@ -9,11 +9,11 @@ package org.gridsuite.ds.server.dto;
 
 import com.powsybl.commons.exceptions.UncheckedSaxException;
 import org.gridsuite.ds.server.DynamicSimulationApplication;
+import org.gridsuite.ds.server.controller.utils.ParameterUtils;
 import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.dto.solver.IdaSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SimSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
-import org.gridsuite.ds.server.dto.solver.SolverTypeInfos;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -76,28 +76,9 @@ public class XmlSerializableParameterTest {
     @Test
     public void testWriteParameterGivenSolvers() throws IOException, XMLStreamException {
 
-        IdaSolverInfos idaSolver = new IdaSolverInfos();
-        idaSolver.setId("2");
-        idaSolver.setType(SolverTypeInfos.IDA);
-        idaSolver.setOrder(2);
-        idaSolver.setInitStep(0.000001);
-        idaSolver.setMinStep(0.000001);
-        idaSolver.setMaxStep(10);
-        idaSolver.setAbsAccuracy(0.0001);
-        idaSolver.setRelAccuracy(0.0001);
+        IdaSolverInfos idaSolver = ParameterUtils.getDefaultIdaSolver();
 
-        SimSolverInfos simSolver = new SimSolverInfos();
-        simSolver.setId("3");
-        simSolver.setType(SolverTypeInfos.SIM);
-        simSolver.setHMin(0.000001);
-        simSolver.setHMax(1);
-        simSolver.setKReduceStep(0.5);
-        simSolver.setNEff(10);
-        simSolver.setNDeadband(2);
-        simSolver.setMaxRootRestart(3);
-        simSolver.setMaxNewtonTry(10);
-        simSolver.setLinearSolverName("KLU");
-        simSolver.setRecalculateStep(false);
+        SimSolverInfos simSolver = ParameterUtils.getDefaultSimSolver();
 
         SolverInfos[] solvers = {idaSolver, simSolver};
 
@@ -113,27 +94,7 @@ public class XmlSerializableParameterTest {
 
     @Test
     public void testWriteParameterGivenNetwork() throws IOException, XMLStreamException {
-        NetworkInfos network = new NetworkInfos();
-        network.setCapacitorNoReclosingDelay(300);
-        network.setDanglingLineCurrentLimitMaxTimeOperation(90);
-        network.setLineCurrentLimitMaxTimeOperation(90);
-        network.setLoadTp(90);
-        network.setLoadTq(90);
-        network.setLoadAlpha(1);
-        network.setLoadAlphaLong(0);
-        network.setLoadBeta(2);
-        network.setLoadBetaLong(0);
-        network.setLoadIsControllable(false);
-        network.setLoadIsRestorative(false);
-        network.setLoadZPMax(100);
-        network.setLoadZQMax(100);
-        network.setReactanceNoReclosingDelay(0);
-        network.setTransformerCurrentLimitMaxTimeOperation(90);
-        network.setTransformerT1StHT(60);
-        network.setTransformerT1StTHT(30);
-        network.setTransformerTNextHT(10);
-        network.setTransformerTNextTHT(10);
-        network.setTransformerTolV(0.015);
+        NetworkInfos network = ParameterUtils.getDefaultNetwork();
 
         // export network to par file
         String resultDir = getClass().getResource(DATA_XML + RESOURCE_PATH_DELIMETER + OUTPUT).getPath();

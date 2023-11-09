@@ -2,8 +2,8 @@
 <parametersSet xmlns="http://www.rte-france.com/dynawo">
     <set id="NETWORK">
         <par type="DOUBLE" name="capacitor_no_reclosing_delay" value="300.0"/>
-        <par type="DOUBLE" name="dangling_line_currentLimit_maxTimeOperation" value="90.0"/>
-        <par type="DOUBLE" name="line_currentLimit_maxTimeOperation" value="90.0"/>
+        <par type="DOUBLE" name="dangling_line_currentLimit_maxTimeOperation" value="240.0"/>
+        <par type="DOUBLE" name="line_currentLimit_maxTimeOperation" value="240.0"/>
         <par type="DOUBLE" name="load_Tp" value="90.0"/>
         <par type="DOUBLE" name="load_Tq" value="90.0"/>
         <par type="DOUBLE" name="load_alpha" value="1.0"/>
@@ -15,7 +15,7 @@
         <par type="DOUBLE" name="load_zPMax" value="100.0"/>
         <par type="DOUBLE" name="load_zQMax" value="100.0"/>
         <par type="DOUBLE" name="reactance_no_reclosing_delay" value="0.0"/>
-        <par type="DOUBLE" name="transformer_currentLimit_maxTimeOperation" value="90.0"/>
+        <par type="DOUBLE" name="transformer_currentLimit_maxTimeOperation" value="240.0"/>
         <par type="DOUBLE" name="transformer_t1st_HT" value="60.0"/>
         <par type="DOUBLE" name="transformer_t1st_THT" value="30.0"/>
         <par type="DOUBLE" name="transformer_tNext_HT" value="10.0"/>
