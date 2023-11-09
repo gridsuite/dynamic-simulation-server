@@ -31,17 +31,17 @@ public class SimSolverInfos extends AbstractSolverInfos {
     public static final String K_REDUCE_STEP = "kReduceStep";
     public static final String MAX_NEWTON_TRY = "maxNewtonTry";
     public static final String LINEAR_SOLVER_NAME = "linearSolverName";
-    public static final String FNORMTOL = "fnormtol";
-    public static final String INITIALADDTOL = "initialaddtol";
-    public static final String SCSTEPTOL = "scsteptol";
-    public static final String MXNEWTSTEP = "mxnewtstep";
-    public static final String MSBSET = "msbset";
-    public static final String MXITER = "mxiter";
-    public static final String PRINTFL = "printfl";
+    public static final String F_NORM_TOL = "fnormtol";
+    public static final String INITIAL_ADD_TOL = "initialaddtol";
+    public static final String SC_STEP_TOL = "scsteptol";
+    public static final String MX_NEW_T_STEP = "mxnewtstep";
+    public static final String MSB_SET = "msbset";
+    public static final String MX_ITER = "mxiter";
+    public static final String PRINT_FL = "printfl";
     public static final String OPTIMIZE_ALGEBRAIC_RESIDUALS_EVALUATIONS = "optimizeAlgebraicResidualsEvaluations";
     public static final String SKIP_NR_IF_INITIAL_GUESS_OK = "skipNRIfInitialGuessOK";
     public static final String ENABLE_SILENT_Z = "enableSilentZ";
-    public static final String OPTIMIZE_REINIT_ALGEBRAIC_RESIDUALS_EVALUATIONS = "optimizeReinitAlgebraicResidualsEvaluations";
+    public static final String OPTIMIZE_RE_INIT_ALGEBRAIC_RESIDUALS_EVALUATIONS = "optimizeReinitAlgebraicResidualsEvaluations";
     public static final String MINIMUM_MODE_CHANGE_TYPE_FOR_ALGEBRAIC_RESTORATION = "minimumModeChangeTypeForAlgebraicRestoration";
     public static final String MINIMUM_MODE_CHANGE_TYPE_FOR_ALGEBRAIC_RESTORATION_INIT = "minimumModeChangeTypeForAlgebraicRestorationInit";
 
@@ -61,19 +61,20 @@ public class SimSolverInfos extends AbstractSolverInfos {
 
     private String linearSolverName;
 
-    private double fnormtol;
+    @JsonProperty("fNormTol")
+    private double fNormTol;
 
-    private double initialaddtol;
+    private double initialAddTol;
 
-    private double scsteptol;
+    private double scStepTol;
 
-    private double mxnewtstep;
+    private double mxNewTStep;
 
     private int msbset;
 
-    private int mxiter;
+    private int mxIter;
 
-    private int printfl;
+    private int printFl;
 
     private boolean optimizeAlgebraicResidualsEvaluations;
 
@@ -81,7 +82,7 @@ public class SimSolverInfos extends AbstractSolverInfos {
 
     private boolean enableSilentZ;
 
-    private boolean optimizeReinitAlgebraicResidualsEvaluations;
+    private boolean optimizeReInitAlgebraicResidualsEvaluations;
 
     private String minimumModeChangeTypeForAlgebraicRestoration;
 
@@ -97,17 +98,17 @@ public class SimSolverInfos extends AbstractSolverInfos {
         XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, K_REDUCE_STEP, Double.toString(kReduceStep));
         XmlSerializableParameter.writeParameter(writer, ParameterType.INT, MAX_NEWTON_TRY, Integer.toString(maxNewtonTry));
         XmlSerializableParameter.writeParameter(writer, ParameterType.STRING, LINEAR_SOLVER_NAME, linearSolverName);
-        XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, FNORMTOL, Double.toString(fnormtol));
-        XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, INITIALADDTOL, Double.toString(initialaddtol));
-        XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, SCSTEPTOL, Double.toString(scsteptol));
-        XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, MXNEWTSTEP, Double.toString(mxnewtstep));
-        XmlSerializableParameter.writeParameter(writer, ParameterType.INT, MSBSET, Integer.toString(msbset));
-        XmlSerializableParameter.writeParameter(writer, ParameterType.INT, MXITER, Integer.toString(mxiter));
-        XmlSerializableParameter.writeParameter(writer, ParameterType.INT, PRINTFL, Integer.toString(printfl));
+        XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, F_NORM_TOL, Double.toString(fNormTol));
+        XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, INITIAL_ADD_TOL, Double.toString(initialAddTol));
+        XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, SC_STEP_TOL, Double.toString(scStepTol));
+        XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, MX_NEW_T_STEP, Double.toString(mxNewTStep));
+        XmlSerializableParameter.writeParameter(writer, ParameterType.INT, MSB_SET, Integer.toString(msbset));
+        XmlSerializableParameter.writeParameter(writer, ParameterType.INT, MX_ITER, Integer.toString(mxIter));
+        XmlSerializableParameter.writeParameter(writer, ParameterType.INT, PRINT_FL, Integer.toString(printFl));
         XmlSerializableParameter.writeParameter(writer, ParameterType.BOOL, OPTIMIZE_ALGEBRAIC_RESIDUALS_EVALUATIONS, Boolean.toString(optimizeAlgebraicResidualsEvaluations));
         XmlSerializableParameter.writeParameter(writer, ParameterType.BOOL, SKIP_NR_IF_INITIAL_GUESS_OK, Boolean.toString(skipNRIfInitialGuessOK));
         XmlSerializableParameter.writeParameter(writer, ParameterType.BOOL, ENABLE_SILENT_Z, Boolean.toString(enableSilentZ));
-        XmlSerializableParameter.writeParameter(writer, ParameterType.BOOL, OPTIMIZE_REINIT_ALGEBRAIC_RESIDUALS_EVALUATIONS, Boolean.toString(optimizeReinitAlgebraicResidualsEvaluations));
+        XmlSerializableParameter.writeParameter(writer, ParameterType.BOOL, OPTIMIZE_RE_INIT_ALGEBRAIC_RESIDUALS_EVALUATIONS, Boolean.toString(optimizeReInitAlgebraicResidualsEvaluations));
         XmlSerializableParameter.writeParameter(writer, ParameterType.STRING, MINIMUM_MODE_CHANGE_TYPE_FOR_ALGEBRAIC_RESTORATION, minimumModeChangeTypeForAlgebraicRestoration);
         XmlSerializableParameter.writeParameter(writer, ParameterType.STRING, MINIMUM_MODE_CHANGE_TYPE_FOR_ALGEBRAIC_RESTORATION_INIT, minimumModeChangeTypeForAlgebraicRestorationInit);
 
