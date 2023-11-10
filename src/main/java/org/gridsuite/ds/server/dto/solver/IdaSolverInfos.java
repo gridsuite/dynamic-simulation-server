@@ -56,6 +56,7 @@ public class IdaSolverInfos extends AbstractSolverInfos {
         XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, ABS_ACCURACY, Double.toString(absAccuracy));
         XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, REL_ACCURACY, Double.toString(relAccuracy));
 
+        super.writeParameter(writer);
         writer.writeEndElement();
     }
 }

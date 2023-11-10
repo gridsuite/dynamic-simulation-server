@@ -187,10 +187,10 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         String testBaseDir = MAPPING_NAME_01;
 
         // prepare parameters
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDynamicSimulationParameters();
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
 
         // Test SIM solver (IDA solver will be ignored to test at moment due to the non-determinist on different OSs, Debian vs Ubuntu)
-        parameters.setSolverId(parameters.getSolvers().get(1).getId());
+        parameters.setSolverId("SIM");
 
         //run the dynamic simulation (on a specific variant with variantId=" + VARIANT_1_ID + ")
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
@@ -233,7 +233,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     public void test01GivenCurvesAndEvents() {
 
         // prepare parameters
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDynamicSimulationParameters();
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
 
         // given curves
         List<CurveInfos> curveInfosList = ParameterUtils.getCurveInfosList();
@@ -283,7 +283,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any(), any(), any());
 
         // prepare parameters
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDynamicSimulationParameters();
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
 
         //run the dynamic simulation
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
