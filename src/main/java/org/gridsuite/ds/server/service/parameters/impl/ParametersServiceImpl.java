@@ -127,6 +127,8 @@ public class ParametersServiceImpl implements ParametersService {
                 }
 
                 dynaWaltzParameters.setNetworkParameters(networkParameters);
+
+                dynaWaltzParameters.setDefaultDumpFileParameters();
             }
 
             return parameters;
