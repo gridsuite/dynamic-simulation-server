@@ -143,11 +143,21 @@
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-dynawo-commons</artifactId>
+            <!-- FIXME to be removed at the next powsybl-ws-dependencies upgrade-->
+            <version>2.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawaltz</artifactId>
+            <!-- FIXME to be removed at the next powsybl-ws-dependencies upgrade-->
+            <version>2.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawaltz-dsl</artifactId>
+            <!-- FIXME to be removed at the next powsybl-ws-dependencies upgrade-->
+            <version>2.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
