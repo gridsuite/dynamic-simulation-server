@@ -53,36 +53,26 @@ public class ParametersServiceImpl implements ParametersService {
 
     @Override
     public byte[] getEventModel(List<EventInfos> events) {
+        byte[] eventModel = new byte[0];
         if (events != null) {
             String generatedGroovyEvents = eventGroovyGeneratorService.generate(events);
             LOGGER.info(generatedGroovyEvents);
-            return generatedGroovyEvents.getBytes(StandardCharsets.UTF_8);
-        } else {
-            // TODO remove reading from hard file
-            try (InputStream is = getClass().getResourceAsStream(PARAMETERS_DIR + RESOURCE_PATH_DELIMETER + EVENTS_GROOVY)) {
-                // read the events.groovy in the "parameters" resources
-                return is.readAllBytes();
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
+            eventModel = generatedGroovyEvents.getBytes(StandardCharsets.UTF_8);
         }
+
+        return eventModel;
     }
 
     @Override
     public byte[] getCurveModel(List<CurveInfos> curves) {
+        byte[] curveModel = new byte[0];
         if (curves != null) {
             String generatedGroovyCurves = curveGroovyGeneratorService.generate(curves);
             LOGGER.info(generatedGroovyCurves);
-            return generatedGroovyCurves.getBytes(StandardCharsets.UTF_8);
-        } else {
-            // TODO remove reading from hard file
-            try (InputStream is = getClass().getResourceAsStream(PARAMETERS_DIR + RESOURCE_PATH_DELIMETER + CURVES_GROOVY)) {
-                // read the curves.groovy in the "parameters" resources
-                return is.readAllBytes();
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
+            curveModel = generatedGroovyCurves.getBytes(StandardCharsets.UTF_8);
         }
+
+        return curveModel;
     }
 
     @Override
@@ -99,34 +89,27 @@ public class ParametersServiceImpl implements ParametersService {
                 dynaWaltzParameters.setModelsParameters(modelsParameters);
 
                 // --- SOLVER PAR --- //
-                // default solver parameters
-                ParametersSet solverParameters = ParametersXml.load(getClass().getResourceAsStream(PARAMETERS_DIR + RESOURCE_PATH_DELIMETER + SOLVERS_PAR), "1");
-                dynaWaltzParameters.setSolverType(DynaWaltzParameters.SolverType.IDA);
-
-                // override solver from input parameter
+                // solver from input parameter
                 SolverInfos inputSolver = inputParameters.getSolvers().stream().filter(elem -> elem.getId().equals(inputParameters.getSolverId())).findFirst().orElse(null);
                 if (inputSolver != null) {
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
                     XmlSerializableParameter.writeParameter(os, XmlSerializableParameter.PARAMETER_SET, inputSolver);
-                    solverParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), inputSolver.getId());
+                    ParametersSet solverParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), inputSolver.getId());
                     dynaWaltzParameters.setSolverType(inputSolver.getType().toSolverType());
+                    dynaWaltzParameters.setSolverParameters(solverParameters);
                 }
 
-                dynaWaltzParameters.setSolverParameters(solverParameters);
 
                 // --- NETWORK PAR --- //
-                // default network parameters
-                ParametersSet networkParameters = ParametersXml.load(getClass().getResourceAsStream(PARAMETERS_DIR + RESOURCE_PATH_DELIMETER + NETWORK_PAR), NetworkInfos.NETWORK_ID);
-
-                // override network from input parameters
+                // network from input parameters
                 NetworkInfos network = inputParameters.getNetwork();
                 if (network != null) {
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
                     XmlSerializableParameter.writeParameter(os, XmlSerializableParameter.PARAMETER_SET, network);
-                    networkParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), network.getId());
+                    ParametersSet networkParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), network.getId());
+                    dynaWaltzParameters.setNetworkParameters(networkParameters);
                 }
 
-                dynaWaltzParameters.setNetworkParameters(networkParameters);
 
                 // Quick fix to make working in powsybl-dynawo 2.1.0
                 // Cannot invoke "com.powsybl.dynawaltz.DumpFileParameters.useDumpFile()"

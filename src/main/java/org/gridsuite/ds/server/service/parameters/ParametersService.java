@@ -18,14 +18,8 @@ import java.util.List;
  */
 public interface ParametersService {
     String RESOURCE_PATH_DELIMETER = "/";
-    String TMP_DIR = "tmp";
-    String WORKING_DIR_PREFIX = "dynamic_simulation_";
     String PARAMETERS_DIR = RESOURCE_PATH_DELIMETER + "parameters";
-    String EVENTS_GROOVY = "events.groovy";
-    String CURVES_GROOVY = "curves.groovy";
     String MODELS_PAR = "models.par";
-    String NETWORK_PAR = "network.par";
-    String SOLVERS_PAR = "solvers.par";
     String PARAMETERS_JSON = "parameters.json";
 
     byte[] getEventModel(List<EventInfos> events);

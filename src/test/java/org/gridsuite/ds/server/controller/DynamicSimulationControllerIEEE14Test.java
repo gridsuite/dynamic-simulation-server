@@ -183,7 +183,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     }
 
     @Test
-    public void test01() {
+    public void test01GivenCurvesAndEvents() throws IOException {
         String testBaseDir = MAPPING_NAME_01;
 
         // prepare parameters
@@ -191,49 +191,6 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
         // Test SIM solver (IDA solver will be ignored to test at moment due to the non-determinist on different OSs, Debian vs Ubuntu)
         parameters.setSolverId("SIM");
-
-        //run the dynamic simulation (on a specific variant with variantId=" + VARIANT_1_ID + ")
-        EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
-                .uri("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING)
-                .bodyValue(parameters)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(UUID.class)
-                .returnResult();
-
-        UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
-
-        //TODO maybe find a more reliable way to test this : failed with 1000 * 60 timeout
-        Message<byte[]> messageSwitch = output.receive(1500 * 60, dsResultDestination);
-        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(DynamicSimulationResultContext.HEADER_RESULT_UUID).toString()));
-
-        try {
-            // prepare expected result to compare
-            String outputDir = DATA_IEEE14_BASE_DIR +
-                    RESOURCE_PATH_DELIMETER + testBaseDir +
-                    RESOURCE_PATH_DELIMETER + OUTPUT;
-            DynamicSimulationResult expectedResult = DynamicSimulationResultDeserializer.read(getClass().getResourceAsStream(outputDir + RESOURCE_PATH_DELIMETER + RESULT_SIM_JSON));
-            String jsonExpectedTimeSeries = TimeSeries.toJson(new ArrayList<>(expectedResult.getCurves().values()));
-
-            // get timeseries from mock timeseries db
-            UUID timeSeriesUuid = UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID);
-            String jsonResultTimeSeries = TimeSeries.toJson(timeSeriesMockBd.remove(timeSeriesUuid));
-
-            // export result to file
-            FileUtils.writeStringToFile(this, outputDir + RESOURCE_PATH_DELIMETER + "exported_" + RESULT_SIM_JSON, jsonResultTimeSeries);
-
-            // compare result only timeseries
-            assertEquals(mapper.readTree(jsonExpectedTimeSeries), mapper.readTree(jsonResultTimeSeries));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    @Test
-    public void test01GivenCurvesAndEvents() {
-
-        // prepare parameters
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
 
         // given curves
         List<CurveInfos> curveInfosList = ParameterUtils.getCurveInfosList();
@@ -258,6 +215,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         Message<byte[]> messageSwitch = output.receive(1500 * 6, dsResultDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(DynamicSimulationResultContext.HEADER_RESULT_UUID).toString()));
 
+        // --- CHECK result at abstract level --- //
         // expected seriesNames
         List<String> expectedSeriesNames = curveInfosList.stream().map(curveInfos -> curveInfos.getEquipmentId() + "_" + curveInfos.getVariableId()).collect(Collectors.toList());
 
@@ -272,6 +230,23 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
             logger.info(String.format("Check time series %s exists or not : %b", expectedSeriesName, seriesNames.contains(expectedSeriesName)));
             assertTrue(seriesNames.contains(expectedSeriesName));
         });
+
+        // --- CHECK result at detail level --- //
+        // prepare expected result to compare
+        String outputDir = DATA_IEEE14_BASE_DIR +
+                           RESOURCE_PATH_DELIMETER + testBaseDir +
+                           RESOURCE_PATH_DELIMETER + OUTPUT;
+        DynamicSimulationResult expectedResult = DynamicSimulationResultDeserializer.read(getClass().getResourceAsStream(outputDir + RESOURCE_PATH_DELIMETER + RESULT_SIM_JSON));
+        String jsonExpectedTimeSeries = TimeSeries.toJson(new ArrayList<>(expectedResult.getCurves().values()));
+
+        // convert result time series to json
+        String jsonResultTimeSeries = TimeSeries.toJson(resultTimeSeries);
+
+        // export result to file
+        FileUtils.writeStringToFile(this, outputDir + RESOURCE_PATH_DELIMETER + "exported_" + RESULT_SIM_JSON, jsonResultTimeSeries);
+
+        // compare result only timeseries
+        assertEquals(mapper.readTree(jsonExpectedTimeSeries), mapper.readTree(jsonResultTimeSeries));
     }
 
     @Test
