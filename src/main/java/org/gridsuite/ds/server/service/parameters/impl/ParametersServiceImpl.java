@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import javax.xml.stream.XMLStreamException;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -52,26 +53,16 @@ public class ParametersServiceImpl implements ParametersService {
 
     @Override
     public byte[] getEventModel(List<EventInfos> events) {
-        byte[] eventModel = new byte[0];
-        if (events != null) {
-            String generatedGroovyEvents = eventGroovyGeneratorService.generate(events);
-            LOGGER.info(generatedGroovyEvents);
-            eventModel = generatedGroovyEvents.getBytes(StandardCharsets.UTF_8);
-        }
-
-        return eventModel;
+        String generatedGroovyEvents = eventGroovyGeneratorService.generate(events != null ? events : Collections.emptyList());
+        LOGGER.info(generatedGroovyEvents);
+        return generatedGroovyEvents.getBytes(StandardCharsets.UTF_8);
     }
 
     @Override
     public byte[] getCurveModel(List<CurveInfos> curves) {
-        byte[] curveModel = new byte[0];
-        if (curves != null) {
-            String generatedGroovyCurves = curveGroovyGeneratorService.generate(curves);
-            LOGGER.info(generatedGroovyCurves);
-            curveModel = generatedGroovyCurves.getBytes(StandardCharsets.UTF_8);
-        }
-
-        return curveModel;
+        String generatedGroovyCurves = curveGroovyGeneratorService.generate(curves != null ? curves : Collections.emptyList());
+        LOGGER.info(generatedGroovyCurves);
+        return generatedGroovyCurves.getBytes(StandardCharsets.UTF_8);
     }
 
     @Override
