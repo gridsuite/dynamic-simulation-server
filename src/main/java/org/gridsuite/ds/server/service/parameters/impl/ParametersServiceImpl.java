@@ -99,7 +99,6 @@ public class ParametersServiceImpl implements ParametersService {
                     dynaWaltzParameters.setSolverParameters(solverParameters);
                 }
 
-
                 // --- NETWORK PAR --- //
                 // network from input parameters
                 NetworkInfos network = inputParameters.getNetwork();
@@ -109,7 +108,6 @@ public class ParametersServiceImpl implements ParametersService {
                     ParametersSet networkParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), network.getId());
                     dynaWaltzParameters.setNetworkParameters(networkParameters);
                 }
-
 
                 // Quick fix to make working in powsybl-dynawo 2.1.0
                 // Cannot invoke "com.powsybl.dynawaltz.DumpFileParameters.useDumpFile()"
