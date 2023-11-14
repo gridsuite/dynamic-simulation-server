@@ -17,10 +17,6 @@ import java.util.List;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public interface ParametersService {
-    String RESOURCE_PATH_DELIMETER = "/";
-    String PARAMETERS_DIR = RESOURCE_PATH_DELIMETER + "parameters";
-    String MODELS_PAR = "models.par";
-    String PARAMETERS_JSON = "parameters.json";
 
     byte[] getEventModel(List<EventInfos> events);
 

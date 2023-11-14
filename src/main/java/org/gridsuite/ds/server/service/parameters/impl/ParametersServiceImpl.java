@@ -8,7 +8,6 @@ package org.gridsuite.ds.server.service.parameters.impl;
 
 import com.powsybl.commons.exceptions.UncheckedXmlStreamException;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
-import com.powsybl.dynamicsimulation.json.JsonDynamicSimulationParameters;
 import com.powsybl.dynawaltz.DynaWaltzParameters;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
 import com.powsybl.dynawaltz.xml.ParametersXml;
@@ -78,15 +77,16 @@ public class ParametersServiceImpl implements ParametersService {
     @Override
     public DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams, String provider, DynamicSimulationParametersInfos inputParameters) {
         try {
-            // load parameter file
-            DynamicSimulationParameters parameters = JsonDynamicSimulationParameters.read(getClass().getResourceAsStream(PARAMETERS_DIR + RESOURCE_PATH_DELIMETER + PARAMETERS_JSON));
+            DynamicSimulationParameters parameters = new DynamicSimulationParameters();
+
             // TODO: Powsybl side - create an explicit dependency to DynaWaltz class and keep dynamic simulation abstraction all over this micro service
             if (DynaWaltzProvider.NAME.equals(provider)) {
                 // --- MODEL PAR --- //
                 List<ParametersSet> modelsParameters = !ArrayUtils.isEmpty(dynamicParams) ? ParametersXml.load(new ByteArrayInputStream(dynamicParams)) : List.of();
 
-                DynaWaltzParameters dynaWaltzParameters = parameters.getExtension(DynaWaltzParameters.class);
+                DynaWaltzParameters dynaWaltzParameters = new DynaWaltzParameters();
                 dynaWaltzParameters.setModelsParameters(modelsParameters);
+                parameters.addExtension(DynaWaltzParameters.class, dynaWaltzParameters);
 
                 // --- SOLVER PAR --- //
                 // solver from input parameter

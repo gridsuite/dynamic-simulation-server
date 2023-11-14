@@ -52,7 +52,6 @@ import java.util.stream.Collectors;
 import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.HEADER_MESSAGE;
 import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.HEADER_RESULT_UUID;
 import static org.gridsuite.ds.server.service.notification.NotificationService.FAIL_MESSAGE;
-import static org.gridsuite.ds.server.service.parameters.ParametersService.MODELS_PAR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -71,6 +70,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     public static final String INPUT = "input";
     public static final String OUTPUT = "output";
     public static final String MODELS_GROOVY = "models.groovy";
+    public static final String MODELS_PAR = "models.par";
     public static final String RESULT_IDA_JSON = "result_IDA.json";
     public static final String RESULT_SIM_JSON = "result_SIM.json";
 
