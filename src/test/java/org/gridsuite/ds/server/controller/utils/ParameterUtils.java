@@ -167,7 +167,12 @@ public final class ParameterUtils {
                 new CurveInfos("_GEN____3_SM", "generator_PGen"),
                 new CurveInfos("_GEN____3_SM", "generator_QGen"),
                 new CurveInfos("_GEN____3_SM", "generator_UStatorPu"),
-                new CurveInfos("_GEN____3_SM", "voltageRegulator_EfdPu")
+                new CurveInfos("_GEN____3_SM", "voltageRegulator_EfdPu"),
+                new CurveInfos("SVC2", "SVarC_injector_UPu"),
+                new CurveInfos("SVC2", "SVarC_injector_PInjPu"),
+                new CurveInfos("SVC2", "SVarC_injector_QInjPu"),
+                new CurveInfos("SVC2", "SVarC_injector_BPu"),
+                new CurveInfos("SVC2", "SVarC_modeHandling_mode_value")
         );
     }
 

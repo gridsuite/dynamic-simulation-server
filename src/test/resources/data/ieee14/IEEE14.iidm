@@ -59,6 +59,7 @@
                                 <iidm:minMaxReactiveLimits minQ="-40.0" maxQ="50.0"/>
                         </iidm:generator>
                         <iidm:load id="_LOAD___2_EC" name="LOAD     2" loadType="UNDEFINED" p0="21.7" q0="12.7" bus="_BUS____2_TN" connectableBus="_BUS____2_TN" p="21.7" q="12.7"/>
+                        <iidm:staticVarCompensator id="SVC2" bMin="0.0002" bMax="0.0008" voltageSetPoint="69.0" reactivePowerSetPoint="0" regulationMode="VOLTAGE" bus="_BUS____2_TN" connectableBus="_BUS____2_TN" p="0" q="3.4571380937892573"/>
                 </iidm:voltageLevel>
         </iidm:substation>
         <iidm:substation id="_BUS____3_SS" name="BUS        3_SS" country="AF" geographicalTags="_SGR_01">
