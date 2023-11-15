@@ -31,7 +31,6 @@ import java.util.Optional;
 
 import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
 import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.*;
-import static org.gridsuite.ds.server.service.parameters.ParametersService.MODELS_PAR;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -48,6 +47,7 @@ public class DynamicMappingClientTest extends AbstractRestClientTest {
     public static final String DATA_IEEE14_BASE_DIR = RESOURCE_PATH_DELIMETER + "data" + RESOURCE_PATH_DELIMETER + "ieee14";
     public static final String INPUT = "input";
     public static final String MODELS_GROOVY = "models.groovy";
+    public static final String MODELS_PAR = "models.par";
 
     private static final String FIXED_DATE = "01/01/2023";
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");

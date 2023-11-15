@@ -1,9 +1,0 @@
-{
-  "version" : "1.0",
-  "startTime" : 0,
-  "stopTime" : 50,
-  "extensions" : {
-    "DynaWaltzParameters" : {
-    }
-  }
-}

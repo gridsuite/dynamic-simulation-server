@@ -84,7 +84,6 @@ public final class ParameterUtils {
     public static SimSolverInfos getDefaultSimSolver() {
         SimSolverInfos simSolver = new SimSolverInfos();
 
-        // these parameters are taken from solver.par file in dynamic simulation server
         simSolver.setId("SIM");
         simSolver.setType(SolverTypeInfos.SIM);
         simSolver.setHMin(0.001);
@@ -135,7 +134,6 @@ public final class ParameterUtils {
     }
 
     public static NetworkInfos getDefaultNetwork() {
-        // these parameters are taken from network.par file in dynamic simulation server
         NetworkInfos network = new NetworkInfos();
         network.setCapacitorNoReclosingDelay(300);
         network.setDanglingLineCurrentLimitMaxTimeOperation(240);
