@@ -6,6 +6,7 @@
  */
 
 import com.powsybl.iidm.network.Generator
+import com.powsybl.iidm.network.StaticVarCompensator
 import com.powsybl.iidm.network.Load
 import com.powsybl.dynawaltz.models.automatons.CurrentLimitAutomaton
 import com.powsybl.iidm.network.Branch
@@ -25,6 +26,15 @@ for (Generator equipment : network.generators) {
         GeneratorPQ {
             staticId equipment.id
             parameterSetId  "GPQ"
+        }
+    }
+}
+
+for (StaticVarCompensator equipment : network.staticVarCompensators) {
+    if (equipment.terminal.voltageLevel.nominalV == 69.000000) {
+        StaticVarCompensator {
+            staticId equipment.id
+            parameterSetId  "SVarCT"
         }
     }
 }
