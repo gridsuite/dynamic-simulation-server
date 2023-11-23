@@ -42,7 +42,7 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>27</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>28</gridsuite-dependencies.version>
         <jib.from.image>powsybl/java-dynawo:2.1.0</jib.from.image>
 
         <h2database.version>1.4.200</h2database.version>
@@ -143,21 +143,11 @@
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-dynawo-commons</artifactId>
-            <!-- FIXME to be removed at the next powsybl-ws-dependencies upgrade-->
-            <version>2.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawaltz</artifactId>
-            <!-- FIXME to be removed at the next powsybl-ws-dependencies upgrade-->
-            <version>2.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawaltz-dsl</artifactId>
-            <!-- FIXME to be removed at the next powsybl-ws-dependencies upgrade-->
-            <version>2.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
