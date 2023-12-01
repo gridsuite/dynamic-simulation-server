@@ -5,13 +5,4 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import com.powsybl.iidm.network.Bus
-
-for (Bus bus : network.busBreakerView.buses) {
-    curve {
-        staticId bus.id
-        variable "Upu_value"
-    }
-}
-
 <curves; separator="\n">
