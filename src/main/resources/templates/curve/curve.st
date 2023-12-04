@@ -1,4 +1,4 @@
 curve {
-    dynamicModelId <dynamicModelId>
+    <idName> <idValue>
     variables <variables>
 }

@@ -16,6 +16,7 @@ import org.gridsuite.ds.server.dto.solver.SimSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
 import org.gridsuite.ds.server.dto.solver.SolverTypeInfos;
 import org.gridsuite.ds.server.dto.network.NetworkInfos;
+import org.gridsuite.ds.server.utils.EquipmentType;
 import org.gridsuite.ds.server.utils.PropertyType;
 
 import java.util.List;
@@ -161,18 +162,18 @@ public final class ParameterUtils {
 
     public static List<CurveInfos> getCurveInfosList() {
         return List.of(
-                new CurveInfos("_LOAD___2_EC", "load_PPu"),
-                new CurveInfos("_LOAD___2_EC", "load_QPu"),
-                new CurveInfos("_GEN____3_SM", "generator_omegaPu"),
-                new CurveInfos("_GEN____3_SM", "generator_PGen"),
-                new CurveInfos("_GEN____3_SM", "generator_QGen"),
-                new CurveInfos("_GEN____3_SM", "generator_UStatorPu"),
-                new CurveInfos("_GEN____3_SM", "voltageRegulator_EfdPu"),
-                new CurveInfos("SVC2", "SVarC_injector_UPu"),
-                new CurveInfos("SVC2", "SVarC_injector_PInjPu"),
-                new CurveInfos("SVC2", "SVarC_injector_QInjPu"),
-                new CurveInfos("SVC2", "SVarC_injector_BPu"),
-                new CurveInfos("SVC2", "SVarC_modeHandling_mode_value")
+                new CurveInfos(EquipmentType.LOAD, "_LOAD___2_EC", "load_PPu"),
+                new CurveInfos(EquipmentType.LOAD, "_LOAD___2_EC", "load_QPu"),
+                new CurveInfos(EquipmentType.GENERATOR, "_GEN____3_SM", "generator_omegaPu"),
+                new CurveInfos(EquipmentType.GENERATOR, "_GEN____3_SM", "generator_PGen"),
+                new CurveInfos(EquipmentType.GENERATOR, "_GEN____3_SM", "generator_QGen"),
+                new CurveInfos(EquipmentType.GENERATOR, "_GEN____3_SM", "generator_UStatorPu"),
+                new CurveInfos(EquipmentType.GENERATOR, "_GEN____3_SM", "voltageRegulator_EfdPu"),
+                new CurveInfos(EquipmentType.STATIC_VAR_COMPENSATOR, "SVC2", "SVarC_injector_UPu"),
+                new CurveInfos(EquipmentType.STATIC_VAR_COMPENSATOR, "SVC2", "SVarC_injector_PInjPu"),
+                new CurveInfos(EquipmentType.STATIC_VAR_COMPENSATOR, "SVC2", "SVarC_injector_QInjPu"),
+                new CurveInfos(EquipmentType.STATIC_VAR_COMPENSATOR, "SVC2", "SVarC_injector_BPu"),
+                new CurveInfos(EquipmentType.STATIC_VAR_COMPENSATOR, "SVC2", "SVarC_modeHandling_mode_value")
         );
     }
 

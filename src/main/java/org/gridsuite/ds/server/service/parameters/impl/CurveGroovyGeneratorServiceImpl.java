@@ -11,6 +11,7 @@ import com.powsybl.commons.PowsyblException;
 import org.apache.commons.io.IOUtils;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
 import org.gridsuite.ds.server.service.parameters.CurveGroovyGeneratorService;
+import org.gridsuite.ds.server.utils.EquipmentType;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.stringtemplate.v4.ST;
@@ -19,6 +20,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.gridsuite.ds.server.utils.EquipmentType.isStaticType;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -39,13 +42,20 @@ public class CurveGroovyGeneratorServiceImpl implements CurveGroovyGeneratorServ
         // config root template
         ST curvesST = new ST(curvesTemplate);
 
-        // group curves info by equipmentId
+        // indexing equipment type by equipmentId
+        Map<String, EquipmentType> equipmentTypeByEquipmentIdMap = curveInfosList.stream()
+                .collect(Collectors.groupingBy(CurveInfos::getEquipmentId,
+                        Collectors.collectingAndThen(Collectors.toSet(), set -> set.stream().findFirst().get().getEquipmentType())));
+
+        // group variables by equipmentId
         Map<String, String> variablesByEquipmentIdMap = curveInfosList.stream()
-                .collect(Collectors.groupingBy(CurveInfos::getEquipmentId, Collectors.mapping(curveInfo -> "\"" + curveInfo.getVariableId() + "\"", Collectors.joining(", "))));
+                .collect(Collectors.groupingBy(CurveInfos::getEquipmentId,
+                        Collectors.mapping(curveInfo -> "\"" + curveInfo.getVariableId() + "\"", Collectors.joining(", "))));
 
         String[] curveStringList = variablesByEquipmentIdMap.entrySet().stream().map(variablesByEquipmentId -> {
             ST curveST = new ST(curveTemplate);
-            curveST.add("dynamicModelId", "\"" + variablesByEquipmentId.getKey() + "\"");
+            curveST.add("idName", isStaticType(equipmentTypeByEquipmentIdMap.get(variablesByEquipmentId.getKey())) ? "staticId" : "dynamicModelId");
+            curveST.add("idValue", "\"" + variablesByEquipmentId.getKey() + "\"");
             curveST.add("variables", variablesByEquipmentId.getValue());
             return curveST.render();
         }).toArray(String[]::new);
