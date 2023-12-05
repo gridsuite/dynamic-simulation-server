@@ -49,7 +49,7 @@ public class CurveGroovyGeneratorServiceImpl implements CurveGroovyGeneratorServ
 
         // group variables by equipmentId
         Map<String, String> variablesByEquipmentIdMap = curveInfosList.stream()
-                .collect(Collectors.groupingBy(CurveInfos::getEquipmentId,
+                .collect(Collectors.groupingBy(CurveInfos::getEquipmentId, LinkedHashMap::new,
                         Collectors.mapping(curveInfo -> "\"" + curveInfo.getVariableId() + "\"", Collectors.joining(", "))));
 
         String[] curveStringList = variablesByEquipmentIdMap.entrySet().stream().map(variablesByEquipmentId -> {
