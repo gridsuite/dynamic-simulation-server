@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.gridsuite.ds.server.DynamicSimulationApi.API_VERSION;
+import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.HEADER_USER_ID;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
@@ -48,8 +49,9 @@ public class DynamicSimulationController {
                                           @RequestParam(name = "receiver", required = false) String receiver,
                                           @RequestParam("mappingName") String mappingName,
                                           @RequestParam(name = "provider", required = false) String provider,
-                                          @RequestBody DynamicSimulationParametersInfos parameters) {
-        Mono<UUID> resultUuid = dynamicSimulationService.runAndSaveResult(receiver, networkUuid, variantId, mappingName, provider, parameters);
+                                          @RequestBody DynamicSimulationParametersInfos parameters,
+                                          @RequestHeader(HEADER_USER_ID) String userId) {
+        Mono<UUID> resultUuid = dynamicSimulationService.runAndSaveResult(receiver, networkUuid, variantId, mappingName, provider, parameters, userId);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 

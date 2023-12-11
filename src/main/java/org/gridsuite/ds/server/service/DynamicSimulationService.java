@@ -62,7 +62,7 @@ public class DynamicSimulationService {
         this.parametersService = Objects.requireNonNull(parametersService);
     }
 
-    public Mono<UUID> runAndSaveResult(String receiver, UUID networkUuid, String variantId, String mappingName, String provider, DynamicSimulationParametersInfos parametersInfos) {
+    public Mono<UUID> runAndSaveResult(String receiver, UUID networkUuid, String variantId, String mappingName, String provider, DynamicSimulationParametersInfos parametersInfos, String userId) {
 
         // check provider => if not found then set default provider
         String dsProvider = getProviders().stream()
@@ -85,7 +85,7 @@ public class DynamicSimulationService {
                     byte[] eventModel = parametersService.getEventModel(parametersInfos.getEvents());
                     byte[] curveModel = parametersService.getCurveModel(parametersInfos.getCurves());
 
-                    DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(dsProvider, receiver, networkUuid, variantId, dynamicModel, eventModel, curveModel, parameters);
+                    DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(dsProvider, receiver, networkUuid, variantId, dynamicModel, eventModel, curveModel, parameters, userId);
 
                     return insertStatus(DynamicSimulationStatus.RUNNING.name()) // update status to running status
                             .map(resultEntity -> {
@@ -108,7 +108,7 @@ public class DynamicSimulationService {
             // set entity with new values
             resultEntities.forEach(resultEntity -> resultEntity.setStatus(status));
             // save entities into database
-            return resultRepository.saveAllAndFlush(resultEntities).stream().map(ResultEntity::getId).collect(Collectors.toList());
+            return resultRepository.saveAllAndFlush(resultEntities).stream().map(ResultEntity::getId).toList();
         });
     }
 
@@ -155,7 +155,7 @@ public class DynamicSimulationService {
     public List<String> getProviders() {
         return DynamicSimulationProvider.findAll().stream()
                 .map(DynamicSimulationProvider::getName)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public String getDefaultProvider() {

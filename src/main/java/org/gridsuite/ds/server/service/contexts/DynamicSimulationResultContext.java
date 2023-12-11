@@ -18,6 +18,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static org.gridsuite.ds.server.service.contexts.ContextUtils.getNonNullHeader;
+import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.HEADER_USER_ID;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -63,12 +64,13 @@ public class DynamicSimulationResultContext {
         String receiver = (String) headers.get(HEADER_RECEIVER);
         UUID networkUuid = UUID.fromString(getNonNullHeader(headers, HEADER_NETWORK_UUID));
         String variantId = (String) headers.get(HEADER_VARIANT_ID);
+        String userId = (String) headers.get(HEADER_USER_ID);
         byte[] dynamicModelContent = (byte[]) headers.get(HEADER_DYNAMIC_MODEL_CONTENT);
         byte[] eventModelContent = (byte[]) headers.get(HEADER_EVENT_MODEL_CONTENT);
         byte[] curveContent = (byte[]) headers.get(HEADER_CURVE_CONTENT);
         // decode the parameters
 
-        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(provider, receiver, networkUuid, variantId, dynamicModelContent, eventModelContent, curveContent, parameters);
+        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(provider, receiver, networkUuid, variantId, dynamicModelContent, eventModelContent, curveContent, parameters, userId);
         return new DynamicSimulationResultContext(resultUuid, runContext);
     }
 
@@ -86,6 +88,7 @@ public class DynamicSimulationResultContext {
                 .setHeader(HEADER_DYNAMIC_MODEL_CONTENT, runContext.getDynamicModelContent())
                 .setHeader(HEADER_EVENT_MODEL_CONTENT, runContext.getEventModelContent())
                 .setHeader(HEADER_CURVE_CONTENT, runContext.getCurveContent())
+                .setHeader(HEADER_USER_ID, runContext.getUserId())
                 .build();
     }
 

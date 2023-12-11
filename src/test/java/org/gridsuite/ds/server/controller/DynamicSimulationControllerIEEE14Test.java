@@ -51,6 +51,7 @@ import java.util.stream.Collectors;
 
 import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.HEADER_MESSAGE;
 import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.HEADER_RESULT_UUID;
+import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.HEADER_USER_ID;
 import static org.gridsuite.ds.server.service.notification.NotificationService.FAIL_MESSAGE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -204,6 +205,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
                 .uri("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING)
                 .bodyValue(parameters)
+                .header(HEADER_USER_ID, "testUserId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(UUID.class)
@@ -264,6 +266,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
                 .uri("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING)
                 .bodyValue(parameters)
+                .header(HEADER_USER_ID, "testUserId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(UUID.class)

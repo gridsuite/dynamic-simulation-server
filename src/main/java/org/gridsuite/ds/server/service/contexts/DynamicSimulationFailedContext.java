@@ -20,6 +20,9 @@ public class DynamicSimulationFailedContext {
     public static final String HEADER_RESULT_UUID = "resultUuid";
     public static final String HEADER_RECEIVER = "receiver";
     public static final String HEADER_MESSAGE = "message";
+    public static final String HEADER_USER_ID = "userId";
+
+    public static final int MSG_MAX_LENGTH = 256;
 
     private final UUID resultUuid;
 
@@ -27,8 +30,11 @@ public class DynamicSimulationFailedContext {
 
     private final String message;
 
-    public DynamicSimulationFailedContext(String receiver, UUID resultUuid, String message) {
+    private final String userId;
+
+    public DynamicSimulationFailedContext(String receiver, UUID resultUuid, String message, String userId) {
         this.receiver = receiver;
+        this.userId = userId;
         this.resultUuid = Objects.requireNonNull(resultUuid);
         this.message = message;
     }
@@ -37,7 +43,24 @@ public class DynamicSimulationFailedContext {
         return MessageBuilder.withPayload("")
                 .setHeader(HEADER_RESULT_UUID, resultUuid.toString())
                 .setHeader(HEADER_RECEIVER, receiver)
-                .setHeader(HEADER_MESSAGE, message)
+                .setHeader(HEADER_MESSAGE, shortenMessage(message))
+                .setHeader(HEADER_USER_ID, userId)
                 .build();
+    }
+
+    // prevent the message from being too long for rabbitmq
+    // the beginning and ending are both kept, it should make it easier to identify
+    public String shortenMessage(String msg) {
+        if (msg == null) {
+            return msg;
+        }
+
+        String shortMsg = msg;
+        if (shortMsg.length() > MSG_MAX_LENGTH) {
+            shortMsg = msg.substring(0, MSG_MAX_LENGTH / 2) +
+                    " ... " +
+                    msg.substring(msg.length() - MSG_MAX_LENGTH / 2, msg.length() - 1);
+        }
+        return shortMsg;
     }
 }
