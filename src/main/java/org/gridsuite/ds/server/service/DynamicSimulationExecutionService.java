@@ -11,7 +11,6 @@ import com.powsybl.computation.ComputationManager;
 import com.powsybl.computation.local.LocalComputationManager;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import lombok.Getter;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +21,6 @@ import java.util.concurrent.Executors;
  * @author David Braquart <david.braquart at rte-france.com>
  */
 @Service
-@Getter
 public class DynamicSimulationExecutionService {
 
     private ExecutorService executorService;
@@ -33,11 +31,15 @@ public class DynamicSimulationExecutionService {
     @PostConstruct
     private void postConstruct() {
         executorService = Executors.newCachedThreadPool();
-        computationManager = new LocalComputationManager(getExecutorService());
+        computationManager = new LocalComputationManager(executorService);
     }
 
     @PreDestroy
     private void preDestroy() {
         executorService.shutdown();
+    }
+
+    public ComputationManager getComputationManager() {
+        return computationManager;
     }
 }
