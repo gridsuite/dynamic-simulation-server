@@ -8,7 +8,6 @@ package org.gridsuite.ds.server.service;
 
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.computation.ComputationManager;
-import com.powsybl.computation.local.LocalComputationManager;
 import com.powsybl.dynamicsimulation.*;
 import com.powsybl.dynamicsimulation.groovy.*;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
@@ -67,15 +66,19 @@ public class DynamicSimulationWorkerService {
 
     private final TimeSeriesClient timeSeriesClient;
 
+    private final DynamicSimulationExecutionService dynamicSimulationExecutionService;
+
     private final DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult;
 
     public DynamicSimulationWorkerService(NetworkStoreService networkStoreService,
                                           NotificationService notificationService,
                                           TimeSeriesClient timeSeriesClient,
+                                          DynamicSimulationExecutionService dynamicSimulationExecutionService,
                                           DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult) {
         this.networkStoreService = networkStoreService;
         this.notificationService = notificationService;
         this.timeSeriesClient = timeSeriesClient;
+        this.dynamicSimulationExecutionService = dynamicSimulationExecutionService;
         this.dynamicSimulationWorkerUpdateResult = dynamicSimulationWorkerUpdateResult;
     }
 
@@ -119,7 +122,7 @@ public class DynamicSimulationWorkerService {
      * @return a computation manager
      */
     public ComputationManager getComputationManager() {
-        return LocalComputationManager.getDefault();
+        return dynamicSimulationExecutionService.getComputationManager();
     }
 
     private Network getNetwork(UUID networkUuid) {
