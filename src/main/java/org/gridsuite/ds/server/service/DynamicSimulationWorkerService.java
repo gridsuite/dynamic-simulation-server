@@ -157,7 +157,9 @@ public class DynamicSimulationWorkerService {
                     // send fail notification
                     Message<String> sendMessage = new DynamicSimulationFailedContext(resultContext.getRunContext().getReceiver(),
                             resultContext.getResultUuid(),
-                            FAIL_MESSAGE + " : " + e.getMessage()).toMessage();
+                            FAIL_MESSAGE + " : " + e.getMessage(),
+                            resultContext.getRunContext().getUserId()
+                            ).toMessage();
 
                     notificationService.emitFailDynamicSimulationMessage(sendMessage);
                     // delete result entity in server's db
