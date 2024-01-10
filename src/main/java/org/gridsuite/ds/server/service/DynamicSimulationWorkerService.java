@@ -70,16 +70,20 @@ public class DynamicSimulationWorkerService {
 
     private final DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult;
 
+    private final DynamicSimulationObserver dynamicSimulationObserver;
+
     public DynamicSimulationWorkerService(NetworkStoreService networkStoreService,
                                           NotificationService notificationService,
                                           TimeSeriesClient timeSeriesClient,
                                           DynamicSimulationExecutionService dynamicSimulationExecutionService,
-                                          DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult) {
+                                          DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult,
+                                          DynamicSimulationObserver dynamicSimulationObserver) {
         this.networkStoreService = networkStoreService;
         this.notificationService = notificationService;
         this.timeSeriesClient = timeSeriesClient;
         this.dynamicSimulationExecutionService = dynamicSimulationExecutionService;
         this.dynamicSimulationWorkerUpdateResult = dynamicSimulationWorkerUpdateResult;
+        this.dynamicSimulationObserver = dynamicSimulationObserver;
     }
 
     public Mono<DynamicSimulationResult> run(DynamicSimulationRunContext context) {
@@ -139,18 +143,17 @@ public class DynamicSimulationWorkerService {
             LOGGER_BROKER_INPUT.debug("consumeRun {}", message);
             DynamicSimulationResultContext resultContext = DynamicSimulationResultContext.fromMessage(message);
             try {
-                run(resultContext.getRunContext())
-                        .flatMap(result -> updateResult(resultContext.getResultUuid(), result))
-                        .doOnSuccess(result -> {
-                            Message<String> sendMessage = MessageBuilder
-                                    .withPayload("")
-                                    .setHeader(DynamicSimulationResultContext.HEADER_RESULT_UUID, resultContext.getResultUuid().toString())
-                                    .setHeader(DynamicSimulationResultContext.HEADER_RECEIVER, resultContext.getRunContext().getReceiver())
-                                    .build();
-                            notificationService.emitResultDynamicSimulationMessage(sendMessage);
-                            LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
-                        })
-                        .block();
+                DynamicSimulationResult dynamicSimulationResult = dynamicSimulationObserver.observeRun("run", resultContext.getRunContext(), () -> Objects.requireNonNull(run(resultContext.getRunContext()).block()));
+                updateResult(resultContext.getResultUuid(), resultContext.getRunContext(), dynamicSimulationResult)
+                    .doOnSuccess(result -> {
+                        Message<String> sendMessage = MessageBuilder
+                            .withPayload("")
+                            .setHeader(DynamicSimulationResultContext.HEADER_RESULT_UUID, resultContext.getResultUuid().toString())
+                            .setHeader(DynamicSimulationResultContext.HEADER_RECEIVER, resultContext.getRunContext().getReceiver())
+                            .build();
+                        notificationService.emitResultDynamicSimulationMessage(sendMessage);
+                        LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
+                    }).block();
             } catch (Exception e) {
                 if (!(e instanceof CancellationException)) {
                     LOGGER.error(FAIL_MESSAGE, e);
@@ -169,7 +172,7 @@ public class DynamicSimulationWorkerService {
         };
     }
 
-    public Mono<DynamicSimulationResult> updateResult(UUID resultUuid, DynamicSimulationResult result) {
+    public Mono<DynamicSimulationResult> updateResult(UUID resultUuid, DynamicSimulationRunContext runContext, DynamicSimulationResult result) {
         Objects.requireNonNull(resultUuid);
         List<TimeSeries> timeSeries = new ArrayList<>(result.getCurves().values());
         StringTimeSeries timeLine = result.getTimeLine();
@@ -182,7 +185,8 @@ public class DynamicSimulationWorkerService {
                     UUID timeLineUuid = uuidTuple.getT2().getId();
                     DynamicSimulationStatus status = result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED;
 
-                    dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
+                    dynamicSimulationObserver.observe("results.save", runContext, () ->
+                        dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status));
                     return result;
                 });
     }
