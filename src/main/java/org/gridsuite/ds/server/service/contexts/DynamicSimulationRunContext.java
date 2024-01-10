@@ -7,6 +7,7 @@
 package org.gridsuite.ds.server.service.contexts;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
+import lombok.Getter;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -14,6 +15,7 @@ import java.util.UUID;
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
+@Getter
 public class DynamicSimulationRunContext {
 
     private final String provider;
@@ -31,8 +33,10 @@ public class DynamicSimulationRunContext {
     private final byte[] curveContent;
 
     private final DynamicSimulationParameters parameters;
+    private final String userId;
 
-    public DynamicSimulationRunContext(String provider, String receiver, UUID networkUuid, String variantId, byte[] dynamicModelContent, byte[] eventModelContent, byte[] curveContent, DynamicSimulationParameters parameters) {
+    public DynamicSimulationRunContext(String provider, String receiver, UUID networkUuid, String variantId, byte[] dynamicModelContent,
+                                       byte[] eventModelContent, byte[] curveContent, DynamicSimulationParameters parameters, String userId) {
         this.provider = provider;
         this.receiver = receiver;
         this.networkUuid = Objects.requireNonNull(networkUuid);
@@ -41,37 +45,7 @@ public class DynamicSimulationRunContext {
         this.eventModelContent = eventModelContent;
         this.curveContent = curveContent;
         this.parameters = parameters;
-    }
-
-    public String getProvider() {
-        return provider;
-    }
-
-    public String getReceiver() {
-        return receiver; }
-
-    public UUID getNetworkUuid() {
-        return networkUuid;
-    }
-
-    public String getVariantId() {
-        return variantId;
-    }
-
-    public byte[] getDynamicModelContent() {
-        return dynamicModelContent;
-    }
-
-    public byte[] getEventModelContent() {
-        return eventModelContent;
-    }
-
-    public byte[] getCurveContent() {
-        return curveContent;
-    }
-
-    public DynamicSimulationParameters getParameters() {
-        return parameters;
+        this.userId = userId;
     }
 }
 
