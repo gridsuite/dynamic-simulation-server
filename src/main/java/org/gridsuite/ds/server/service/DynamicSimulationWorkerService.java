@@ -176,7 +176,7 @@ public class DynamicSimulationWorkerService {
         Objects.requireNonNull(resultUuid);
         List<TimeSeries> timeSeries = new ArrayList<>(result.getCurves().values());
         StringTimeSeries timeLine = result.getTimeLine();
-        return Mono.zip(
+        return dynamicSimulationObserver.observe("results.save", runContext, () -> Mono.zip(
                     timeSeriesClient.sendTimeSeries(timeSeries).subscribeOn(Schedulers.boundedElastic()),
                     timeSeriesClient.sendTimeSeries(Arrays.asList(timeLine)).subscribeOn(Schedulers.boundedElastic())
                 )
@@ -185,10 +185,9 @@ public class DynamicSimulationWorkerService {
                     UUID timeLineUuid = uuidTuple.getT2().getId();
                     DynamicSimulationStatus status = result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED;
 
-                    dynamicSimulationObserver.observe("results.save", runContext, () ->
-                        dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status));
+                    dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
                     return result;
-                });
+                }));
     }
 
     @Bean
