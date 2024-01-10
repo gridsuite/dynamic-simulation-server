@@ -149,7 +149,9 @@ public class DynamicSimulationWorkerService {
                         () -> Objects.requireNonNull(run(resultContext.getRunContext()).block()));
 
                 // save result
-                updateResult(resultContext.getResultUuid(), resultContext.getRunContext(), dynamicSimulationResult);
+                dynamicSimulationObserver.observe("results.save",
+                        resultContext.getRunContext(),
+                        () -> updateResult(resultContext.getResultUuid(), dynamicSimulationResult));
 
                 // notify result already available
                 Message<String> sendMessage = MessageBuilder
@@ -178,13 +180,13 @@ public class DynamicSimulationWorkerService {
         };
     }
 
-    public void updateResult(UUID resultUuid, DynamicSimulationRunContext runContext, DynamicSimulationResult result) {
+    public void updateResult(UUID resultUuid, DynamicSimulationResult result) {
         Objects.requireNonNull(resultUuid);
         List<TimeSeries> timeSeries = new ArrayList<>(result.getCurves().values());
         StringTimeSeries timeLine = result.getTimeLine();
 
         // send result to time-series-server then update referenced result uuids to the db
-        dynamicSimulationObserver.observe("results.save", runContext, () -> Mono.zip(
+        Mono.zip(
                 timeSeriesClient.sendTimeSeries(timeSeries).subscribeOn(Schedulers.boundedElastic()),
                 timeSeriesClient.sendTimeSeries(Arrays.asList(timeLine)).subscribeOn(Schedulers.boundedElastic())
             )
@@ -195,7 +197,7 @@ public class DynamicSimulationWorkerService {
 
                 dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
                 return result;
-            }).block());
+            }).block();
     }
 
     @Bean
