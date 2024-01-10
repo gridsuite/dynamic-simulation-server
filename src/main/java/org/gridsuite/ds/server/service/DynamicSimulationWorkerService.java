@@ -143,17 +143,25 @@ public class DynamicSimulationWorkerService {
             LOGGER_BROKER_INPUT.debug("consumeRun {}", message);
             DynamicSimulationResultContext resultContext = DynamicSimulationResultContext.fromMessage(message);
             try {
-                DynamicSimulationResult dynamicSimulationResult = dynamicSimulationObserver.observeRun("run", resultContext.getRunContext(), () -> Objects.requireNonNull(run(resultContext.getRunContext()).block()));
-                updateResult(resultContext.getResultUuid(), resultContext.getRunContext(), dynamicSimulationResult)
-                    .doOnSuccess(result -> {
-                        Message<String> sendMessage = MessageBuilder
-                            .withPayload("")
-                            .setHeader(DynamicSimulationResultContext.HEADER_RESULT_UUID, resultContext.getResultUuid().toString())
-                            .setHeader(DynamicSimulationResultContext.HEADER_RECEIVER, resultContext.getRunContext().getReceiver())
-                            .build();
-                        notificationService.emitResultDynamicSimulationMessage(sendMessage);
-                        LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
-                    }).block();
+                // run simulation
+                DynamicSimulationResult dynamicSimulationResult = dynamicSimulationObserver.observeRun("run",
+                        resultContext.getRunContext(),
+                        () -> Objects.requireNonNull(run(resultContext.getRunContext()).block()));
+
+                // save result
+                dynamicSimulationObserver.observe("results.save",
+                        resultContext.getRunContext(),
+                        () -> updateResult(resultContext.getResultUuid(), dynamicSimulationResult));
+
+                // notify result already available
+                Message<String> sendMessage = MessageBuilder
+                    .withPayload("")
+                    .setHeader(DynamicSimulationResultContext.HEADER_RESULT_UUID, resultContext.getResultUuid().toString())
+                    .setHeader(DynamicSimulationResultContext.HEADER_RECEIVER, resultContext.getRunContext().getReceiver())
+                    .build();
+                notificationService.emitResultDynamicSimulationMessage(sendMessage);
+
+                LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
             } catch (Exception e) {
                 if (!(e instanceof CancellationException)) {
                     LOGGER.error(FAIL_MESSAGE, e);
@@ -172,23 +180,24 @@ public class DynamicSimulationWorkerService {
         };
     }
 
-    public Mono<DynamicSimulationResult> updateResult(UUID resultUuid, DynamicSimulationRunContext runContext, DynamicSimulationResult result) {
+    public void updateResult(UUID resultUuid, DynamicSimulationResult result) {
         Objects.requireNonNull(resultUuid);
         List<TimeSeries> timeSeries = new ArrayList<>(result.getCurves().values());
         StringTimeSeries timeLine = result.getTimeLine();
-        return Mono.zip(
-                    timeSeriesClient.sendTimeSeries(timeSeries).subscribeOn(Schedulers.boundedElastic()),
-                    timeSeriesClient.sendTimeSeries(Arrays.asList(timeLine)).subscribeOn(Schedulers.boundedElastic())
-                )
-                .map(uuidTuple -> {
-                    UUID timeSeriesUuid = uuidTuple.getT1().getId();
-                    UUID timeLineUuid = uuidTuple.getT2().getId();
-                    DynamicSimulationStatus status = result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED;
 
-                    dynamicSimulationObserver.observe("results.save", runContext, () ->
-                        dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status));
-                    return result;
-                });
+        // send result to time-series-server then update referenced result uuids to the db
+        Mono.zip(
+                timeSeriesClient.sendTimeSeries(timeSeries).subscribeOn(Schedulers.boundedElastic()),
+                timeSeriesClient.sendTimeSeries(Arrays.asList(timeLine)).subscribeOn(Schedulers.boundedElastic())
+            )
+            .map(uuidTuple -> {
+                UUID timeSeriesUuid = uuidTuple.getT1().getId();
+                UUID timeLineUuid = uuidTuple.getT2().getId();
+                DynamicSimulationStatus status = result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED;
+
+                dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
+                return result;
+            }).block();
     }
 
     @Bean
