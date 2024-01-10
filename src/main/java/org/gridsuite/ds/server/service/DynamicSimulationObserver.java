@@ -43,10 +43,6 @@ public class DynamicSimulationObserver {
         createObservation(name, runContext).observeChecked(callable);
     }
 
-    public <T, E extends Throwable> T observe(String name, DynamicSimulationRunContext runContext, Observation.CheckedCallable<T, E> callable) throws E {
-        return createObservation(name, runContext).observeChecked(callable);
-    }
-
     public <T extends DynamicSimulationResult, E extends Throwable> T observeRun(String name, DynamicSimulationRunContext runContext, Observation.CheckedCallable<T, E> callable) throws E {
         T result = createObservation(name, runContext).observeChecked(callable);
         incrementCount(runContext, result);
