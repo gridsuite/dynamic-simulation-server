@@ -39,8 +39,8 @@ public class DynamicSimulationObserver {
         this.meterRegistry = meterRegistry;
     }
 
-    public <T, E extends Throwable> T observe(String name, DynamicSimulationRunContext runContext, Observation.CheckedCallable<T, E> callable) throws E {
-        return createObservation(name, runContext).observeChecked(callable);
+    public <E extends Throwable> void observe(String name, DynamicSimulationRunContext runContext, Observation.CheckedRunnable<E> runnable) throws E {
+        createObservation(name, runContext).observeChecked(runnable);
     }
 
     public <T extends DynamicSimulationResult, E extends Throwable> T observeRun(String name, DynamicSimulationRunContext runContext, Observation.CheckedCallable<T, E> callable) throws E {
