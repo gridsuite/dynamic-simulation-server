@@ -90,8 +90,7 @@ public class DynamicSimulationWorkerService {
         Objects.requireNonNull(context);
         LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {},", context.getNetworkUuid(), context.getParameters().getStartTime(), context.getParameters().getStopTime());
 
-        Network network = dynamicSimulationObserver.observe("network.load", context, () ->
-            getNetwork(context.getNetworkUuid()));
+        Network network = getNetwork(context.getNetworkUuid());
 
         List<DynamicModelGroovyExtension> dynamicModelExtensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynaWaltzProvider.NAME);
         DynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(new ByteArrayInputStream(context.getDynamicModelContent()), dynamicModelExtensions);
@@ -144,8 +143,7 @@ public class DynamicSimulationWorkerService {
             LOGGER_BROKER_INPUT.debug("consumeRun {}", message);
             DynamicSimulationResultContext resultContext = DynamicSimulationResultContext.fromMessage(message);
             try {
-                dynamicSimulationObserver.observeRun("run", resultContext.getRunContext(), () -> Objects.requireNonNull(run(resultContext.getRunContext())
-                    .flatMap(result -> updateResult(resultContext.getResultUuid(), resultContext.getRunContext(), result))
+                DynamicSimulationResult dynamicSimulationResult = dynamicSimulationObserver.observeRun("run", resultContext.getRunContext(), () -> Objects.requireNonNull(run(resultContext.getRunContext())
                     .doOnSuccess(result -> {
                         Message<String> sendMessage = MessageBuilder
                             .withPayload("")
@@ -156,6 +154,7 @@ public class DynamicSimulationWorkerService {
                         LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
                     })
                     .block()));
+                updateResult(resultContext.getResultUuid(), resultContext.getRunContext(), dynamicSimulationResult).block();
             } catch (Exception e) {
                 if (!(e instanceof CancellationException)) {
                     LOGGER.error(FAIL_MESSAGE, e);
