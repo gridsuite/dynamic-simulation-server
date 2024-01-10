@@ -143,7 +143,8 @@ public class DynamicSimulationWorkerService {
             LOGGER_BROKER_INPUT.debug("consumeRun {}", message);
             DynamicSimulationResultContext resultContext = DynamicSimulationResultContext.fromMessage(message);
             try {
-                DynamicSimulationResult dynamicSimulationResult = dynamicSimulationObserver.observeRun("run", resultContext.getRunContext(), () -> Objects.requireNonNull(run(resultContext.getRunContext())
+                DynamicSimulationResult dynamicSimulationResult = dynamicSimulationObserver.observeRun("run", resultContext.getRunContext(), () -> Objects.requireNonNull(run(resultContext.getRunContext()).block()));
+                updateResult(resultContext.getResultUuid(), resultContext.getRunContext(), dynamicSimulationResult)
                     .doOnSuccess(result -> {
                         Message<String> sendMessage = MessageBuilder
                             .withPayload("")
@@ -152,9 +153,7 @@ public class DynamicSimulationWorkerService {
                             .build();
                         notificationService.emitResultDynamicSimulationMessage(sendMessage);
                         LOGGER.info("Dynamic simulation complete (resultUuid='{}')", resultContext.getResultUuid());
-                    })
-                    .block()));
-                updateResult(resultContext.getResultUuid(), resultContext.getRunContext(), dynamicSimulationResult).block();
+                    }).block();
             } catch (Exception e) {
                 if (!(e instanceof CancellationException)) {
                     LOGGER.error(FAIL_MESSAGE, e);
