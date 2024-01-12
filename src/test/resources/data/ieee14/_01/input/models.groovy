@@ -9,7 +9,7 @@ import com.powsybl.iidm.network.Generator
 import com.powsybl.iidm.network.StaticVarCompensator
 import com.powsybl.iidm.network.Load
 import com.powsybl.dynawaltz.models.automatons.CurrentLimitAutomaton
-import com.powsybl.iidm.network.Branch
+import com.powsybl.iidm.network.TwoSides
 
 for (Generator equipment : network.generators) {
     if (equipment.terminal.voltageLevel.nominalV == 13.800000) {

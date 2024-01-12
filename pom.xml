@@ -42,7 +42,7 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>28</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>29-SNAPSHOT</gridsuite-dependencies.version>
         <jib.from.image>powsybl/java-dynawo:2.1.0</jib.from.image>
 
         <h2database.version>1.4.200</h2database.version>

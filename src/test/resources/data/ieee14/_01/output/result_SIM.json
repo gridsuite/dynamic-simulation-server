@@ -1,7 +1,6 @@
 {
   "version" : "1.0",
-  "isOK" : true,
-  "logs" : null,
+  "status" : "SUCCESS",
   "curves" : [ {
     "metadata" : {
       "name" : "SVC2_SVarC_injector_QInjPu",
@@ -159,17 +158,5 @@
       "stepLengths" : [ 1, 1, 1, 2, 1, 4, 1, 2, 1, 1, 8, 1, 1, 1, 1, 1, 1, 27 ]
     } ]
   } ],
-  "timeLine" : {
-    "metadata" : {
-      "name" : "timeLine",
-      "dataType" : "STRING",
-      "tags" : [ ],
-      "regularIndex" : {
-        "startTime" : 0,
-        "endTime" : 0,
-        "spacing" : 0
-      }
-    },
-    "chunks" : [ ]
-  }
+  "timeLine" : []
 }
