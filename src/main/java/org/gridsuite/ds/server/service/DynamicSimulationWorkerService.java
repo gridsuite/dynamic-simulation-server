@@ -15,17 +15,14 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import com.powsybl.timeseries.StringTimeSeries;
 import com.powsybl.timeseries.TimeSeries;
-import com.powsybl.dynamicsimulation.groovy.GroovyCurvesSupplier;
-import com.powsybl.dynamicsimulation.groovy.GroovyEventModelsSupplier;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
+import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationCancelContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.notification.NotificationService;
-import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -39,7 +36,10 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.io.ByteArrayInputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -183,19 +183,17 @@ public class DynamicSimulationWorkerService {
     public void updateResult(UUID resultUuid, DynamicSimulationResult result) {
         Objects.requireNonNull(resultUuid);
         List<TimeSeries> timeSeries = new ArrayList<>(result.getCurves().values());
-        StringTimeSeries timeLine = result.getTimeLine();
 
         // send result to time-series-server then update referenced result uuids to the db
         Mono.zip(
                 timeSeriesClient.sendTimeSeries(timeSeries).subscribeOn(Schedulers.boundedElastic()),
-                timeSeriesClient.sendTimeSeries(Arrays.asList(timeLine)).subscribeOn(Schedulers.boundedElastic())
+                Mono.empty()
             )
             .map(uuidTuple -> {
                 UUID timeSeriesUuid = uuidTuple.getT1().getId();
-                UUID timeLineUuid = uuidTuple.getT2().getId();
                 DynamicSimulationStatus status = result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED;
 
-                dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
+                dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, null, status);
                 return result;
             }).block();
     }

@@ -52,7 +52,7 @@ CurrentLimitAutomaton {
     parameterSetId "CLA_2_4"
     dynamicModelId "CLA_1"
     iMeasurement "_BUS____2-BUS____4-1_AC"
-    iMeasurementSide Branch.Side.TWO
+    iMeasurementSide TwoSides.TWO
     controlledQuadripole "_BUS____2-BUS____4-1_AC"
 }
 
@@ -60,6 +60,6 @@ CurrentLimitAutomaton {
     parameterSetId "CLA_2_5"
     dynamicModelId "CLA_2"
     iMeasurement "_BUS____2-BUS____5-1_AC"
-    iMeasurementSide Branch.Side.TWO
+    iMeasurementSide TwoSides.TWO
     controlledQuadripole "_BUS____2-BUS____5-1_AC"
 }
