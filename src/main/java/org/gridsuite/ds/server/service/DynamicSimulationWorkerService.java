@@ -15,6 +15,8 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
+import com.powsybl.timeseries.IrregularTimeSeriesIndex;
+import com.powsybl.timeseries.StringTimeSeries;
 import com.powsybl.timeseries.TimeSeries;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
@@ -36,10 +38,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -183,17 +182,26 @@ public class DynamicSimulationWorkerService {
     public void updateResult(UUID resultUuid, DynamicSimulationResult result) {
         Objects.requireNonNull(resultUuid);
         List<TimeSeries> timeSeries = new ArrayList<>(result.getCurves().values());
+        List<TimelineEvent> timeLines = result.getTimeLine();
+
+        // convert timeline event list to StringTimeSeries
+        long[] timeLineIndexes = timeLines.stream().mapToLong(event -> (long) event.time()).toArray();
+        String[] timeLineValues = timeLines.stream().map(event -> event.modelName() + " : " + event.message()).toArray(String[]::new);
+        StringTimeSeries timeLineSeries = TimeSeries.createString("timeLine", new IrregularTimeSeriesIndex(timeLineIndexes), timeLineValues);
 
         // send result to time-series-server then update referenced result uuids to the db
         Mono.zip(
                 timeSeriesClient.sendTimeSeries(timeSeries).subscribeOn(Schedulers.boundedElastic()),
-                Mono.empty()
+                timeSeriesClient.sendTimeSeries(Arrays.asList(timeLineSeries)).subscribeOn(Schedulers.boundedElastic())
             )
             .map(uuidTuple -> {
                 UUID timeSeriesUuid = uuidTuple.getT1().getId();
-                DynamicSimulationStatus status = result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED;
+                UUID timeLineUuid = uuidTuple.getT2().getId();
+                DynamicSimulationStatus status = result.getStatus() == DynamicSimulationResult.Status.SUCCESS ?
+                        DynamicSimulationStatus.CONVERGED :
+                        DynamicSimulationStatus.DIVERGED;
 
-                dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, null, status);
+                dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
                 return result;
             }).block();
     }
