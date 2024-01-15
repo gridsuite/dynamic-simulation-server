@@ -12,6 +12,7 @@ import com.powsybl.commons.datasource.ResourceDataSource;
 import com.powsybl.commons.datasource.ResourceSet;
 import com.powsybl.dynamicsimulation.DynamicSimulationResult;
 import com.powsybl.dynamicsimulation.DynamicSimulationResultImpl;
+import com.powsybl.dynamicsimulation.TimelineEvent;
 import com.powsybl.iidm.network.Importers;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
@@ -38,10 +39,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.*;
@@ -115,16 +113,16 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         curves.put("NETWORK__BUS____2-BUS____5-1_AC_iSide2", TimeSeries.createDouble("NETWORK__BUS____2-BUS____5-1_AC_iSide2", index, 333.847331, 333.847321, 333.847300, 333.847259));
         curves.put("NETWORK__BUS____1_TN_Upu_value", TimeSeries.createDouble("NETWORK__BUS____1_TN_Upu_value", index, 1.059970, 1.059970, 1.059970, 1.059970));
 
-        index = new IrregularTimeSeriesIndex(new long[]{102479, 102479, 102479, 104396});
-        StringTimeSeries timeLine = TimeSeries.createString("TimeLine", index,
-                "CLA_2_5 - CLA : order to change topology",
-                "_BUS____2-BUS____5-1_AC - LINE : opening both sides",
-                "CLA_2_5 - CLA : order to change topology",
-                "CLA_2_4 - CLA : arming by over-current constraint");
+        List<TimelineEvent> timeLine = List.of(
+                new TimelineEvent(102479, "CLA_2_5 - CLA", "order to change topology"),
+                new TimelineEvent(102479, "_BUS____2-BUS____5-1_AC - LINE", "opening both sides"),
+                new TimelineEvent(102479, "CLA_2_5 - CLA", "order to change topology"),
+                new TimelineEvent(104396, "CLA_2_4 - CLA", "arming by over-current constraint")
+        );
 
-        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, null)))
+        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, timeLine)))
                 .when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any(), any(), any());
-        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, null)))
+        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, timeLine)))
                 .when(dynamicSimulationWorkerService).runAsync(any(), any(), isNull(), any(), any(), any(), any());
     }
 
