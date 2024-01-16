@@ -6,6 +6,8 @@
  */
 package org.gridsuite.ds.server.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.dynamicsimulation.*;
@@ -59,6 +61,8 @@ public class DynamicSimulationWorkerService {
 
     private static final Logger LOGGER_BROKER_INPUT = LoggerFactory.getLogger(CATEGORY_BROKER_INPUT);
 
+    private final ObjectMapper objectMapper;
+
     private final NetworkStoreService networkStoreService;
 
     private final NotificationService notificationService;
@@ -71,12 +75,14 @@ public class DynamicSimulationWorkerService {
 
     private final DynamicSimulationObserver dynamicSimulationObserver;
 
-    public DynamicSimulationWorkerService(NetworkStoreService networkStoreService,
+    public DynamicSimulationWorkerService(ObjectMapper objectMapper,
+                                          NetworkStoreService networkStoreService,
                                           NotificationService notificationService,
                                           TimeSeriesClient timeSeriesClient,
                                           DynamicSimulationExecutionService dynamicSimulationExecutionService,
                                           DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult,
                                           DynamicSimulationObserver dynamicSimulationObserver) {
+        this.objectMapper = objectMapper;
         this.networkStoreService = networkStoreService;
         this.notificationService = notificationService;
         this.timeSeriesClient = timeSeriesClient;
@@ -186,7 +192,13 @@ public class DynamicSimulationWorkerService {
 
         // convert timeline event list to StringTimeSeries
         long[] timeLineIndexes = timeLines.stream().mapToLong(event -> (long) event.time()).toArray();
-        String[] timeLineValues = timeLines.stream().map(event -> event.modelName() + " : " + event.message()).toArray(String[]::new);
+        String[] timeLineValues = timeLines.stream().map(event -> {
+            try {
+                return objectMapper.writeValueAsString(event);
+            } catch (JsonProcessingException e) {
+                throw new PowsyblException("Error while serializing time line event: " + event.toString(), e);
+            }
+        }).toArray(String[]::new);
         StringTimeSeries timeLineSeries = TimeSeries.createString("timeLine", new IrregularTimeSeriesIndex(timeLineIndexes), timeLineValues);
 
         // send result to time-series-server then update referenced result uuids to the db
@@ -201,6 +213,9 @@ public class DynamicSimulationWorkerService {
                         DynamicSimulationStatus.CONVERGED :
                         DynamicSimulationStatus.DIVERGED;
 
+                LOGGER.info(""" 
+                Update dynamic simulation [resultUuid=%s, timeSeriesUuid=%s, timeLineUuid=%s, status=%s
+                    """.formatted(resultUuid, timeSeriesUuid, timeLineUuid, status.name()));
                 dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
                 return result;
             }).block();
