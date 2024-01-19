@@ -1,4 +1,4 @@
 curve {
-    <idName> <idValue>
+    <idKey> <idValue>
     variables <variables>
 }
