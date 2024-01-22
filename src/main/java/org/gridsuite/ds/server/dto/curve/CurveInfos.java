@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.gridsuite.ds.server.utils.EquipmentType;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -22,6 +23,7 @@ import lombok.Setter;
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CurveInfos {
+    private EquipmentType equipmentType;
     private String equipmentId;
     private String variableId;
 }
