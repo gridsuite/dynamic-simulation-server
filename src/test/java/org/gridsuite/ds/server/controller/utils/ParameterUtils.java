@@ -16,7 +16,6 @@ import org.gridsuite.ds.server.dto.solver.IdaSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SimSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
 import org.gridsuite.ds.server.dto.solver.SolverTypeInfos;
-import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.utils.EquipmentType;
 import org.gridsuite.ds.server.utils.PropertyType;
 

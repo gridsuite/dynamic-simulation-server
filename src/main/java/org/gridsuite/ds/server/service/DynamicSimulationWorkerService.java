@@ -213,9 +213,9 @@ public class DynamicSimulationWorkerService {
                         DynamicSimulationStatus.CONVERGED :
                         DynamicSimulationStatus.DIVERGED;
 
-                LOGGER.info(""" 
-                Update dynamic simulation [resultUuid=%s, timeSeriesUuid=%s, timeLineUuid=%s, status=%s
-                    """.formatted(resultUuid, timeSeriesUuid, timeLineUuid, status.name()));
+                LOGGER.info("""
+                        Update dynamic simulation [resultUuid=%s, timeSeriesUuid=%s, timeLineUuid=%s, status=%s
+                        """.formatted(resultUuid, timeSeriesUuid, timeLineUuid, status.name()));
                 dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
                 return result;
             }).block();
