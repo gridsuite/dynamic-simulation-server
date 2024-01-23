@@ -58,31 +58,34 @@ public class DynamicSimulationController {
     @GetMapping(value = "/results/{resultUuid}/timeseries", produces = "application/json")
     @Operation(summary = "Get a dynamic simulation result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result"),
-        @ApiResponse(responseCode = "404", description = "Dynamic simulation result has not been found")})
+        @ApiResponse(responseCode = "204", description = "Dynamic simulation series uuid is empty"),
+        @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
     public Mono<ResponseEntity<UUID>> getTimeSeriesResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         Mono<UUID> result = dynamicSimulationService.getTimeSeriesId(resultUuid);
         return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .defaultIfEmpty(ResponseEntity.noContent().build());
     }
 
     @GetMapping(value = "/results/{resultUuid}/timeline", produces = "application/json")
     @Operation(summary = "Get a dynamic simulation result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result"),
-        @ApiResponse(responseCode = "404", description = "Dynamic simulation result has not been found")})
+        @ApiResponse(responseCode = "204", description = "Dynamic simulation timeline uuid is empty"),
+        @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
     public Mono<ResponseEntity<UUID>> getTimeLineResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         Mono<UUID> result = dynamicSimulationService.getTimeLineId(resultUuid);
         return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .defaultIfEmpty(ResponseEntity.noContent().build());
     }
 
     @GetMapping(value = "/results/{resultUuid}/status", produces = "application/json")
     @Operation(summary = "Get the dynamic simulation status from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation status"),
-        @ApiResponse(responseCode = "404", description = "Dynamic simulation status has not been found")})
+        @ApiResponse(responseCode = "204", description = "Dynamic simulation status is empty"),
+        @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
     public Mono<ResponseEntity<DynamicSimulationStatus>> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         Mono<DynamicSimulationStatus> result = dynamicSimulationService.getStatus(resultUuid);
         return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .defaultIfEmpty(ResponseEntity.noContent().build());
     }
 
     @PutMapping(value = "/results/invalidate-status", produces = "application/json")

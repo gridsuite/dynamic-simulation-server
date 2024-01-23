@@ -22,8 +22,10 @@ import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
@@ -38,6 +40,7 @@ import java.util.UUID;
 public class DynamicSimulationService {
     private static final String CATEGORY_BROKER_OUTPUT = DynamicSimulationService.class.getName() + ".output-broker-messages";
     private static final Logger LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
+    public static final String RESULT_UUID_NOT_FOUND = "Result uuid not found: ";
 
     private final String defaultProvider;
     private final ResultRepository resultRepository;
@@ -113,19 +116,24 @@ public class DynamicSimulationService {
 
     public Mono<UUID> getTimeSeriesId(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return Mono.fromCallable(() -> resultRepository.findById(resultUuid).map(ResultEntity::getTimeSeriesId)
-                .orElse(null));
+        return Mono.fromCallable(() -> resultRepository.findById(resultUuid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, RESULT_UUID_NOT_FOUND + resultUuid))
+                .getTimeSeriesId());
     }
 
     public Mono<UUID> getTimeLineId(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return Mono.fromCallable(() -> resultRepository.findById(resultUuid).map(ResultEntity::getTimeLineId)
-                .orElse(null));
+        return Mono.fromCallable(() -> resultRepository.findById(resultUuid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, RESULT_UUID_NOT_FOUND + resultUuid))
+                .getTimeLineId());
     }
 
     public Mono<DynamicSimulationStatus> getStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return Mono.fromCallable(() -> resultRepository.findById(resultUuid).map(ResultEntity::getStatus).orElse(null)).map(DynamicSimulationStatus::valueOf);
+        return Mono.fromCallable(() -> resultRepository.findById(resultUuid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, RESULT_UUID_NOT_FOUND + resultUuid))
+                .getStatus())
+                .mapNotNull(DynamicSimulationStatus::valueOf);
     }
 
     public Mono<Void> deleteResult(UUID resultUuid) {

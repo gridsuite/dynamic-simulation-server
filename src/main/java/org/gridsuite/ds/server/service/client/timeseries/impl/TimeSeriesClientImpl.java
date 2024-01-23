@@ -12,6 +12,7 @@ import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -34,6 +35,9 @@ public class TimeSeriesClientImpl implements TimeSeriesClient {
 
     @Override
     public Mono<TimeSeriesGroupInfos> sendTimeSeries(List<TimeSeries> timeSeriesList) {
+        if (CollectionUtils.isEmpty(timeSeriesList)) {
+            return Mono.just(new TimeSeriesGroupInfos(null));
+        }
 
         // convert timeseries to json
         var timeSeriesListJson = TimeSeries.toJson(timeSeriesList);
