@@ -8,62 +8,84 @@ package org.gridsuite.ds.server.service.client.timeseries.impl;
 
 import com.powsybl.timeseries.TimeSeries;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
+import org.gridsuite.ds.server.service.client.AbstractRestClient;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 import java.util.UUID;
+
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.CREATE_TIME_SERIES_ERROR;
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.DELETE_TIME_SERIES_ERROR;
+import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
+import static org.gridsuite.ds.server.utils.ExceptionUtils.handleHttpError;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @Service
-public class TimeSeriesClientImpl implements TimeSeriesClient {
+public class TimeSeriesClientImpl extends AbstractRestClient implements TimeSeriesClient {
 
     public static final String BASE_END_POINT_URI = API_VERSION + DELIMITER + TIME_SERIES_END_POINT;
-    private final WebClient webClient;
 
-    public TimeSeriesClientImpl(WebClient.Builder builder, @Value("${gridsuite.services.timeseries-server.base-uri:http://timeseries-server/}") String baseUri) {
-        webClient = builder.baseUrl(baseUri).build();
+    @Autowired
+    public TimeSeriesClientImpl(@Value("${gridsuite.services.timeseries-server.base-uri:http://timeseries-server/}") String baseUri,
+                                RestTemplate restTemplate) {
+        super(baseUri, restTemplate);
     }
 
     @Override
-    public Mono<TimeSeriesGroupInfos> sendTimeSeries(List<TimeSeries> timeSeriesList) {
+    public TimeSeriesGroupInfos sendTimeSeries(List<TimeSeries> timeSeriesList) {
         if (CollectionUtils.isEmpty(timeSeriesList)) {
-            return Mono.just(new TimeSeriesGroupInfos(null));
+            return null;
         }
 
         // convert timeseries to json
         var timeSeriesListJson = TimeSeries.toJson(timeSeriesList);
 
+        String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, TIME_SERIES_END_POINT);
+
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl);
+        var uriComponents = uriComponentsBuilder.build();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
         // call time-series Rest API
-        return webClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path(BASE_END_POINT_URI)
-                        .build())
-                .body(BodyInserters.fromValue(timeSeriesListJson))
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<TimeSeriesGroupInfos>() { });
+        HttpEntity<String> httpEntity = new HttpEntity<>(timeSeriesListJson, headers);
+
+        try {
+            return getRestTemplate().postForObject(uriComponents.toUriString(), httpEntity, TimeSeriesGroupInfos.class);
+        } catch (HttpStatusCodeException e) {
+            throw handleHttpError(e, CREATE_TIME_SERIES_ERROR);
+        }
     }
 
     @Override
-    public Mono<Void> deleteTimeSeriesGroup(UUID groupUuid) {
+    public void deleteTimeSeriesGroup(UUID groupUuid) {
         if (groupUuid == null) {
-            return Mono.empty();
+            return;
         }
 
+        String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, TIME_SERIES_END_POINT);
+
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl  + DELIMITER + "{groupUuid}");
+        var uriComponents = uriComponentsBuilder.buildAndExpand(groupUuid);
+
         // call time-series Rest API
-        return webClient.delete()
-                .uri(uriBuilder -> uriBuilder
-                        .path(BASE_END_POINT_URI + DELIMITER + "{groupUuid}")
-                        .build(groupUuid))
-                .retrieve()
-                .bodyToMono(Void.class);
+        try {
+            getRestTemplate().delete(uriComponents.toUriString());
+        } catch (HttpStatusCodeException e) {
+            throw handleHttpError(e, DELETE_TIME_SERIES_ERROR);
+        }
     }
 }

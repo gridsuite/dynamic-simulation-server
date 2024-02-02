@@ -8,7 +8,6 @@ package org.gridsuite.ds.server.service.client.timeseries;
 
 import com.powsybl.timeseries.TimeSeries;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,10 +17,9 @@ import java.util.UUID;
  */
 public interface TimeSeriesClient {
     String API_VERSION = "v1";
-    String DELIMITER = "/";
     String TIME_SERIES_END_POINT = "timeseries-group";
 
-    Mono<TimeSeriesGroupInfos> sendTimeSeries(List<TimeSeries> timeSeriesList);
+    TimeSeriesGroupInfos sendTimeSeries(List<TimeSeries> timeSeriesList);
 
-    Mono<Void> deleteTimeSeriesGroup(UUID groupUuid);
+    void deleteTimeSeriesGroup(UUID groupUuid);
 }

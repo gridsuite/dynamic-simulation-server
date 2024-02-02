@@ -11,16 +11,23 @@ import java.util.Objects;
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
-class DynamicSimulationException extends RuntimeException {
+public class DynamicSimulationException extends RuntimeException {
 
     public enum Type {
-        DATABASE_DRIVER_NOT_FOUND,
+        URI_SYNTAX,
+        CREATE_TIME_SERIES_ERROR,
+        DELETE_TIME_SERIES_ERROR
     }
 
     private final Type type;
 
-    DynamicSimulationException(Type type) {
+    public DynamicSimulationException(Type type) {
         super(Objects.requireNonNull(type.name()));
+        this.type = type;
+    }
+
+    public DynamicSimulationException(Type type, String message) {
+        super(message);
         this.type = type;
     }
 
