@@ -6,6 +6,8 @@
  */
 package org.gridsuite.ds.server.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.dynamicsimulation.*;
@@ -15,17 +17,16 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
+import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.StringTimeSeries;
 import com.powsybl.timeseries.TimeSeries;
-import com.powsybl.dynamicsimulation.groovy.GroovyCurvesSupplier;
-import com.powsybl.dynamicsimulation.groovy.GroovyEventModelsSupplier;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
+import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationCancelContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.notification.NotificationService;
-import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -60,6 +61,8 @@ public class DynamicSimulationWorkerService {
 
     private static final Logger LOGGER_BROKER_INPUT = LoggerFactory.getLogger(CATEGORY_BROKER_INPUT);
 
+    private final ObjectMapper objectMapper;
+
     private final NetworkStoreService networkStoreService;
 
     private final NotificationService notificationService;
@@ -72,12 +75,14 @@ public class DynamicSimulationWorkerService {
 
     private final DynamicSimulationObserver dynamicSimulationObserver;
 
-    public DynamicSimulationWorkerService(NetworkStoreService networkStoreService,
+    public DynamicSimulationWorkerService(ObjectMapper objectMapper,
+                                          NetworkStoreService networkStoreService,
                                           NotificationService notificationService,
                                           TimeSeriesClient timeSeriesClient,
                                           DynamicSimulationExecutionService dynamicSimulationExecutionService,
                                           DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult,
                                           DynamicSimulationObserver dynamicSimulationObserver) {
+        this.objectMapper = objectMapper;
         this.networkStoreService = networkStoreService;
         this.notificationService = notificationService;
         this.timeSeriesClient = timeSeriesClient;
@@ -183,18 +188,34 @@ public class DynamicSimulationWorkerService {
     public void updateResult(UUID resultUuid, DynamicSimulationResult result) {
         Objects.requireNonNull(resultUuid);
         List<TimeSeries> timeSeries = new ArrayList<>(result.getCurves().values());
-        StringTimeSeries timeLine = result.getTimeLine();
+        List<TimelineEvent> timeLines = result.getTimeLine();
+
+        // convert timeline event list to StringTimeSeries
+        long[] timeLineIndexes = timeLines.stream().mapToLong(event -> (long) event.time()).toArray();
+        String[] timeLineValues = timeLines.stream().map(event -> {
+            try {
+                return objectMapper.writeValueAsString(event);
+            } catch (JsonProcessingException e) {
+                throw new PowsyblException("Error while serializing time line event: " + event.toString(), e);
+            }
+        }).toArray(String[]::new);
+        StringTimeSeries timeLineSeries = TimeSeries.createString("timeLine", new IrregularTimeSeriesIndex(timeLineIndexes), timeLineValues);
 
         // send result to time-series-server then update referenced result uuids to the db
         Mono.zip(
                 timeSeriesClient.sendTimeSeries(timeSeries).subscribeOn(Schedulers.boundedElastic()),
-                timeSeriesClient.sendTimeSeries(Arrays.asList(timeLine)).subscribeOn(Schedulers.boundedElastic())
+                timeSeriesClient.sendTimeSeries(Arrays.asList(timeLineSeries)).subscribeOn(Schedulers.boundedElastic())
             )
             .map(uuidTuple -> {
                 UUID timeSeriesUuid = uuidTuple.getT1().getId();
                 UUID timeLineUuid = uuidTuple.getT2().getId();
-                DynamicSimulationStatus status = result.isOk() ? DynamicSimulationStatus.CONVERGED : DynamicSimulationStatus.DIVERGED;
+                DynamicSimulationStatus status = result.getStatus() == DynamicSimulationResult.Status.SUCCESS ?
+                        DynamicSimulationStatus.CONVERGED :
+                        DynamicSimulationStatus.DIVERGED;
 
+                LOGGER.info("""
+                        Update dynamic simulation [resultUuid=%s, timeSeriesUuid=%s, timeLineUuid=%s, status=%s
+                        """.formatted(resultUuid, timeSeriesUuid, timeLineUuid, status.name()));
                 dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
                 return result;
             }).block();

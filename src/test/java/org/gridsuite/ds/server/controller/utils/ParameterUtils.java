@@ -11,11 +11,11 @@ import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.event.EventPropertyInfos;
+import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.dto.solver.IdaSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SimSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
 import org.gridsuite.ds.server.dto.solver.SolverTypeInfos;
-import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.utils.EquipmentType;
 import org.gridsuite.ds.server.utils.PropertyType;
 
@@ -182,7 +182,7 @@ public final class ParameterUtils {
                 new EventInfos(null, null, "_BUS____1-BUS____5-1_AC", null, "Disconnect", List.of(
                         new EventPropertyInfos(null, "staticId", "_BUS____1-BUS____5-1_AC", PropertyType.STRING),
                         new EventPropertyInfos(null, "startTime", "1", PropertyType.FLOAT),
-                        new EventPropertyInfos(null, "disconnectOnly", "Branch.Side.TWO", PropertyType.ENUM)
+                        new EventPropertyInfos(null, "disconnectOnly", "TwoSides.TWO", PropertyType.ENUM)
                 ))
         );
     }

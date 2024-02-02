@@ -9,7 +9,7 @@ import com.powsybl.iidm.network.Generator
 import com.powsybl.iidm.network.StaticVarCompensator
 import com.powsybl.iidm.network.Load
 import com.powsybl.dynawaltz.models.automatons.CurrentLimitAutomaton
-import com.powsybl.iidm.network.Branch
+import com.powsybl.iidm.network.TwoSides
 
 for (Generator equipment : network.generators) {
     if (equipment.terminal.voltageLevel.nominalV == 13.800000) {
@@ -52,7 +52,7 @@ CurrentLimitAutomaton {
     parameterSetId "CLA_2_4"
     dynamicModelId "CLA_1"
     iMeasurement "_BUS____2-BUS____4-1_AC"
-    iMeasurementSide Branch.Side.TWO
+    iMeasurementSide TwoSides.TWO
     controlledQuadripole "_BUS____2-BUS____4-1_AC"
 }
 
@@ -60,6 +60,6 @@ CurrentLimitAutomaton {
     parameterSetId "CLA_2_5"
     dynamicModelId "CLA_2"
     iMeasurement "_BUS____2-BUS____5-1_AC"
-    iMeasurementSide Branch.Side.TWO
+    iMeasurementSide TwoSides.TWO
     controlledQuadripole "_BUS____2-BUS____5-1_AC"
 }
