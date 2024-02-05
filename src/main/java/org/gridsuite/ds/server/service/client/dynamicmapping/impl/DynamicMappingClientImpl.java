@@ -6,37 +6,58 @@
  */
 package org.gridsuite.ds.server.service.client.dynamicmapping.impl;
 
+import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
+import org.gridsuite.ds.server.service.client.AbstractRestClient;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.util.Objects;
+
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.CREATE_MAPPING_SCRIPT_ERROR;
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.DYNAMIC_MAPPING_NOT_FOUND;
+import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
+import static org.gridsuite.ds.server.utils.ExceptionUtils.handleHttpError;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @Service
-public class DynamicMappingClientImpl implements DynamicMappingClient {
+public class DynamicMappingClientImpl extends AbstractRestClient implements DynamicMappingClient {
 
-    private final WebClient webClient;
-
-    public DynamicMappingClientImpl(WebClient.Builder builder, @Value("${gridsuite.services.dynamic-mapping-server.base-uri:http://dynamic-mapping-server/}") String baseUri) {
-        webClient = builder.baseUrl(baseUri).build();
+    @Autowired
+    public DynamicMappingClientImpl(@Value("${gridsuite.services.dynamic-mapping-server.base-uri:http://dynamic-mapping-server/}") String baseUri, RestTemplate restTemplate) {
+        super(baseUri, restTemplate);
     }
 
     @Override
-    public Mono<Script> createFromMapping(String mappingName) {
-        String url = API_VERSION + DELIMITER + DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT + DELIMITER + "{mappingName}";
+    public Script createFromMapping(String mappingName) {
+        Objects.requireNonNull(mappingName);
+
+        String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT);
+
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl + "{mappingName}");
+
+        // to export script and not persist
+        uriComponentsBuilder.queryParam("persistent", false);
+        var uriComponents = uriComponentsBuilder.buildAndExpand(mappingName);
 
         // call dynamic mapping Rest API
-        return webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path(url)
-                        .queryParam("persistent", false)
-                        .build(mappingName))
-                .retrieve()
-                .bodyToMono(Script.class);
-
+        try {
+            return getRestTemplate().getForObject(uriComponents.toUriString(), Script.class);
+        } catch (HttpStatusCodeException e) {
+            if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
+                throw new DynamicSimulationException(DYNAMIC_MAPPING_NOT_FOUND, "Mapping not found: " + mappingName);
+            } else {
+                throw handleHttpError(e, CREATE_MAPPING_SCRIPT_ERROR);
+            }
+        }
     }
+
 }
