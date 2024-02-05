@@ -18,8 +18,8 @@ import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.timeseries.IrregularTimeSeriesIndex;
-import com.powsybl.timeseries.StringTimeSeries;
 import com.powsybl.timeseries.TimeSeries;
+import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationCancelContext;
@@ -40,7 +40,10 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.io.ByteArrayInputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -188,23 +191,26 @@ public class DynamicSimulationWorkerService {
     public void updateResult(UUID resultUuid, DynamicSimulationResult result) {
         Objects.requireNonNull(resultUuid);
         List<TimeSeries> timeSeries = new ArrayList<>(result.getCurves().values());
-        List<TimelineEvent> timeLines = result.getTimeLine();
+        List<TimeSeries> timeLineSeries = new ArrayList<>();
 
-        // convert timeline event list to StringTimeSeries
-        long[] timeLineIndexes = timeLines.stream().mapToLong(event -> (long) event.time()).toArray();
-        String[] timeLineValues = timeLines.stream().map(event -> {
-            try {
-                return objectMapper.writeValueAsString(event);
-            } catch (JsonProcessingException e) {
-                throw new PowsyblException("Error while serializing time line event: " + event.toString(), e);
-            }
-        }).toArray(String[]::new);
-        StringTimeSeries timeLineSeries = TimeSeries.createString("timeLine", new IrregularTimeSeriesIndex(timeLineIndexes), timeLineValues);
+        // collect and convert timeline event list to StringTimeSeries
+        if (!CollectionUtils.isEmpty(result.getTimeLine())) {
+            List<TimelineEvent> timeLines = result.getTimeLine();
+            long[] timeLineIndexes = timeLines.stream().mapToLong(event -> (long) event.time()).toArray();
+            String[] timeLineValues = timeLines.stream().map(event -> {
+                try {
+                    return objectMapper.writeValueAsString(event);
+                } catch (JsonProcessingException e) {
+                    throw new PowsyblException("Error while serializing time line event: " + event.toString(), e);
+                }
+            }).toArray(String[]::new);
+            timeLineSeries.add(TimeSeries.createString("timeLine", new IrregularTimeSeriesIndex(timeLineIndexes), timeLineValues));
+        }
 
         // send result to time-series-server then update referenced result uuids to the db
         Mono.zip(
                 timeSeriesClient.sendTimeSeries(timeSeries).subscribeOn(Schedulers.boundedElastic()),
-                timeSeriesClient.sendTimeSeries(Arrays.asList(timeLineSeries)).subscribeOn(Schedulers.boundedElastic())
+                timeSeriesClient.sendTimeSeries(timeLineSeries).subscribeOn(Schedulers.boundedElastic())
             )
             .map(uuidTuple -> {
                 UUID timeSeriesUuid = uuidTuple.getT1().getId();
