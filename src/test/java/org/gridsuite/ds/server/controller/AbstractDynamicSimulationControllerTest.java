@@ -21,7 +21,7 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -29,7 +29,6 @@ import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.reactive.config.EnableWebFlux;
 
 import java.io.IOException;
 import java.util.List;
@@ -43,8 +42,7 @@ import static org.mockito.Mockito.when;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @RunWith(SpringRunner.class)
-@AutoConfigureWebTestClient(timeout = "PT360S")
-@EnableWebFlux
+@AutoConfigureMockMvc
 @SpringBootTest
 @ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class},
         initializers = CustomApplicationContextInitializer.class)
@@ -88,14 +86,14 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
         initTimeSeriesServiceMock();
 
         // NotificationService mock
-        initNotificationServiceMock();
+        //initNotificationServiceMock();
 
         // DynamicSimulationWorkerService spy
         initDynamicSimulationWorkerServiceSpy();
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         super.tearDown();
 
         OutputDestination output = getOutputDestination();

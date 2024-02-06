@@ -15,6 +15,7 @@ public class DynamicSimulationException extends RuntimeException {
 
     public enum Type {
         URI_SYNTAX,
+        RESULT_UUID_NOT_FOUND,
         DYNAMIC_MAPPING_NOT_FOUND,
         CREATE_MAPPING_SCRIPT_ERROR,
         CREATE_TIME_SERIES_ERROR,

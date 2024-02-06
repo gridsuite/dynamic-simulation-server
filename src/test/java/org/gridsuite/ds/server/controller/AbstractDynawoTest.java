@@ -45,7 +45,7 @@ public abstract class AbstractDynawoTest {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         computationManager.close();
     }
 }

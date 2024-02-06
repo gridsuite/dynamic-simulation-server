@@ -6,6 +6,7 @@
  */
 package org.gridsuite.ds.server.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
@@ -17,7 +18,10 @@ import com.powsybl.iidm.network.Importers;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import com.powsybl.timeseries.*;
+import com.powsybl.timeseries.DoubleTimeSeries;
+import com.powsybl.timeseries.IrregularTimeSeriesIndex;
+import com.powsybl.timeseries.TimeSeries;
+import com.powsybl.timeseries.TimeSeriesIndex;
 import org.gridsuite.ds.server.controller.utils.ParameterUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
@@ -33,9 +37,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.messaging.Message;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.web.reactive.server.EntityExchangeResult;
-import org.springframework.test.web.reactive.server.WebTestClient;
-import reactor.core.publisher.Mono;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,19 +47,23 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.*;
 import static org.gridsuite.ds.server.service.notification.NotificationService.FAIL_MESSAGE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.isNull;
+import static org.mockito.Mockito.*;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 public class DynamicSimulationControllerTest extends AbstractDynamicSimulationControllerTest {
     @Autowired
-    private WebTestClient webTestClient;
+    private MockMvc mockMvc;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     @Autowired
     private OutputDestination output;
@@ -94,13 +101,14 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 "",
                 new Date(),
                 "");
-        given(dynamicMappingClient.createFromMapping(MAPPING_NAME)).willReturn(Mono.just(scriptObj));
+        given(dynamicMappingClient.createFromMapping(MAPPING_NAME)).willReturn(scriptObj);
     }
 
     @Override
     protected void initTimeSeriesServiceMock() {
-        given(timeSeriesClient.sendTimeSeries(any())).willReturn(Mono.just(new TimeSeriesGroupInfos(UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID))));
-        given(timeSeriesClient.deleteTimeSeriesGroup(any())).willReturn(Mono.empty());
+        given(timeSeriesClient.sendTimeSeries(any()))
+            .willReturn(new TimeSeriesGroupInfos(UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID)));
+        doNothing().when(timeSeriesClient).deleteTimeSeriesGroup(any(UUID.class));
     }
 
     @Before
@@ -133,132 +141,129 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     @Test
-    public void test() {
+    public void test() throws Exception {
 
         // prepare parameters
         DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
 
         //run the dynamic simulation on a specific variant
-        EntityExchangeResult<UUID> entityExchangeResult = webTestClient.post()
-                .uri("/v1/networks/{networkUuid}/run?variantId=" + VARIANT_1_ID + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
-                .bodyValue(parameters)
-                .header(HEADER_USER_ID, "testUserId")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(UUID.class)
-                .returnResult();
-
-        UUID runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
+        MvcResult result = mockMvc.perform(
+                post("/v1/networks/{networkUuid}/run?variantId=" +
+                     VARIANT_1_ID + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING, NETWORK_UUID_STRING)
+                    .contentType(APPLICATION_JSON)
+                    .header(HEADER_USER_ID, "testUserId")
+                    .content(objectMapper.writeValueAsString(parameters)))
+            .andExpect(status().isOk())
+            .andReturn();
+        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
         Message<byte[]> messageSwitch = output.receive(1000 * 10, dsResultDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
 
         //run the dynamic simulation on the implicit default variant
-        entityExchangeResult = webTestClient.post()
-                .uri("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
-                .bodyValue(parameters)
-                .header(HEADER_USER_ID, "testUserId")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(UUID.class)
-                .returnResult();
+        result = mockMvc.perform(
+                post("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
+                    .contentType(APPLICATION_JSON)
+                    .header(HEADER_USER_ID, "testUserId")
+                    .content(objectMapper.writeValueAsString(parameters)))
+            .andExpect(status().isOk())
+            .andReturn();
 
-        runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
+        runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
         messageSwitch = output.receive(1000 * 10, dsResultDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
 
         //get the calculation status
-        EntityExchangeResult<DynamicSimulationStatus> entityExchangeResult2 = webTestClient.get()
-                .uri("/v1/results/{resultUuid}/status", runUuid)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(DynamicSimulationStatus.class)
-                .returnResult();
+        result = mockMvc.perform(
+                get("/v1/results/{resultUuid}/status", runUuid))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        DynamicSimulationStatus status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
 
         //depending on the execution speed it can be both
-        assertTrue(DynamicSimulationStatus.CONVERGED == entityExchangeResult2.getResponseBody()
-                || DynamicSimulationStatus.RUNNING == entityExchangeResult2.getResponseBody());
+        assertTrue(DynamicSimulationStatus.CONVERGED == status
+                || DynamicSimulationStatus.RUNNING == status);
 
         //get the status of a non-existing simulation and expect a not found
-        webTestClient.get()
-                .uri("/v1/results/{resultUuid}/status", UUID.randomUUID())
-                .exchange()
-                .expectStatus().isNotFound();
+        mockMvc.perform(
+                get("/v1/results/{resultUuid}/status", UUID.randomUUID()))
+            .andExpect(status().isNotFound())
+            .andReturn();
 
         //get the results of a non-existing simulation and expect a not found
-        webTestClient.get()
-                .uri("/v1/results/{resultUuid}/timeseries", UUID.randomUUID())
-                .exchange()
-                .expectStatus().isNotFound();
+        mockMvc.perform(
+                get("/v1/results/{resultUuid}/timeseries", UUID.randomUUID()))
+            .andExpect(status().isNotFound())
+            .andReturn();
 
-        //get the result timeseries uuid of the calculation
-        webTestClient.get()
-                .uri("/v1/results/{resultUuid}/timeseries", runUuid)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(UUID.class);
+        //get the result time-series uuid of the calculation
+        mockMvc.perform(
+                get("/v1/results/{resultUuid}/timeseries", runUuid))
+            .andExpect(status().isOk())
+            .andReturn();
 
         //get the result timeline uuid of the calculation
-        webTestClient.get()
-                .uri("/v1/results/{resultUuid}/timeline", runUuid)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(UUID.class);
+        mockMvc.perform(
+                get("/v1/results/{resultUuid}/timeline", runUuid))
+            .andExpect(status().isOk())
+            .andReturn();
 
         // get the ending status of the calculation which must be is converged
-        webTestClient.get()
-                .uri("/v1/results/{resultUuid}/status", runUuid)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(DynamicSimulationStatus.class)
-                .isEqualTo(DynamicSimulationStatus.CONVERGED);
+        result = mockMvc.perform(
+                get("/v1/results/{resultUuid}/status", runUuid))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
+
+        assertSame(DynamicSimulationStatus.CONVERGED, status);
 
         // test invalidate status => i.e. set NOT_DONE
         // set NOT_DONE
-        webTestClient.put()
-                .uri("/v1/results/invalidate-status?resultUuid=" + runUuid)
-                .exchange()
-                .expectStatus().isOk();
+        mockMvc.perform(
+                put("/v1/results/invalidate-status?resultUuid=" + runUuid))
+            .andExpect(status().isOk())
+            .andReturn();
+
         // check whether NOT_DONE is persisted
-        DynamicSimulationStatus statusAfterInvalidate = webTestClient.get()
-                .uri("/v1/results/{resultUuid}/status", runUuid)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(DynamicSimulationStatus.class)
-                .returnResult()
-                .getResponseBody();
+        result = mockMvc.perform(
+                get("/v1/results/{resultUuid}/status", runUuid))
+            .andExpect(status().isOk())
+            .andReturn();
+        DynamicSimulationStatus statusAfterInvalidate = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
+
         assertEquals(DynamicSimulationStatus.NOT_DONE, statusAfterInvalidate);
 
         //delete a result and expect ok
-        webTestClient.delete()
-                .uri("/v1/results/{resultUuid}", runUuid)
-                .exchange()
-                .expectStatus().isOk();
+        mockMvc.perform(
+                delete("/v1/results/{resultUuid}", runUuid))
+            .andExpect(status().isOk())
+            .andReturn();
 
         //try to get the removed result and except a not found
-        webTestClient.get()
-                .uri("/v1/results/{resultUuid}/timeseries", runUuid)
-                .exchange()
-                .expectStatus().isNotFound();
+        mockMvc.perform(
+                get("/v1/results/{resultUuid}/timeseries", runUuid))
+            .andExpect(status().isNotFound())
+            .andReturn();
 
         //delete all results and except ok
-        webTestClient.delete()
-                .uri("/v1/results")
-                .exchange()
-                .expectStatus().isOk();
+        mockMvc.perform(
+                delete("/v1/results"))
+            .andExpect(status().isOk())
+            .andReturn();
 
         // network not found
-        entityExchangeResult = webTestClient.post()
-                .uri("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_NOT_FOUND_STRING)
-                .bodyValue(parameters)
-                .header(HEADER_USER_ID, "testUserId")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(UUID.class)
-                .returnResult();
+        result = mockMvc.perform(
+                post("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_NOT_FOUND_STRING)
+                        .contentType(APPLICATION_JSON)
+                        .header(HEADER_USER_ID, "testUserId")
+                        .content(objectMapper.writeValueAsString(parameters)))
+            .andExpect(status().isOk())
+            .andReturn();
 
-        runUuid = UUID.fromString(entityExchangeResult.getResponseBody().toString());
+        runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
         messageSwitch = output.receive(1000 * 5, dsFailedDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));

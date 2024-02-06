@@ -24,7 +24,9 @@ import org.springframework.web.client.RestTemplate;
 import java.util.*;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.API_VERSION;
 import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.TIME_SERIES_END_POINT;
+import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -63,7 +65,10 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
         List<TimeSeries> timeSeries = new ArrayList<>(curves.values());
 
         // mock response for test case POST with url - /timeseries-group
-        wireMockServer.stubFor(WireMock.post(WireMock.urlMatching(TIME_SERIES_END_POINT + ".*"))
+        String baseUrl = buildEndPointUrl("", API_VERSION,
+                TIME_SERIES_END_POINT);
+
+        wireMockServer.stubFor(WireMock.post(WireMock.urlMatching(baseUrl + ".*"))
                 .willReturn(WireMock.ok()
                         .withBody(objectMapper.writeValueAsString(new TimeSeriesGroupInfos(UUID.fromString(TIME_SERIES_UUID))))
                         .withHeader("Content-Type", "application/json; charset=utf-8")
@@ -81,7 +86,9 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
     public void testDeleteTimeSeriesGroup() {
 
         // mock response for test case DELETE with url - /timeseries-group
-        wireMockServer.stubFor(WireMock.delete(WireMock.urlMatching(TIME_SERIES_END_POINT + ".*"))
+        String baseUrl = buildEndPointUrl("", API_VERSION,
+                TIME_SERIES_END_POINT);
+        wireMockServer.stubFor(WireMock.delete(WireMock.urlMatching(baseUrl + ".*"))
                 .willReturn(WireMock.ok()));
 
         // test service

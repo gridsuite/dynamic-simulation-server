@@ -28,7 +28,9 @@ import java.util.Optional;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.*;
+import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.API_VERSION;
+import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT;
+import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -101,9 +103,10 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         scriptJson = ow.writeValueAsString(scriptObj);
 
         // mock response for test case GET with url - /scripts/from/{MAPPING_NAME_01}
-        String baseUrl = DELIMITER + API_VERSION + DELIMITER +
-                         DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT + DELIMITER;
-        wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl + DELIMITER + "{mappingName}"))
+        String baseUrl = buildEndPointUrl("", API_VERSION,
+                         DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT);
+
+        wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl + "{mappingName}"))
                 .withPathParam("mappingName", equalTo(mappingName))
                 .willReturn(WireMock.ok()
                         .withBody(scriptJson)

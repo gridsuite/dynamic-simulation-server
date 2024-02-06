@@ -21,6 +21,7 @@ import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.TimeSeries;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
+import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationCancelContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext;
@@ -36,16 +37,12 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 import static org.gridsuite.ds.server.service.notification.NotificationService.FAIL_MESSAGE;
@@ -94,7 +91,7 @@ public class DynamicSimulationWorkerService {
         this.dynamicSimulationObserver = dynamicSimulationObserver;
     }
 
-    public Mono<DynamicSimulationResult> run(DynamicSimulationRunContext context) {
+    public DynamicSimulationResult run(DynamicSimulationRunContext context) throws ExecutionException, InterruptedException {
         Objects.requireNonNull(context);
         LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {},", context.getNetworkUuid(), context.getParameters().getStartTime(), context.getParameters().getStopTime());
 
@@ -109,13 +106,13 @@ public class DynamicSimulationWorkerService {
         List<CurveGroovyExtension> curveExtensions = GroovyExtension.find(CurveGroovyExtension.class, DynaWaltzProvider.NAME);
         CurvesSupplier curvesSupplier = new GroovyCurvesSupplier(new ByteArrayInputStream(context.getCurveContent()), curveExtensions);
 
-        return Mono.fromCompletionStage(runAsync(network,
+        return runAsync(network,
                 context.getProvider(),
                 context.getVariantId() != null ? context.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
                 dynamicModelsSupplier,
                 eventModelsSupplier,
                 curvesSupplier,
-                context.getParameters()));
+                context.getParameters()).get();
     }
 
     public CompletableFuture<DynamicSimulationResult> runAsync(Network network,
@@ -154,7 +151,7 @@ public class DynamicSimulationWorkerService {
                 // run simulation
                 DynamicSimulationResult dynamicSimulationResult = dynamicSimulationObserver.observeRun("run",
                         resultContext.getRunContext(),
-                        () -> Objects.requireNonNull(run(resultContext.getRunContext()).block()));
+                        () -> Objects.requireNonNull(run(resultContext.getRunContext())));
 
                 // save result
                 dynamicSimulationObserver.observe("results.save",
@@ -207,24 +204,23 @@ public class DynamicSimulationWorkerService {
             timeLineSeries.add(TimeSeries.createString("timeLine", new IrregularTimeSeriesIndex(timeLineIndexes), timeLineValues));
         }
 
-        // send result to time-series-server then update referenced result uuids to the db
-        Mono.zip(
-                timeSeriesClient.sendTimeSeries(timeSeries).subscribeOn(Schedulers.boundedElastic()),
-                timeSeriesClient.sendTimeSeries(timeLineSeries).subscribeOn(Schedulers.boundedElastic())
-            )
-            .map(uuidTuple -> {
-                UUID timeSeriesUuid = uuidTuple.getT1().getId();
-                UUID timeLineUuid = uuidTuple.getT2().getId();
-                DynamicSimulationStatus status = result.getStatus() == DynamicSimulationResult.Status.SUCCESS ?
-                        DynamicSimulationStatus.CONVERGED :
-                        DynamicSimulationStatus.DIVERGED;
+        // send time-series/timeline to time-series-server
+        UUID timeSeriesUuid = Optional.ofNullable(timeSeriesClient.sendTimeSeries(timeSeries))
+                .map(TimeSeriesGroupInfos::getId)
+                .orElse(null);
+        UUID timeLineUuid = Optional.ofNullable(timeSeriesClient.sendTimeSeries(timeLineSeries))
+                .map(TimeSeriesGroupInfos::getId)
+                .orElse(null);
 
-                LOGGER.info("""
-                        Update dynamic simulation [resultUuid=%s, timeSeriesUuid=%s, timeLineUuid=%s, status=%s
-                        """.formatted(resultUuid, timeSeriesUuid, timeLineUuid, status.name()));
-                dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
-                return result;
-            }).block();
+        // update time-series/timeline uuids and result status to the db
+        DynamicSimulationStatus status = result.getStatus() == DynamicSimulationResult.Status.SUCCESS ?
+                DynamicSimulationStatus.CONVERGED :
+                DynamicSimulationStatus.DIVERGED;
+
+        LOGGER.info("""
+                Update dynamic simulation [resultUuid=%s, timeSeriesUuid=%s, timeLineUuid=%s, status=%s
+                """.formatted(resultUuid, timeSeriesUuid, timeLineUuid, status.name()));
+        dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
     }
 
     @Bean
