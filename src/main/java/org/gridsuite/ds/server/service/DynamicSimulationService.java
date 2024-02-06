@@ -105,12 +105,12 @@ public class DynamicSimulationService {
     }
 
     public List<UUID> updateStatus(List<UUID> resultUuids, String status) {
-            // find result entities
-            List<ResultEntity> resultEntities = resultRepository.findAllById(resultUuids);
-            // set entity with new values
-            resultEntities.forEach(resultEntity -> resultEntity.setStatus(status));
-            // save entities into database
-            return resultRepository.saveAllAndFlush(resultEntities).stream().map(ResultEntity::getId).toList();
+        // find result entities
+        List<ResultEntity> resultEntities = resultRepository.findAllById(resultUuids);
+        // set entity with new values
+        resultEntities.forEach(resultEntity -> resultEntity.setStatus(status));
+        // save entities into database
+        return resultRepository.saveAllAndFlush(resultEntities).stream().map(ResultEntity::getId).toList();
     }
 
     public UUID getTimeSeriesId(UUID resultUuid) {

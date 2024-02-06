@@ -20,7 +20,7 @@ import org.springframework.web.client.HttpStatusCodeException;
  *
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public class ExceptionUtils {
+public final class ExceptionUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionUtils.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 

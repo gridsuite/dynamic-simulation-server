@@ -18,6 +18,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.timeseries.TimeSeries;
+import com.powsybl.timeseries.TimeSeriesDataType;
 import com.powsybl.timeseries.TimeSeriesMetadata;
 import org.gridsuite.ds.server.controller.utils.FileUtils;
 import org.gridsuite.ds.server.controller.utils.ParameterUtils;
@@ -152,18 +153,15 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
     @Override
     protected void initTimeSeriesServiceMock() {
-        Mockito.doAnswer((invocation) -> {
+        Mockito.doAnswer(invocation -> {
                 final Object[] args = invocation.getArguments();
                 List<TimeSeries> data = (List<TimeSeries>) args[0];
                 UUID seriesUuid = null;
                 if (!data.isEmpty()) {
-                    switch (data.get(0).getMetadata().getDataType()) {
-                        case STRING:
-                            seriesUuid = UUID.fromString(TimeSeriesClientTest.TIME_LINE_UUID);
-                            break;
-                        default:
-                            seriesUuid = UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID);
-                            break;
+                    if (Objects.requireNonNull(data.get(0).getMetadata().getDataType()) == TimeSeriesDataType.STRING) {
+                        seriesUuid = UUID.fromString(TimeSeriesClientTest.TIME_LINE_UUID);
+                    } else {
+                        seriesUuid = UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID);
                     }
                     timeSeriesMockBd.put(seriesUuid, (List<TimeSeries>) args[0]);
                 }

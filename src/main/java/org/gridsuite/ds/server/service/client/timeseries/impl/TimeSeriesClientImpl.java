@@ -78,7 +78,7 @@ public class TimeSeriesClientImpl extends AbstractRestClient implements TimeSeri
 
         String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, TIME_SERIES_END_POINT);
 
-        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl  + DELIMITER + "{groupUuid}");
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl + DELIMITER + "{groupUuid}");
         var uriComponents = uriComponentsBuilder.buildAndExpand(groupUuid);
 
         // call time-series Rest API
