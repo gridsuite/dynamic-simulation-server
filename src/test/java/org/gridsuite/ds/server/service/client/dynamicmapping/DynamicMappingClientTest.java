@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.service.client.AbstractWireMockRestClientTest;
 import org.gridsuite.ds.server.service.client.dynamicmapping.impl.DynamicMappingClientImpl;
@@ -28,6 +29,10 @@ import java.util.Optional;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.CREATE_MAPPING_SCRIPT_ERROR;
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.DYNAMIC_MAPPING_NOT_FOUND;
 import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.API_VERSION;
 import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT;
 import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
@@ -59,6 +64,11 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    private static String getEndpointUrl() {
+        return buildEndPointUrl("", API_VERSION,
+                DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT);
+    }
 
     @Override
     public void setup() {
@@ -102,9 +112,8 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         ObjectWriter ow = objectMapper.writer().withDefaultPrettyPrinter();
         scriptJson = ow.writeValueAsString(scriptObj);
 
-        // mock response for test case GET with url - /scripts/from/{MAPPING_NAME_01}
-        String baseUrl = buildEndPointUrl("", API_VERSION,
-                         DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT);
+        // mock response for test case GET with url - /scripts/from/{mappingName}
+        String baseUrl = getEndpointUrl();
 
         wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl + "{mappingName}"))
                 .withPathParam("mappingName", equalTo(mappingName))
@@ -121,4 +130,51 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         // load models.par
         assertEquals(parametersFile, createdScript.getParametersFile());
     }
+
+    @Test
+    public void testCreateFromMappingGivenNotFound() {
+        String mappingName = MAPPING_NAME_01;
+
+        // mock response for test case GET with url - /scripts/from/{mappingName}
+        String baseUrl = getEndpointUrl();
+
+        wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl + "{mappingName}"))
+                .withPathParam("mappingName", equalTo(mappingName))
+                .willReturn(WireMock.notFound()
+                ));
+
+        // test service
+        DynamicSimulationException dynamicSimulationException = catchThrowableOfType(() -> dynamicMappingClient.createFromMapping(MAPPING_NAME_01),
+                DynamicSimulationException.class);
+
+        // check result
+        assertThat(dynamicSimulationException.getType())
+                .isEqualTo(DYNAMIC_MAPPING_NOT_FOUND);
+    }
+
+    @Test
+    public void testCreateFromMappingGivenException() {
+        String mappingName = MAPPING_NAME_01;
+
+        // mock response for test case GET with url - /scripts/from/{mappingName}
+        String baseUrl = getEndpointUrl();
+
+        wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl + "{mappingName}"))
+                .withPathParam("mappingName", equalTo(mappingName))
+                .willReturn(WireMock.serverError()
+                        .withBody(ERROR_MESSAGE)
+                ));
+
+        // test service
+        DynamicSimulationException dynamicSimulationException = catchThrowableOfType(() -> dynamicMappingClient.createFromMapping(MAPPING_NAME_01),
+                DynamicSimulationException.class);
+
+        // check result
+        assertThat(dynamicSimulationException.getType())
+                .isEqualTo(CREATE_MAPPING_SCRIPT_ERROR);
+        assertThat(dynamicSimulationException.getMessage())
+                .isEqualTo(ERROR_MESSAGE);
+
+    }
+
 }

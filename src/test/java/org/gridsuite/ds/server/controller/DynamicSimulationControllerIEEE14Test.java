@@ -159,9 +159,9 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
                 UUID seriesUuid = null;
                 if (!data.isEmpty()) {
                     if (Objects.requireNonNull(data.get(0).getMetadata().getDataType()) == TimeSeriesDataType.STRING) {
-                        seriesUuid = UUID.fromString(TimeSeriesClientTest.TIME_LINE_UUID);
+                        seriesUuid = TimeSeriesClientTest.TIME_LINE_UUID;
                     } else {
-                        seriesUuid = UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID);
+                        seriesUuid = TimeSeriesClientTest.TIME_SERIES_UUID;
                     }
                     timeSeriesMockBd.put(seriesUuid, (List<TimeSeries>) args[0]);
                 }
@@ -221,7 +221,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         List<String> expectedSeriesNames = curveInfosList.stream().map(curveInfos -> curveInfos.getEquipmentId() + "_" + curveInfos.getVariableId()).collect(Collectors.toList());
 
         // get timeseries from mock timeseries db
-        UUID timeSeriesUuid = UUID.fromString(TimeSeriesClientTest.TIME_SERIES_UUID);
+        UUID timeSeriesUuid = TimeSeriesClientTest.TIME_SERIES_UUID;
         List<TimeSeries> resultTimeSeries = timeSeriesMockBd.get(timeSeriesUuid);
         // result seriesNames
         List<String> seriesNames = resultTimeSeries.stream().map(TimeSeries::getMetadata).map(TimeSeriesMetadata::getName).collect(Collectors.toList());

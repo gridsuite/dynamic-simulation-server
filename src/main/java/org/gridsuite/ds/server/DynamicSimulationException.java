@@ -34,7 +34,7 @@ public class DynamicSimulationException extends RuntimeException {
         this.type = type;
     }
 
-    Type getType() {
+    public Type getType() {
         return type;
     }
 }

@@ -28,6 +28,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 @ContextHierarchy({@ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class})})
 public abstract class AbstractWireMockRestClientTest {
 
+    public static final String ERROR_MESSAGE = "Something wrong in remote server";
+    public static final String ERROR_MESSAGE_JSON = """
+            {"message": "%s"}
+        """.formatted(ERROR_MESSAGE);
+
     public final Logger getLogger() {
         return LoggerFactory.getLogger(this.getClass());
     }
