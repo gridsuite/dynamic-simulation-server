@@ -116,23 +116,24 @@ public class DynamicSimulationService {
     public UUID getTimeSeriesId(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid)
-                .map(ResultEntity::getTimeSeriesId)
-                .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid));
+                .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
+                .getTimeSeriesId();
     }
 
     public UUID getTimeLineId(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid)
-                .map(ResultEntity::getTimeLineId)
-                .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid));
+                .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
+                .getTimeLineId();
     }
 
     public DynamicSimulationStatus getStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return resultRepository.findById(resultUuid)
-                .map(ResultEntity::getStatus)
-                .map(DynamicSimulationStatus::valueOf)
-                .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid));
+        String status = resultRepository.findById(resultUuid)
+                .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
+                .getStatus();
+
+        return status == null ? null : DynamicSimulationStatus.valueOf(status);
     }
 
     public void deleteResult(UUID resultUuid) {

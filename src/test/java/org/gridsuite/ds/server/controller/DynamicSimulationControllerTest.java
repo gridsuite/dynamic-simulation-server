@@ -18,10 +18,8 @@ import com.powsybl.iidm.network.Importers;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import com.powsybl.timeseries.DoubleTimeSeries;
-import com.powsybl.timeseries.IrregularTimeSeriesIndex;
-import com.powsybl.timeseries.TimeSeries;
-import com.powsybl.timeseries.TimeSeriesIndex;
+import com.powsybl.timeseries.*;
+import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.ds.server.controller.utils.ParameterUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
@@ -30,18 +28,16 @@ import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.messaging.Message;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -106,16 +102,36 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
     @Override
     protected void initTimeSeriesServiceMock() {
-        given(timeSeriesClient.sendTimeSeries(any()))
-            .willReturn(new TimeSeriesGroupInfos(TimeSeriesClientTest.TIME_SERIES_UUID));
+        Mockito.doAnswer(invocation -> {
+                final Object[] args = invocation.getArguments();
+                List<TimeSeries> data = (List<TimeSeries>) args[0];
+
+                if (CollectionUtils.isEmpty(data)) {
+                    return null;
+                }
+
+                UUID seriesUuid;
+                if (Objects.requireNonNull(data.get(0).getMetadata().getDataType()) == TimeSeriesDataType.STRING) {
+                    seriesUuid = TimeSeriesClientTest.TIME_LINE_UUID;
+                } else {
+                    seriesUuid = TimeSeriesClientTest.TIME_SERIES_UUID;
+                }
+                return new TimeSeriesGroupInfos(seriesUuid);
+            }
+        ).when(timeSeriesClient).sendTimeSeries(any());
+
         doNothing().when(timeSeriesClient).deleteTimeSeriesGroup(any(UUID.class));
     }
 
     @Before
     public void setUp() throws IOException {
         super.setUp();
+    }
 
-        // mock DynamicSimulationWorkerService
+    @Test
+    public void testGivenTimeSeriesAndTimeLine() throws Exception {
+
+        // mock DynamicSimulationWorkerService with time-series and timeline
         Map<String, DoubleTimeSeries> curves = new HashMap<>();
         TimeSeriesIndex index = new IrregularTimeSeriesIndex(new long[]{32, 64, 128, 256});
         curves.put("NETWORK__BUS____2-BUS____5-1_AC_iSide2", TimeSeries.createDouble("NETWORK__BUS____2-BUS____5-1_AC_iSide2", index, 333.847331, 333.847321, 333.847300, 333.847259));
@@ -132,16 +148,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 .when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any(), any(), any());
         doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, timeLine)))
                 .when(dynamicSimulationWorkerService).runAsync(any(), any(), isNull(), any(), any(), any(), any());
-    }
-
-    private static MockMultipartFile createMockMultipartFile(String fileName) throws IOException {
-        try (InputStream inputStream = DynamicSimulationControllerTest.class.getResourceAsStream("/" + fileName)) {
-            return new MockMultipartFile("file", fileName, MediaType.TEXT_PLAIN_VALUE, inputStream);
-        }
-    }
-
-    @Test
-    public void test() throws Exception {
 
         // prepare parameters
         DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
@@ -192,11 +198,17 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
             .andExpect(status().isNotFound())
             .andReturn();
 
-        //get the results of a non-existing simulation and expect a not found
+        //get the time-series uuid of a non-existing simulation and expect a not found
         mockMvc.perform(
                 get("/v1/results/{resultUuid}/timeseries", UUID.randomUUID()))
             .andExpect(status().isNotFound())
             .andReturn();
+
+        //get the timeline uuid of a non-existing simulation and expect a not found
+        mockMvc.perform(
+                        get("/v1/results/{resultUuid}/timeline", UUID.randomUUID()))
+                .andExpect(status().isNotFound())
+                .andReturn();
 
         //get the result time-series uuid of the calculation
         mockMvc.perform(
@@ -236,6 +248,12 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         assertEquals(DynamicSimulationStatus.NOT_DONE, statusAfterInvalidate);
 
+        // set NOT_DONE for none existing result
+        mockMvc.perform(
+                        put("/v1/results/invalidate-status?resultUuid=" + UUID.randomUUID()))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
         //delete a result and expect ok
         mockMvc.perform(
                 delete("/v1/results/{resultUuid}", runUuid))
@@ -247,6 +265,12 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 get("/v1/results/{resultUuid}/timeseries", runUuid))
             .andExpect(status().isNotFound())
             .andReturn();
+
+        //delete a none existing result and except ok
+        mockMvc.perform(
+                        delete("/v1/results/{resultUuid}", UUID.randomUUID()))
+                .andExpect(status().isOk())
+                .andReturn();
 
         //delete all results and except ok
         mockMvc.perform(
@@ -268,5 +292,55 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         messageSwitch = output.receive(1000 * 5, dsFailedDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
         assertEquals(FAIL_MESSAGE + " : " + HttpStatus.NOT_FOUND, messageSwitch.getHeaders().get(HEADER_MESSAGE));
+    }
+
+    @Test
+    public void testGivenEmptyTimeSeriesAndTimeLine() throws Exception {
+        // mock DynamicSimulationWorkerService without time-series and timeline
+        Map<String, DoubleTimeSeries> curves = new HashMap<>();
+        List<TimelineEvent> timeLine = List.of();
+
+        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, timeLine)))
+                .when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any(), any(), any());
+
+        // prepare parameters
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
+
+        //run the dynamic simulation on a specific variant
+        MvcResult result = mockMvc.perform(
+                        post("/v1/networks/{networkUuid}/run?variantId=" +
+                             VARIANT_1_ID + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING, NETWORK_UUID_STRING)
+                                .contentType(APPLICATION_JSON)
+                                .header(HEADER_USER_ID, "testUserId")
+                                .content(objectMapper.writeValueAsString(parameters)))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
+
+        Message<byte[]> messageSwitch = output.receive(1000 * 10, dsResultDestination);
+        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
+
+        // get the ending status of the calculation which must be is converged
+        result = mockMvc.perform(
+                        get("/v1/results/{resultUuid}/status", runUuid))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        DynamicSimulationStatus status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
+
+        assertSame(DynamicSimulationStatus.CONVERGED, status);
+
+        //get time-series uuid of the calculation
+        mockMvc.perform(
+                        get("/v1/results/{resultUuid}/timeseries", runUuid))
+                .andExpect(status().isNoContent())
+                .andReturn();
+
+        //get timeline uuid of the calculation
+        mockMvc.perform(
+                        get("/v1/results/{resultUuid}/timeline", runUuid))
+                .andExpect(status().isNoContent())
+                .andReturn();
+
     }
 }
