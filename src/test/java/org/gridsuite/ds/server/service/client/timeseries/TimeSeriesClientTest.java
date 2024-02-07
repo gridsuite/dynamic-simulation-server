@@ -169,4 +169,14 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
         assertThat(dynamicSimulationException.getMessage())
                 .isEqualTo(ERROR_MESSAGE);
     }
+
+    @Test
+    public void testDeleteTimeSeriesGroupGivenEmpty() {
+
+        // test service
+        timeSeriesClient.deleteTimeSeriesGroup(null);
+
+        // check result
+        assertTrue(true);
+    }
 }
