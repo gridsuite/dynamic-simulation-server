@@ -50,12 +50,12 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private static List<TimeSeries> createTimeSeriesList() {
-        Map<String, TimeSeries> curves = new HashMap<>();
+    private static List<TimeSeries<?, ?>> createTimeSeriesList() {
+        Map<String, TimeSeries<?, ?>> curves = new HashMap<>();
         TimeSeriesIndex index = new IrregularTimeSeriesIndex(new long[]{32, 64, 128, 256});
         curves.put("NETWORK__BUS____2-BUS____5-1_AC_iSide2", TimeSeries.createDouble("NETWORK__BUS____2-BUS____5-1_AC_iSide2", index, 333.847331, 333.847321, 333.847300, 333.847259));
         curves.put("NETWORK__BUS____1_TN_Upu_value", TimeSeries.createDouble("NETWORK__BUS____1_TN_Upu_value", index, 1.059970, 1.059970, 1.059970, 1.059970));
-        List<TimeSeries> timeSeries = new ArrayList<>(curves.values());
+        List<TimeSeries<?, ?>> timeSeries = new ArrayList<>(curves.values());
         return timeSeries;
     }
 
@@ -77,7 +77,7 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
     public void testSendTimeSeries() throws JsonProcessingException {
 
         // prepare time series
-        List<TimeSeries> timeSeries = createTimeSeriesList();
+        List<TimeSeries<?, ?>> timeSeries = createTimeSeriesList();
 
         // mock response for test case POST with url - /timeseries-group
         String baseUrl = getEndpointUrl();
@@ -99,7 +99,7 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
     @Test
     public void testSendTimeSeriesGivenException() {
         // prepare time series
-        List<TimeSeries> timeSeries = createTimeSeriesList();
+        List<TimeSeries<?, ?>> timeSeries = createTimeSeriesList();
 
         // mock response for test case POST with url - /timeseries-group
         String baseUrl = getEndpointUrl();
@@ -122,9 +122,9 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
     }
 
     @Test
-    public void testSendTimeSeriesGivenEmpty() throws JsonProcessingException {
+    public void testSendTimeSeriesGivenEmpty() {
         // prepare time series
-        List<TimeSeries> timeSeries = new ArrayList<>();
+        List<TimeSeries<?, ?>> timeSeries = new ArrayList<>();
 
         // test service
         TimeSeriesGroupInfos timeSeriesGroupInfos = timeSeriesClient.sendTimeSeries(timeSeries);

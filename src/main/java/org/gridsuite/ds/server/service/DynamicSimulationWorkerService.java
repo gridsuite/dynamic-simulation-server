@@ -187,8 +187,8 @@ public class DynamicSimulationWorkerService {
 
     public void updateResult(UUID resultUuid, DynamicSimulationResult result) {
         Objects.requireNonNull(resultUuid);
-        List<TimeSeries> timeSeries = new ArrayList<>(result.getCurves().values());
-        List<TimeSeries> timeLineSeries = new ArrayList<>();
+        List<TimeSeries<?, ?>> timeSeries = new ArrayList<>(result.getCurves().values());
+        List<TimeSeries<?, ?>> timeLineSeries = new ArrayList<>();
 
         // collect and convert timeline event list to StringTimeSeries
         if (!CollectionUtils.isEmpty(result.getTimeLine())) {
@@ -217,9 +217,8 @@ public class DynamicSimulationWorkerService {
                 DynamicSimulationStatus.CONVERGED :
                 DynamicSimulationStatus.DIVERGED;
 
-        LOGGER.info("""
-                Update dynamic simulation [resultUuid=%s, timeSeriesUuid=%s, timeLineUuid=%s, status=%s
-                """.formatted(resultUuid, timeSeriesUuid, timeLineUuid, status.name()));
+        LOGGER.info("Update dynamic simulation [resultUuid={}, timeSeriesUuid={}, timeLineUuid={}, status={}",
+                resultUuid, timeSeriesUuid, timeLineUuid, status);
         dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
     }
 

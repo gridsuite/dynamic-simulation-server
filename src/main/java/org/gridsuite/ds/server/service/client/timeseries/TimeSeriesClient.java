@@ -19,7 +19,7 @@ public interface TimeSeriesClient {
     String API_VERSION = "v1";
     String TIME_SERIES_END_POINT = "timeseries-group";
 
-    TimeSeriesGroupInfos sendTimeSeries(List<TimeSeries> timeSeriesList);
+    TimeSeriesGroupInfos sendTimeSeries(List<TimeSeries<?, ?>> timeSeriesList);
 
     void deleteTimeSeriesGroup(UUID groupUuid);
 }

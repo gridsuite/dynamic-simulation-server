@@ -35,8 +35,6 @@ import static org.gridsuite.ds.server.utils.ExceptionUtils.handleHttpError;
 @Service
 public class TimeSeriesClientImpl extends AbstractRestClient implements TimeSeriesClient {
 
-    public static final String BASE_END_POINT_URI = API_VERSION + DELIMITER + TIME_SERIES_END_POINT;
-
     @Autowired
     public TimeSeriesClientImpl(@Value("${gridsuite.services.timeseries-server.base-uri:http://timeseries-server/}") String baseUri,
                                 RestTemplate restTemplate) {
@@ -44,7 +42,7 @@ public class TimeSeriesClientImpl extends AbstractRestClient implements TimeSeri
     }
 
     @Override
-    public TimeSeriesGroupInfos sendTimeSeries(List<TimeSeries> timeSeriesList) {
+    public TimeSeriesGroupInfos sendTimeSeries(List<TimeSeries<?, ?>> timeSeriesList) {
         if (CollectionUtils.isEmpty(timeSeriesList)) {
             return null;
         }

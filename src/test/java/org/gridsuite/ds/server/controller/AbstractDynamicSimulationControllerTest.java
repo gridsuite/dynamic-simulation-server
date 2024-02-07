@@ -13,12 +13,9 @@ import org.gridsuite.ds.server.controller.utils.TestUtils;
 import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
-import org.gridsuite.ds.server.service.notification.NotificationService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -32,10 +29,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
 /**
@@ -65,12 +59,7 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
     protected NetworkStoreService networkStoreClient;
 
     @SpyBean
-    private NotificationService notificationService;
-
-    @SpyBean
     protected DynamicSimulationWorkerService dynamicSimulationWorkerService;
-
-    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Before
     public void setUp() throws IOException {
@@ -84,9 +73,6 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
 
         // TimeSeriesService mock
         initTimeSeriesServiceMock();
-
-        // NotificationService mock
-        //initNotificationServiceMock();
 
         // DynamicSimulationWorkerService spy
         initDynamicSimulationWorkerServiceSpy();
@@ -117,24 +103,6 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
     private void initDynamicSimulationWorkerServiceSpy() {
         // setup spy bean
         when(dynamicSimulationWorkerService.getComputationManager()).thenReturn(computationManager);
-    }
-
-    protected void initNotificationServiceMock() {
-        // Emit messages in separate threads, like in production.
-        // Otherwise the test binder calls consumers directly in the caller thread.
-        // By coincidence, this leads to the following exception,
-        // because we use webflux for the controller (calller thread),
-        // and we use webflux to implement control flow in consumeRun
-        // > Exception in consumeRun java.lang.IllegalStateException: block()/blockFirst()/blockLast() are blocking, which is not supported in thread parallel-5
-        doAnswer((InvocationOnMock invocation) ->
-                executorService.submit(() -> {
-                    try {
-                        return invocation.callRealMethod();
-                    } catch (Throwable e) {
-                        throw new RuntimeException("Error in test wrapping emit", e);
-                    }
-                })
-        ).when(notificationService).emitRunDynamicSimulationMessage(Mockito.any());
     }
 
 }

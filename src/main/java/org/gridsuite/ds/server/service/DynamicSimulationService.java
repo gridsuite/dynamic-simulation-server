@@ -21,8 +21,6 @@ import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.notification.NotificationService;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
@@ -39,8 +37,6 @@ import static org.gridsuite.ds.server.DynamicSimulationException.Type.RESULT_UUI
  */
 @Service
 public class DynamicSimulationService {
-    private static final String CATEGORY_BROKER_OUTPUT = DynamicSimulationService.class.getName() + ".output-broker-messages";
-    private static final Logger LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
     public static final String MSG_RESULT_UUID_NOT_FOUND = "Result uuid not found: ";
 
     private final String defaultProvider;

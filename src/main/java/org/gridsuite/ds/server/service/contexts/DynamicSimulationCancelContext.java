@@ -20,8 +20,8 @@ import static org.gridsuite.ds.server.service.contexts.ContextUtils.getNonNullHe
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public class DynamicSimulationCancelContext {
-    public static final String RESULT_UUID = "resultUuid";
-    public static final String RECEIVER = "receiver";
+    public static final String HEADER_RESULT_UUID = "resultUuid";
+    public static final String HEADER_RECEIVER = "receiver";
 
     private final UUID resultUuid;
 
@@ -43,15 +43,15 @@ public class DynamicSimulationCancelContext {
     public static DynamicSimulationCancelContext fromMessage(Message<String> message) {
         Objects.requireNonNull(message);
         MessageHeaders headers = message.getHeaders();
-        UUID resultUuid = UUID.fromString(getNonNullHeader(headers, RESULT_UUID));
-        String receiver = (String) headers.get(RECEIVER);
+        UUID resultUuid = UUID.fromString(getNonNullHeader(headers, HEADER_RESULT_UUID));
+        String receiver = (String) headers.get(HEADER_RECEIVER);
         return new DynamicSimulationCancelContext(receiver, resultUuid);
     }
 
     public Message<String> toMessage() {
         return MessageBuilder.withPayload("")
-                .setHeader(RESULT_UUID, resultUuid.toString())
-                .setHeader(RECEIVER, receiver)
+                .setHeader(HEADER_RESULT_UUID, resultUuid.toString())
+                .setHeader(HEADER_RECEIVER, receiver)
                 .build();
     }
 }
