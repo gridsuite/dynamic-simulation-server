@@ -26,7 +26,7 @@ public final class UrlUtils {
 
     /**
      * Build endpoint url
-     * @param baseUri base uri with http://domain:port or empty
+     * @param baseUri base uri with "http://domain:port" or empty
      * @param apiVersion for example "v1" or empty
      * @param endPoint root endpoint
      * @return a normalized completed url to endpoint
@@ -39,7 +39,7 @@ public final class UrlUtils {
                 sb.append(apiVersion).append(DELIMITER);
             }
             if (Strings.isNotBlank(endPoint)) {
-                sb.append(endPoint).append(DELIMITER);
+                sb.append(endPoint);
             }
             var url = sb.toString();
 

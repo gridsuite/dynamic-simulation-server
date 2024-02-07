@@ -22,8 +22,8 @@ import java.util.Objects;
 
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.CREATE_MAPPING_SCRIPT_ERROR;
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.DYNAMIC_MAPPING_NOT_FOUND;
-import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
 import static org.gridsuite.ds.server.service.client.utils.ExceptionUtils.handleHttpError;
+import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -42,7 +42,7 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
 
         String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT);
 
-        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl + "{mappingName}");
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl + DELIMITER + "{mappingName}");
 
         // to export script and not persist
         uriComponentsBuilder.queryParam("persistent", false);

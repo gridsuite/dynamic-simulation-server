@@ -33,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.CREATE_MAPPING_SCRIPT_ERROR;
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.DYNAMIC_MAPPING_NOT_FOUND;
+import static org.gridsuite.ds.server.service.client.RestClient.DELIMITER;
 import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.API_VERSION;
 import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT;
 import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
@@ -115,7 +116,7 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         // mock response for test case GET with url - /scripts/from/{mappingName}
         String baseUrl = getEndpointUrl();
 
-        wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl + "{mappingName}"))
+        wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl + DELIMITER + "{mappingName}"))
                 .withPathParam("mappingName", equalTo(mappingName))
                 .willReturn(WireMock.ok()
                         .withBody(scriptJson)
@@ -159,7 +160,7 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         // mock response for test case GET with url - /scripts/from/{mappingName}
         String baseUrl = getEndpointUrl();
 
-        wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl + "{mappingName}"))
+        wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl + DELIMITER + "{mappingName}"))
                 .withPathParam("mappingName", equalTo(mappingName))
                 .willReturn(WireMock.serverError()
                         .withBody(ERROR_MESSAGE)
