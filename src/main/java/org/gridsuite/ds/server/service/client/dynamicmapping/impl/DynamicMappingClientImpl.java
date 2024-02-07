@@ -23,7 +23,7 @@ import java.util.Objects;
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.CREATE_MAPPING_SCRIPT_ERROR;
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.DYNAMIC_MAPPING_NOT_FOUND;
 import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
-import static org.gridsuite.ds.server.utils.ExceptionUtils.handleHttpError;
+import static org.gridsuite.ds.server.service.client.utils.ExceptionUtils.handleHttpError;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>

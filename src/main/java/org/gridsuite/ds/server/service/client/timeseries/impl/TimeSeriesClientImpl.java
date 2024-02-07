@@ -27,7 +27,7 @@ import java.util.UUID;
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.CREATE_TIME_SERIES_ERROR;
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.DELETE_TIME_SERIES_ERROR;
 import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
-import static org.gridsuite.ds.server.utils.ExceptionUtils.handleHttpError;
+import static org.gridsuite.ds.server.service.client.utils.ExceptionUtils.handleHttpError;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
