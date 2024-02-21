@@ -86,7 +86,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         Network network = Importers.importData("XIIDM", dataSource, null);
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_1_ID);
         given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_STRING), PreloadingStrategy.COLLECTION)).willReturn(network);
-        given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_NOT_FOUND_STRING), PreloadingStrategy.COLLECTION)).willThrow(new PowsyblException());
     }
 
     @Override
@@ -126,6 +125,31 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     @Before
     public void setUp() throws IOException {
         super.setUp();
+    }
+
+    @Test
+    public void testGivenNotExistingNetworkUuid() throws Exception {
+
+        // mock NetworkStoreService throws exception for a none-existing network uuid
+        given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_NOT_FOUND_STRING), PreloadingStrategy.COLLECTION)).willThrow(new PowsyblException());
+
+        // prepare parameters
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
+
+        // network not found
+        MvcResult result = mockMvc.perform(
+                        post("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_NOT_FOUND_STRING)
+                                .contentType(APPLICATION_JSON)
+                                .header(HEADER_USER_ID, "testUserId")
+                                .content(objectMapper.writeValueAsString(parameters)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
+
+        Message<byte[]> messageSwitch = output.receive(1000 * 5, dsFailedDestination);
+        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
+        assertEquals(FAIL_MESSAGE + " : " + HttpStatus.NOT_FOUND, messageSwitch.getHeaders().get(HEADER_MESSAGE));
     }
 
     @Test
@@ -274,21 +298,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         mockMvc.perform(
                 delete("/v1/results"))
             .andExpect(status().isOk());
-
-        // network not found
-        result = mockMvc.perform(
-                post("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_NOT_FOUND_STRING)
-                        .contentType(APPLICATION_JSON)
-                        .header(HEADER_USER_ID, "testUserId")
-                        .content(objectMapper.writeValueAsString(parameters)))
-            .andExpect(status().isOk())
-            .andReturn();
-
-        runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
-
-        messageSwitch = output.receive(1000 * 5, dsFailedDestination);
-        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
-        assertEquals(FAIL_MESSAGE + " : " + HttpStatus.NOT_FOUND, messageSwitch.getHeaders().get(HEADER_MESSAGE));
     }
 
     @Test
