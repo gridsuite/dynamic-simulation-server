@@ -22,25 +22,24 @@ import org.springframework.web.client.HttpStatusCodeException;
  */
 public final class ExceptionUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionUtils.class);
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private ExceptionUtils() {
         throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
 
-    public static DynamicSimulationException handleHttpError(HttpStatusCodeException httpException, DynamicSimulationException.Type type) {
+    public static DynamicSimulationException handleHttpError(HttpStatusCodeException httpException, DynamicSimulationException.Type type, ObjectMapper objectMapper) {
         String responseBody = httpException.getResponseBodyAsString();
 
-        String errorMessage = responseBody.isEmpty() ? httpException.getStatusCode().toString() : parseHttpError(responseBody);
+        String errorMessage = responseBody.isEmpty() ? httpException.getStatusCode().toString() : parseHttpError(responseBody, objectMapper);
 
         LOGGER.error(errorMessage, httpException);
 
         return new DynamicSimulationException(type, errorMessage);
     }
 
-    private static String parseHttpError(String responseBody) {
+    private static String parseHttpError(String responseBody, ObjectMapper objectMapper) {
         try {
-            JsonNode node = OBJECT_MAPPER.readTree(responseBody).path("message");
+            JsonNode node = objectMapper.readTree(responseBody).path("message");
             if (!node.isMissingNode()) {
                 return node.asText();
             }

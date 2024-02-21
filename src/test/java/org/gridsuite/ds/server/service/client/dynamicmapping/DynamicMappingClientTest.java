@@ -77,7 +77,8 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         dynamicMappingClient = new DynamicMappingClientImpl(
                 // use new WireMockServer(DYNAMIC_MAPPING_PORT) to test with local server if needed
                 initMockWebServer(new WireMockServer(wireMockConfig().dynamicPort())),
-                restTemplate);
+                restTemplate,
+                objectMapper);
     }
 
     @Test

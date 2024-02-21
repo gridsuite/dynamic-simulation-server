@@ -7,6 +7,7 @@
 
 package org.gridsuite.ds.server.service.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -16,6 +17,8 @@ public interface RestClient {
     String DELIMITER = "/";
 
     RestTemplate getRestTemplate();
+
+    ObjectMapper getObjectMapper();
 
     String getBaseUri();
 }

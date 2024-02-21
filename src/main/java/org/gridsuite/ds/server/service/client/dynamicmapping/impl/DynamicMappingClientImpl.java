@@ -6,6 +6,7 @@
  */
 package org.gridsuite.ds.server.service.client.dynamicmapping.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.service.client.AbstractRestClient;
@@ -32,8 +33,8 @@ import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPoin
 public class DynamicMappingClientImpl extends AbstractRestClient implements DynamicMappingClient {
 
     @Autowired
-    public DynamicMappingClientImpl(@Value("${gridsuite.services.dynamic-mapping-server.base-uri:http://dynamic-mapping-server/}") String baseUri, RestTemplate restTemplate) {
-        super(baseUri, restTemplate);
+    public DynamicMappingClientImpl(@Value("${gridsuite.services.dynamic-mapping-server.base-uri:http://dynamic-mapping-server/}") String baseUri, RestTemplate restTemplate, ObjectMapper objectMapper) {
+        super(baseUri, restTemplate, objectMapper);
     }
 
     @Override
@@ -55,7 +56,7 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
             if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
                 throw new DynamicSimulationException(DYNAMIC_MAPPING_NOT_FOUND, "Mapping not found: " + mappingName);
             } else {
-                throw handleHttpError(e, CREATE_MAPPING_SCRIPT_ERROR);
+                throw handleHttpError(e, CREATE_MAPPING_SCRIPT_ERROR, getObjectMapper());
             }
         }
     }

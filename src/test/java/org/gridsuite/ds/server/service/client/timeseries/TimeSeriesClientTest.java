@@ -33,7 +33,7 @@ import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient
 import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.TIME_SERIES_END_POINT;
 import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -70,7 +70,8 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
         timeSeriesClient = new TimeSeriesClientImpl(
             // use new WireMockServer(TIME_SERIES_PORT) to test with local server if needed
             initMockWebServer(new WireMockServer(wireMockConfig().dynamicPort())),
-            restTemplate);
+            restTemplate,
+            objectMapper);
     }
 
     @Test
@@ -143,10 +144,7 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
                 .willReturn(WireMock.ok()));
 
         // test service
-        timeSeriesClient.deleteTimeSeriesGroup(TIME_LINE_UUID);
-
-        // check result
-        assertTrue(true);
+        assertDoesNotThrow(() -> timeSeriesClient.deleteTimeSeriesGroup(TIME_LINE_UUID));
     }
 
     @Test
@@ -174,9 +172,6 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
     public void testDeleteTimeSeriesGroupGivenEmpty() {
 
         // test service
-        timeSeriesClient.deleteTimeSeriesGroup(null);
-
-        // check result
-        assertTrue(true);
+        assertDoesNotThrow(() -> timeSeriesClient.deleteTimeSeriesGroup(null));
     }
 }

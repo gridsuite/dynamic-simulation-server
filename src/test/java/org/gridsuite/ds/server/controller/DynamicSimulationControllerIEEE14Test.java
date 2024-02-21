@@ -49,7 +49,6 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.*;
 import static org.gridsuite.ds.server.service.notification.NotificationService.FAIL_MESSAGE;
@@ -85,7 +84,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     private static final String NETWORK_FILE = "IEEE14.iidm";
     private static final String TEST_EXCEPTION_MESSAGE = "Test exception";
 
-    private final Map<UUID, List<TimeSeries>> timeSeriesMockBd = new HashMap<>();
+    private final Map<UUID, List<TimeSeries<?, ?>>> timeSeriesMockBd = new HashMap<>();
 
     @Autowired
     private MockMvc mockMvc;
@@ -97,7 +96,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     private InputDestination input;
 
     @Autowired
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper;
 
     private static final String FIXED_DATE = "01/01/2023";
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
@@ -156,7 +155,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     protected void initTimeSeriesServiceMock() {
         Mockito.doAnswer(invocation -> {
                 final Object[] args = invocation.getArguments();
-                List<TimeSeries> data = (List<TimeSeries>) args[0];
+                List<TimeSeries<?, ?>> data = (List<TimeSeries<?, ?>>) args[0];
 
                 if (CollectionUtils.isEmpty(data)) {
                     return null;
@@ -168,7 +167,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
                 } else {
                     seriesUuid = TimeSeriesClientTest.TIME_SERIES_UUID;
                 }
-                timeSeriesMockBd.put(seriesUuid, (List<TimeSeries>) args[0]);
+                timeSeriesMockBd.put(seriesUuid, (List<TimeSeries<?, ?>>) args[0]);
                 return new TimeSeriesGroupInfos(seriesUuid);
             }
         ).when(timeSeriesClient).sendTimeSeries(any());
@@ -222,13 +221,13 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
         // --- CHECK result at abstract level --- //
         // expected seriesNames
-        List<String> expectedSeriesNames = curveInfosList.stream().map(curveInfos -> curveInfos.getEquipmentId() + "_" + curveInfos.getVariableId()).collect(Collectors.toList());
+        List<String> expectedSeriesNames = curveInfosList.stream().map(curveInfos -> curveInfos.getEquipmentId() + "_" + curveInfos.getVariableId()).toList();
 
         // get timeseries from mock timeseries db
         UUID timeSeriesUuid = TimeSeriesClientTest.TIME_SERIES_UUID;
-        List<TimeSeries> resultTimeSeries = timeSeriesMockBd.get(timeSeriesUuid);
+        List<TimeSeries<?, ?>> resultTimeSeries = timeSeriesMockBd.get(timeSeriesUuid);
         // result seriesNames
-        List<String> seriesNames = resultTimeSeries.stream().map(TimeSeries::getMetadata).map(TimeSeriesMetadata::getName).collect(Collectors.toList());
+        List<String> seriesNames = resultTimeSeries.stream().map(TimeSeries::getMetadata).map(TimeSeriesMetadata::getName).toList();
 
         // compare result only series' names
         expectedSeriesNames.forEach(expectedSeriesName -> {

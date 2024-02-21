@@ -6,6 +6,7 @@
  */
 package org.gridsuite.ds.server.service.client.timeseries.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.timeseries.TimeSeries;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.AbstractRestClient;
@@ -26,8 +27,8 @@ import java.util.UUID;
 
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.CREATE_TIME_SERIES_ERROR;
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.DELETE_TIME_SERIES_ERROR;
-import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
 import static org.gridsuite.ds.server.service.client.utils.ExceptionUtils.handleHttpError;
+import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -37,8 +38,8 @@ public class TimeSeriesClientImpl extends AbstractRestClient implements TimeSeri
 
     @Autowired
     public TimeSeriesClientImpl(@Value("${gridsuite.services.timeseries-server.base-uri:http://timeseries-server/}") String baseUri,
-                                RestTemplate restTemplate) {
-        super(baseUri, restTemplate);
+                                RestTemplate restTemplate, ObjectMapper objectMapper) {
+        super(baseUri, restTemplate, objectMapper);
     }
 
     @Override
@@ -64,7 +65,7 @@ public class TimeSeriesClientImpl extends AbstractRestClient implements TimeSeri
         try {
             return getRestTemplate().postForObject(uriComponents.toUriString(), httpEntity, TimeSeriesGroupInfos.class);
         } catch (HttpStatusCodeException e) {
-            throw handleHttpError(e, CREATE_TIME_SERIES_ERROR);
+            throw handleHttpError(e, CREATE_TIME_SERIES_ERROR, getObjectMapper());
         }
     }
 
@@ -83,7 +84,7 @@ public class TimeSeriesClientImpl extends AbstractRestClient implements TimeSeri
         try {
             getRestTemplate().delete(uriComponents.toUriString());
         } catch (HttpStatusCodeException e) {
-            throw handleHttpError(e, DELETE_TIME_SERIES_ERROR);
+            throw handleHttpError(e, DELETE_TIME_SERIES_ERROR, getObjectMapper());
         }
     }
 }

@@ -7,6 +7,7 @@
 
 package org.gridsuite.ds.server.service.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.client.RestTemplate;
@@ -22,14 +23,22 @@ public abstract class AbstractRestClient implements RestClient {
 
     private final String baseUri;
 
-    protected AbstractRestClient(String baseUri, RestTemplate restTemplate) {
+    private final ObjectMapper objectMapper;
+
+    protected AbstractRestClient(String baseUri, RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.baseUri = baseUri;
         this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
     }
 
     @Override
     public RestTemplate getRestTemplate() {
         return restTemplate;
+    }
+
+    @Override
+    public ObjectMapper getObjectMapper() {
+        return objectMapper;
     }
 
     @Override

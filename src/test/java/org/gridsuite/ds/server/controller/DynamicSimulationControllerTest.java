@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+import static org.gridsuite.ds.server.controller.utils.TestUtils.assertType;
 import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.*;
 import static org.gridsuite.ds.server.service.notification.NotificationService.FAIL_MESSAGE;
 import static org.junit.Assert.*;
@@ -72,7 +73,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     private static final String NETWORK_UUID_NOT_FOUND_STRING = "22222222-0000-0000-0000-000000000000";
     private static final String VARIANT_1_ID = "variant_1";
     private static final String TEST_FILE = "IEEE14.iidm";
-    private static final boolean RESULT = true;
 
     @Override
     public OutputDestination getOutputDestination() {
@@ -104,7 +104,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     protected void initTimeSeriesServiceMock() {
         Mockito.doAnswer(invocation -> {
                 final Object[] args = invocation.getArguments();
-                List<TimeSeries> data = (List<TimeSeries>) args[0];
+                List<TimeSeries<?, ?>> data = (List<TimeSeries<?, ?>>) args[0];
 
                 if (CollectionUtils.isEmpty(data)) {
                     return null;
@@ -195,32 +195,35 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         //get the status of a non-existing simulation and expect a not found
         mockMvc.perform(
                 get("/v1/results/{resultUuid}/status", UUID.randomUUID()))
-            .andExpect(status().isNotFound())
-            .andReturn();
+            .andExpect(status().isNotFound());
 
         //get the time-series uuid of a non-existing simulation and expect a not found
         mockMvc.perform(
                 get("/v1/results/{resultUuid}/timeseries", UUID.randomUUID()))
-            .andExpect(status().isNotFound())
-            .andReturn();
+            .andExpect(status().isNotFound());
 
         //get the timeline uuid of a non-existing simulation and expect a not found
         mockMvc.perform(
                         get("/v1/results/{resultUuid}/timeline", UUID.randomUUID()))
-                .andExpect(status().isNotFound())
-                .andReturn();
+                .andExpect(status().isNotFound());
 
         //get the result time-series uuid of the calculation
-        mockMvc.perform(
+        result = mockMvc.perform(
                 get("/v1/results/{resultUuid}/timeseries", runUuid))
             .andExpect(status().isOk())
             .andReturn();
 
+        // the return content must be a UUID class
+        assertType(result.getResponse().getContentAsString(), UUID.class, objectMapper);
+
         //get the result timeline uuid of the calculation
-        mockMvc.perform(
+        result = mockMvc.perform(
                 get("/v1/results/{resultUuid}/timeline", runUuid))
             .andExpect(status().isOk())
             .andReturn();
+
+        // the return content must be a UUID class
+        assertType(result.getResponse().getContentAsString(), UUID.class, objectMapper);
 
         // get the ending status of the calculation which must be is converged
         result = mockMvc.perform(
@@ -236,8 +239,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         // set NOT_DONE
         mockMvc.perform(
                 put("/v1/results/invalidate-status?resultUuid=" + runUuid))
-            .andExpect(status().isOk())
-            .andReturn();
+            .andExpect(status().isOk());
 
         // check whether NOT_DONE is persisted
         result = mockMvc.perform(
@@ -251,32 +253,27 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         // set NOT_DONE for none existing result
         mockMvc.perform(
                         put("/v1/results/invalidate-status?resultUuid=" + UUID.randomUUID()))
-                .andExpect(status().isNotFound())
-                .andReturn();
+                .andExpect(status().isNotFound());
 
-        //delete a result and expect ok
+        //delete a result
         mockMvc.perform(
                 delete("/v1/results/{resultUuid}", runUuid))
-            .andExpect(status().isOk())
-            .andReturn();
+            .andExpect(status().isOk());
 
         //try to get the removed result and except a not found
         mockMvc.perform(
                 get("/v1/results/{resultUuid}/timeseries", runUuid))
-            .andExpect(status().isNotFound())
-            .andReturn();
+            .andExpect(status().isNotFound());
 
-        //delete a none existing result and except ok
+        //delete a none existing result
         mockMvc.perform(
                         delete("/v1/results/{resultUuid}", UUID.randomUUID()))
-                .andExpect(status().isOk())
-                .andReturn();
+                .andExpect(status().isOk());
 
         //delete all results and except ok
         mockMvc.perform(
                 delete("/v1/results"))
-            .andExpect(status().isOk())
-            .andReturn();
+            .andExpect(status().isOk());
 
         // network not found
         result = mockMvc.perform(
@@ -333,14 +330,12 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         //get time-series uuid of the calculation
         mockMvc.perform(
                         get("/v1/results/{resultUuid}/timeseries", runUuid))
-                .andExpect(status().isNoContent())
-                .andReturn();
+                .andExpect(status().isNoContent());
 
         //get timeline uuid of the calculation
         mockMvc.perform(
                         get("/v1/results/{resultUuid}/timeline", runUuid))
-                .andExpect(status().isNoContent())
-                .andReturn();
+                .andExpect(status().isNoContent());
 
     }
 }
