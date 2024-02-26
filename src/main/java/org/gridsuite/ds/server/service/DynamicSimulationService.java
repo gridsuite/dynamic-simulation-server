@@ -96,7 +96,7 @@ public class DynamicSimulationService {
         return resultEntity.getId();
     }
 
-    public ResultEntity insertStatus(String status) {
+    private ResultEntity insertStatus(String status) {
         return resultRepository.save(new ResultEntity(null, null, null, status));
     }
 
