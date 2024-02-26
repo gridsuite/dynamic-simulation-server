@@ -61,7 +61,7 @@ public class DynamicSimulationServiceTest {
         given(resultRepository.saveAllAndFlush(resultEntities)).willReturn(resultEntities);
 
         // call method to be tested
-        List<UUID> updatedResultUuids = dynamicSimulationService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE.name()).block();
+        List<UUID> updatedResultUuids = dynamicSimulationService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE.name());
 
         // check result
         // only one result
@@ -88,7 +88,7 @@ public class DynamicSimulationServiceTest {
         given(resultRepository.saveAllAndFlush(resultEntities)).willReturn(resultEntities);
 
         // call method to be tested
-        List<UUID> updatedResultUuids = dynamicSimulationService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE.name()).block();
+        List<UUID> updatedResultUuids = dynamicSimulationService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE.name());
 
         // check result
         // only one result

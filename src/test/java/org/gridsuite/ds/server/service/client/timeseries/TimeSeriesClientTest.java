@@ -7,110 +7,171 @@
 
 package org.gridsuite.ds.server.service.client.timeseries;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.TimeSeries;
 import com.powsybl.timeseries.TimeSeriesIndex;
-import lombok.SneakyThrows;
-import okhttp3.mockwebserver.Dispatcher;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.RecordedRequest;
+import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
-import org.gridsuite.ds.server.service.client.AbstractRestClientTest;
+import org.gridsuite.ds.server.service.client.AbstractWireMockRestClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.impl.TimeSeriesClientImpl;
-import org.jetbrains.annotations.NotNull;
-import org.junit.Before;
 import org.junit.Test;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
-import static org.apache.commons.collections4.ListUtils.emptyIfNull;
-import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.*;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.CREATE_TIME_SERIES_ERROR;
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.DELETE_TIME_SERIES_ERROR;
+import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.API_VERSION;
+import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.TIME_SERIES_END_POINT;
+import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public class TimeSeriesClientTest extends AbstractRestClientTest {
+public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
 
-    public static final String TIME_SERIES_UUID = "33333333-0000-0000-0000-000000000000";
-    public static final String TIME_LINE_UUID = "44444444-0000-0000-0000-000000000000";
+    public static final UUID TIME_SERIES_UUID = UUID.randomUUID();
+    public static final UUID TIME_LINE_UUID = UUID.randomUUID();
     private TimeSeriesClient timeSeriesClient;
 
-    @Override
-    @NotNull
-    protected Dispatcher getDispatcher() {
-        return new Dispatcher() {
-            @SneakyThrows
-            @NotNull
-            @Override
-            public MockResponse dispatch(@NotNull RecordedRequest recordedRequest) {
-                String path = Objects.requireNonNull(recordedRequest.getPath());
-                String baseUrl = DELIMITER + API_VERSION + DELIMITER + TIME_SERIES_END_POINT;
-                baseUrl = baseUrl.replace("//", "/");
-                String method = recordedRequest.getMethod();
-                List<String> pathSegments = emptyIfNull(recordedRequest.getRequestUrl().pathSegments());
+    @Autowired
+    RestTemplate restTemplate;
 
-                // v1/time-series
-                if ("POST".equals(method)
-                        && path.matches(baseUrl + ".*")) {
-                    return new MockResponse()
-                            .setResponseCode(HttpStatus.OK.value())
-                            .addHeader("Content-Type", "application/json; charset=utf-8")
-                            .setBody(getObjectMapper().writeValueAsString(new TimeSeriesGroupInfos(UUID.fromString(TIME_SERIES_UUID))));
-                } else if ("DELETE".equals(method)
-                        && path.matches(baseUrl + ".*")) {
-                    // take the {groupUuid} at the last item
-                    String groupUuid = pathSegments.stream().reduce((first, second) -> second).orElse("");
-                    if (TIME_SERIES_UUID.equals(groupUuid)) {
-                        return new MockResponse()
-                                .setResponseCode(HttpStatus.OK.value())
-                                .addHeader("Content-Type", "application/json; charset=utf-8");
-                    }
-                }
+    @Autowired
+    private ObjectMapper objectMapper;
 
-                return new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value());
-            }
-        };
-    }
-
-//    /**
-//     * Used for test with a local server
-//     * @throws RuntimeException
-//     */
-//    @Override
-//    protected String initMockWebServer(int port) throws RuntimeException {
-//        return "http://localhost:" + TIME_SERIES_PORT;
-//    }
-
-    @Before
-    public void setUp() {
-        super.setUp();
-
-        // config builder
-        WebClient.Builder webClientBuilder = WebClient.builder();
-        timeSeriesClient = new TimeSeriesClientImpl(webClientBuilder, initMockWebServer());
-    }
-
-    @Test
-    public void testSendTimeSeries() {
-        Map<String, TimeSeries> curves = new HashMap<>();
+    private static List<TimeSeries<?, ?>> createTimeSeriesList() {
+        Map<String, TimeSeries<?, ?>> curves = new HashMap<>();
         TimeSeriesIndex index = new IrregularTimeSeriesIndex(new long[]{32, 64, 128, 256});
         curves.put("NETWORK__BUS____2-BUS____5-1_AC_iSide2", TimeSeries.createDouble("NETWORK__BUS____2-BUS____5-1_AC_iSide2", index, 333.847331, 333.847321, 333.847300, 333.847259));
         curves.put("NETWORK__BUS____1_TN_Upu_value", TimeSeries.createDouble("NETWORK__BUS____1_TN_Upu_value", index, 1.059970, 1.059970, 1.059970, 1.059970));
-        List<TimeSeries> timeSeries = new ArrayList<>(curves.values());
-        UUID timeSeriesUuid = timeSeriesClient.sendTimeSeries(timeSeries).block().getId();
-        assertEquals(TIME_SERIES_UUID, Optional.of(timeSeriesUuid).orElseThrow().toString());
+        List<TimeSeries<?, ?>> timeSeries = new ArrayList<>(curves.values());
+        return timeSeries;
+    }
+
+    private static String getEndpointUrl() {
+        return buildEndPointUrl("", API_VERSION,
+                TIME_SERIES_END_POINT);
+    }
+
+    @Override
+    public void setup() {
+        super.setup();
+        timeSeriesClient = new TimeSeriesClientImpl(
+            // use new WireMockServer(TIME_SERIES_PORT) to test with local server if needed
+            initMockWebServer(new WireMockServer(wireMockConfig().dynamicPort())),
+            restTemplate,
+            objectMapper);
+    }
+
+    @Test
+    public void testSendTimeSeries() throws JsonProcessingException {
+
+        // prepare time series
+        List<TimeSeries<?, ?>> timeSeries = createTimeSeriesList();
+
+        // mock response for test case POST with url - /timeseries-group
+        String baseUrl = getEndpointUrl();
+
+        wireMockServer.stubFor(WireMock.post(WireMock.urlMatching(baseUrl + ".*"))
+                .willReturn(WireMock.ok()
+                        .withBody(objectMapper.writeValueAsString(new TimeSeriesGroupInfos(TIME_SERIES_UUID)))
+                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                ));
+
+        // test service
+        UUID timeSeriesUuid = timeSeriesClient.sendTimeSeries(timeSeries).getId();
+
+        // check result
+        assertEquals(TIME_SERIES_UUID, timeSeriesUuid);
+
+    }
+
+    @Test
+    public void testSendTimeSeriesGivenException() {
+        // prepare time series
+        List<TimeSeries<?, ?>> timeSeries = createTimeSeriesList();
+
+        // mock response for test case POST with url - /timeseries-group
+        String baseUrl = getEndpointUrl();
+
+        wireMockServer.stubFor(WireMock.post(WireMock.urlMatching(baseUrl + ".*"))
+                .willReturn(WireMock.serverError()
+                        .withBody(ERROR_MESSAGE_JSON)));
+
+        // test service
+        DynamicSimulationException dynamicSimulationException = catchThrowableOfType(
+                () -> timeSeriesClient.sendTimeSeries(timeSeries),
+                DynamicSimulationException.class);
+
+        // check result
+        assertThat(dynamicSimulationException.getType())
+                .isEqualTo(CREATE_TIME_SERIES_ERROR);
+        assertThat(dynamicSimulationException.getMessage())
+                .isEqualTo(ERROR_MESSAGE);
+
+    }
+
+    @Test
+    public void testSendTimeSeriesGivenEmpty() {
+        // prepare time series
+        List<TimeSeries<?, ?>> timeSeries = new ArrayList<>();
+
+        // test service
+        TimeSeriesGroupInfos timeSeriesGroupInfos = timeSeriesClient.sendTimeSeries(timeSeries);
+
+        // check result
+        assertEquals(null, timeSeriesGroupInfos);
 
     }
 
     @Test
     public void testDeleteTimeSeriesGroup() {
-        timeSeriesClient.deleteTimeSeriesGroup(UUID.fromString(TIME_SERIES_UUID)).block();
+
+        // mock response for test case DELETE with url - /timeseries-group
+        String baseUrl = getEndpointUrl();
+        wireMockServer.stubFor(WireMock.delete(WireMock.urlMatching(baseUrl + ".*"))
+                .willReturn(WireMock.ok()));
+
+        // test service
+        assertDoesNotThrow(() -> timeSeriesClient.deleteTimeSeriesGroup(TIME_LINE_UUID));
+    }
+
+    @Test
+    public void testDeleteTimeSeriesGroupGivenException() {
+
+        // mock response for test case DELETE with url - /timeseries-group
+        String baseUrl = getEndpointUrl();
+        wireMockServer.stubFor(WireMock.delete(WireMock.urlMatching(baseUrl + ".*"))
+                .willReturn(WireMock.serverError()
+                        .withBody(ERROR_MESSAGE)));
+
+        // test service
+        DynamicSimulationException dynamicSimulationException = catchThrowableOfType(
+                () -> timeSeriesClient.deleteTimeSeriesGroup(TIME_LINE_UUID),
+                DynamicSimulationException.class);
 
         // check result
-        assertTrue(true);
+        assertThat(dynamicSimulationException.getType())
+                .isEqualTo(DELETE_TIME_SERIES_ERROR);
+        assertThat(dynamicSimulationException.getMessage())
+                .isEqualTo(ERROR_MESSAGE);
+    }
+
+    @Test
+    public void testDeleteTimeSeriesGroupGivenEmpty() {
+
+        // test service
+        assertDoesNotThrow(() -> timeSeriesClient.deleteTimeSeriesGroup(null));
     }
 }

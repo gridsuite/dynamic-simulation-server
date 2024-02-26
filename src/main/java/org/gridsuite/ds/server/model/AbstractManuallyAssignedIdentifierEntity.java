@@ -6,12 +6,11 @@
  */
 package org.gridsuite.ds.server.model;
 
-import org.springframework.data.domain.Persistable;
-
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Transient;
+import org.springframework.data.domain.Persistable;
 
 /**
  * @author Chamseddine Benhamed <chamseddine.benhamed at rte-france.com>

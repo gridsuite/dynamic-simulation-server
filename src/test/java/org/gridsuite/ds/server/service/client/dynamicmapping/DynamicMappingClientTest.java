@@ -7,36 +7,42 @@
 
 package org.gridsuite.ds.server.service.client.dynamicmapping;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import okhttp3.mockwebserver.Dispatcher;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.RecordedRequest;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
-import org.gridsuite.ds.server.service.client.AbstractRestClientTest;
+import org.gridsuite.ds.server.service.client.AbstractWireMockRestClientTest;
 import org.gridsuite.ds.server.service.client.dynamicmapping.impl.DynamicMappingClientImpl;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StreamUtils;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Objects;
 import java.util.Optional;
 
-import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
-import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.CREATE_MAPPING_SCRIPT_ERROR;
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.DYNAMIC_MAPPING_NOT_FOUND;
+import static org.gridsuite.ds.server.service.client.RestClient.DELIMITER;
+import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.API_VERSION;
+import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT;
+import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public class DynamicMappingClientTest extends AbstractRestClientTest {
+public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
 
     public static final String RESOURCE_PATH_DELIMETER = "/";
 
@@ -54,108 +60,42 @@ public class DynamicMappingClientTest extends AbstractRestClientTest {
 
     private DynamicMappingClient dynamicMappingClient;
 
-    @Override
-    @NotNull
-    protected Dispatcher getDispatcher() {
-        return new Dispatcher() {
-            @NotNull
-            @Override
-            public MockResponse dispatch(@NotNull RecordedRequest recordedRequest) {
-                String path = Objects.requireNonNull(recordedRequest.getPath());
-                String baseUrl = DELIMITER + API_VERSION + DELIMITER +
-                        DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT + DELIMITER;
-                baseUrl = baseUrl.replace("//", "/");
-                String method = recordedRequest.getMethod();
-                MockResponse response = new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value());
-                // scripts/from/{mappingName}
-                if ("GET".equals(method)
-                        && path.matches(baseUrl + ".*")) {
-                    // take {mappingName} at the last
-                    String mappingName = emptyIfNull(recordedRequest.getRequestUrl().pathSegments()).stream().reduce((first, second) -> second).orElse("");
-                    if (MAPPING_NAME_01.equals(mappingName)) {
-                        String scriptJson;
-                        try {
-                            // load models.groovy
-                            String inputDir = DATA_IEEE14_BASE_DIR +
-                                    RESOURCE_PATH_DELIMETER + mappingName +
-                                    RESOURCE_PATH_DELIMETER + INPUT;
-                            String scriptPath = inputDir + RESOURCE_PATH_DELIMETER + MODELS_GROOVY;
-                            InputStream scriptIS = getClass().getResourceAsStream(scriptPath);
-                            byte[] scriptBytes;
-                            scriptBytes = StreamUtils.copyToByteArray(scriptIS);
-                            String script = new String(scriptBytes, StandardCharsets.UTF_8);
+    @Autowired
+    RestTemplate restTemplate;
 
-                            // load models.par
-                            String parametersFilePath = inputDir + RESOURCE_PATH_DELIMETER + MODELS_PAR;
-                            InputStream parametersFileIS = getClass().getResourceAsStream(parametersFilePath);
-                            byte[] parametersFileBytes;
-                            parametersFileBytes = StreamUtils.copyToByteArray(parametersFileIS);
-                            String parametersFile = new String(parametersFileBytes, StandardCharsets.UTF_8);
+    @Autowired
+    private ObjectMapper objectMapper;
 
-                            Script scriptObj = new Script(
-                                    mappingName + "-script",
-                                    mappingName,
-                                    script,
-                                    dateFormat.parse(FIXED_DATE),
-                                    parametersFile);
-
-                            ObjectWriter ow = getObjectMapper().writer().withDefaultPrettyPrinter();
-                            scriptJson = ow.writeValueAsString(scriptObj);
-                        } catch (JsonProcessingException e) {
-                            logger.info("Cannot convert to json : ", e);
-                            return new MockResponse().setResponseCode(HttpStatus.NO_CONTENT.value());
-                        } catch (IOException e) {
-                            logger.info("Cannot read file : ", e);
-                            return new MockResponse().setResponseCode(HttpStatus.NO_CONTENT.value());
-                        } catch (ParseException e) {
-                            logger.info("Cannot parse date: ", e);
-                            return new MockResponse().setResponseCode(HttpStatus.NO_CONTENT.value());
-                        }
-
-                        response = new MockResponse()
-                                .setResponseCode(HttpStatus.OK.value())
-                                .addHeader("Content-Type", "application/json; charset=utf-8")
-                                .setBody(scriptJson);
-                    }
-                }
-                return response;
-            }
-        };
+    private static String getEndpointUrl() {
+        return buildEndPointUrl("", API_VERSION,
+                DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT);
     }
 
-//    /**
-//     * used for test with local server
-//     */
-//    @Override
-//    protected String initMockWebServer(int port) throws RuntimeException {
-//        return "http://localhost:" + DYNAMIC_MAPPING_PORT;
-//    }
-
     @Override
-    public void setUp() {
-        super.setUp();
-
-        // config builder
-        WebClient.Builder webClientBuilder = WebClient.builder();
-        dynamicMappingClient = new DynamicMappingClientImpl(webClientBuilder, initMockWebServer());
+    public void setup() {
+        super.setup();
+        dynamicMappingClient = new DynamicMappingClientImpl(
+                // use new WireMockServer(DYNAMIC_MAPPING_PORT) to test with local server if needed
+                initMockWebServer(new WireMockServer(wireMockConfig().dynamicPort())),
+                restTemplate,
+                objectMapper);
     }
 
     @Test
-    public void testCreateFromMapping() throws IOException {
+    public void testCreateFromMapping() throws IOException, ParseException {
         String mappingName = MAPPING_NAME_01;
-        Script createdScript = dynamicMappingClient.createFromMapping(MAPPING_NAME_01).block();
 
+        // prepare script
+        String scriptJson;
         // load models.groovy
         String inputDir = DATA_IEEE14_BASE_DIR +
-                RESOURCE_PATH_DELIMETER + mappingName +
-                RESOURCE_PATH_DELIMETER + INPUT;
+                          RESOURCE_PATH_DELIMETER + mappingName +
+                          RESOURCE_PATH_DELIMETER + INPUT;
         String scriptPath = inputDir + RESOURCE_PATH_DELIMETER + MODELS_GROOVY;
         InputStream scriptIS = getClass().getResourceAsStream(scriptPath);
         byte[] scriptBytes;
         scriptBytes = StreamUtils.copyToByteArray(scriptIS);
         String script = new String(scriptBytes, StandardCharsets.UTF_8);
-
-        assertEquals(script, Optional.of(createdScript).orElseThrow().getScript());
 
         // load models.par
         String parametersFilePath = inputDir + RESOURCE_PATH_DELIMETER + MODELS_PAR;
@@ -164,6 +104,79 @@ public class DynamicMappingClientTest extends AbstractRestClientTest {
         parametersFileBytes = StreamUtils.copyToByteArray(parametersFileIS);
         String parametersFile = new String(parametersFileBytes, StandardCharsets.UTF_8);
 
+        Script scriptObj = new Script(
+                mappingName + "-script",
+                mappingName,
+                script,
+                dateFormat.parse(FIXED_DATE),
+                parametersFile);
+
+        ObjectWriter ow = objectMapper.writer().withDefaultPrettyPrinter();
+        scriptJson = ow.writeValueAsString(scriptObj);
+
+        // mock response for test case GET with url - /scripts/from/{mappingName}
+        String baseUrl = getEndpointUrl();
+
+        wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl + DELIMITER + "{mappingName}"))
+                .withPathParam("mappingName", equalTo(mappingName))
+                .willReturn(WireMock.ok()
+                        .withBody(scriptJson)
+                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                ));
+
+        Script createdScript = dynamicMappingClient.createFromMapping(MAPPING_NAME_01);
+
+        // check result
+        // models.groovy
+        assertEquals(script, Optional.of(createdScript).orElseThrow().getScript());
+        // load models.par
         assertEquals(parametersFile, createdScript.getParametersFile());
     }
+
+    @Test
+    public void testCreateFromMappingGivenNotFound() {
+        String mappingName = MAPPING_NAME_01;
+
+        // mock response for test case GET with url - /scripts/from/{mappingName}
+        String baseUrl = getEndpointUrl();
+
+        wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl + "{mappingName}"))
+                .withPathParam("mappingName", equalTo(mappingName))
+                .willReturn(WireMock.notFound()
+                ));
+
+        // test service
+        DynamicSimulationException dynamicSimulationException = catchThrowableOfType(() -> dynamicMappingClient.createFromMapping(MAPPING_NAME_01),
+                DynamicSimulationException.class);
+
+        // check result
+        assertThat(dynamicSimulationException.getType())
+                .isEqualTo(DYNAMIC_MAPPING_NOT_FOUND);
+    }
+
+    @Test
+    public void testCreateFromMappingGivenException() {
+        String mappingName = MAPPING_NAME_01;
+
+        // mock response for test case GET with url - /scripts/from/{mappingName}
+        String baseUrl = getEndpointUrl();
+
+        wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl + DELIMITER + "{mappingName}"))
+                .withPathParam("mappingName", equalTo(mappingName))
+                .willReturn(WireMock.serverError()
+                        .withBody(ERROR_MESSAGE)
+                ));
+
+        // test service
+        DynamicSimulationException dynamicSimulationException = catchThrowableOfType(() -> dynamicMappingClient.createFromMapping(MAPPING_NAME_01),
+                DynamicSimulationException.class);
+
+        // check result
+        assertThat(dynamicSimulationException.getType())
+                .isEqualTo(CREATE_MAPPING_SCRIPT_ERROR);
+        assertThat(dynamicSimulationException.getMessage())
+                .isEqualTo(ERROR_MESSAGE);
+
+    }
+
 }

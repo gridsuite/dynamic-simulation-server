@@ -7,11 +7,13 @@
 
 package org.gridsuite.ds.server.controller.utils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 
 import java.util.List;
 
 import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -32,5 +34,9 @@ public final class TestUtils {
         } finally {
             output.clear(); // purge in order to not fail the other tests
         }
+    }
+
+    public static void assertType(String response, Class<?> valueType, ObjectMapper objectMapper) {
+        assertDoesNotThrow(() -> objectMapper.readValue(response, valueType));
     }
 }

@@ -59,7 +59,7 @@ public class DynamicSimulationObserver {
         Counter.builder(COMPUTATION_COUNTER_NAME)
                 .tag(PROVIDER_TAG_NAME, runContext.getProvider())
                 .tag(TYPE_TAG_NAME, COMPUTATION_TYPE)
-                .tag(STATUS_TAG_NAME, result != null && result.isOk() ? "OK" : "NOK")
+                .tag(STATUS_TAG_NAME, result != null && result.getStatus() == DynamicSimulationResult.Status.SUCCESS ? "OK" : "NOK")
                 .register(meterRegistry)
                 .increment();
     }

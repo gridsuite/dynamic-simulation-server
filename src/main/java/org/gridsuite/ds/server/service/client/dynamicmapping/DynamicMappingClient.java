@@ -7,16 +7,16 @@
 package org.gridsuite.ds.server.service.client.dynamicmapping;
 
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
-import reactor.core.publisher.Mono;
+
+import static org.gridsuite.ds.server.service.client.RestClient.DELIMITER;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public interface DynamicMappingClient {
     String API_VERSION = "";
-    String DELIMITER = "/";
     String DYNAMIC_MAPPING_SCRIPT_BASE_END_POINT = "scripts";
     String DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT = DYNAMIC_MAPPING_SCRIPT_BASE_END_POINT + DELIMITER + "from";
 
-    Mono<Script> createFromMapping(String mappingName);
+    Script createFromMapping(String mappingName);
 }

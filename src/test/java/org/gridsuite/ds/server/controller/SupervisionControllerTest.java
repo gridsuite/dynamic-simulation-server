@@ -9,36 +9,31 @@ package org.gridsuite.ds.server.controller;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.reactive.server.EntityExchangeResult;
-import org.springframework.test.web.reactive.server.WebTestClient;
-import static org.junit.Assert.assertEquals;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
  */
 @RunWith(SpringRunner.class)
-@AutoConfigureWebTestClient
+@AutoConfigureMockMvc
 @SpringBootTest
 public class SupervisionControllerTest {
 
     @Autowired
-    private WebTestClient webTestClient;
+    private MockMvc mockMvc;
 
     @Test
-    public void testResultCount() {
-        //get the result timeline uuid of the calculation
-        EntityExchangeResult<Integer> entityExchangeResult = webTestClient.get()
-            .uri("/v1/supervision/results-count")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(Integer.class).returnResult();
-
-        int resultCount = entityExchangeResult.getResponseBody();
-        assertEquals(0, resultCount);
-
+    public void testResultCount() throws Exception {
+        //get count of the result uuids
+        mockMvc.perform(get("/v1/supervision/results-count"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("0"));
     }
-
 }

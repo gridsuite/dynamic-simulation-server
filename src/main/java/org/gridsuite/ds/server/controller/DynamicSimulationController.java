@@ -11,13 +11,13 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.UUID;
@@ -44,14 +44,14 @@ public class DynamicSimulationController {
     @PostMapping(value = "/networks/{networkUuid}/run", produces = "application/json")
     @Operation(summary = "run the dynamic simulation")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Run dynamic simulation")})
-    public ResponseEntity<Mono<UUID>> run(@PathVariable("networkUuid") UUID networkUuid,
+    public ResponseEntity<UUID> run(@PathVariable("networkUuid") UUID networkUuid,
                                           @RequestParam(name = "variantId", required = false) String variantId,
                                           @RequestParam(name = "receiver", required = false) String receiver,
                                           @RequestParam("mappingName") String mappingName,
                                           @RequestParam(name = "provider", required = false) String provider,
                                           @RequestBody DynamicSimulationParametersInfos parameters,
                                           @RequestHeader(HEADER_USER_ID) String userId) {
-        Mono<UUID> resultUuid = dynamicSimulationService.runAndSaveResult(receiver, networkUuid, variantId, mappingName, provider, parameters, userId);
+        UUID resultUuid = dynamicSimulationService.runAndSaveResult(receiver, networkUuid, variantId, mappingName, provider, parameters, userId);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
@@ -60,10 +60,10 @@ public class DynamicSimulationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result"),
         @ApiResponse(responseCode = "204", description = "Dynamic simulation series uuid is empty"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
-    public Mono<ResponseEntity<UUID>> getTimeSeriesResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        Mono<UUID> result = dynamicSimulationService.getTimeSeriesId(resultUuid);
-        return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
-                .defaultIfEmpty(ResponseEntity.noContent().build());
+    public ResponseEntity<UUID> getTimeSeriesResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        UUID result = dynamicSimulationService.getTimeSeriesId(resultUuid);
+        return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result) :
+                ResponseEntity.noContent().build();
     }
 
     @GetMapping(value = "/results/{resultUuid}/timeline", produces = "application/json")
@@ -71,10 +71,10 @@ public class DynamicSimulationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result"),
         @ApiResponse(responseCode = "204", description = "Dynamic simulation timeline uuid is empty"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
-    public Mono<ResponseEntity<UUID>> getTimeLineResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        Mono<UUID> result = dynamicSimulationService.getTimeLineId(resultUuid);
-        return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
-                .defaultIfEmpty(ResponseEntity.noContent().build());
+    public ResponseEntity<UUID> getTimeLineResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        UUID result = dynamicSimulationService.getTimeLineId(resultUuid);
+        return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result) :
+                ResponseEntity.noContent().build();
     }
 
     @GetMapping(value = "/results/{resultUuid}/status", produces = "application/json")
@@ -82,45 +82,45 @@ public class DynamicSimulationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation status"),
         @ApiResponse(responseCode = "204", description = "Dynamic simulation status is empty"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
-    public Mono<ResponseEntity<DynamicSimulationStatus>> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        Mono<DynamicSimulationStatus> result = dynamicSimulationService.getStatus(resultUuid);
-        return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
-                .defaultIfEmpty(ResponseEntity.noContent().build());
+    public ResponseEntity<DynamicSimulationStatus> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        DynamicSimulationStatus result = dynamicSimulationService.getStatus(resultUuid);
+        return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result) :
+                ResponseEntity.noContent().build();
     }
 
     @PutMapping(value = "/results/invalidate-status", produces = "application/json")
     @Operation(summary = "Invalidate the dynamic simulation status from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result uuids have been invalidated"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result has not been found")})
-    public Mono<ResponseEntity<List<UUID>>> invalidateStatus(@Parameter(description = "Result UUIDs") @RequestParam("resultUuid") List<UUID> resultUuids) {
-        Mono<List<UUID>> result = dynamicSimulationService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE.name());
-        return result.map(r -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(r))
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+    public ResponseEntity<List<UUID>> invalidateStatus(@Parameter(description = "Result UUIDs") @RequestParam("resultUuid") List<UUID> resultUuids) {
+        List<UUID> result = dynamicSimulationService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE.name());
+        return CollectionUtils.isEmpty(result) ? ResponseEntity.notFound().build() :
+                ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result);
     }
 
     @DeleteMapping(value = "/results/{resultUuid}")
     @Operation(summary = "Delete a dynamic simulation result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result has been deleted")})
-    public ResponseEntity<Mono<Void>> deleteResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        Mono<Void> result = dynamicSimulationService.deleteResult(resultUuid);
-        return ResponseEntity.ok().body(result);
+    public ResponseEntity<Void> deleteResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        dynamicSimulationService.deleteResult(resultUuid);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping(value = "/results", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Delete all dynamic simulation results from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All dynamic simulation results have been deleted")})
-    public ResponseEntity<Mono<Void>> deleteResults() {
-        Mono<Void> result = dynamicSimulationService.deleteResults();
-        return ResponseEntity.ok().body(result);
+    public ResponseEntity<Void> deleteResults() {
+        dynamicSimulationService.deleteResults();
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping(value = "/results/{resultUuid}/stop", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Stop a dynamic simulation computation")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation has been stopped")})
-    public ResponseEntity<Mono<Void>> stop(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
+    public ResponseEntity<Void> stop(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
                                            @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver) {
-        Mono<Void> result = dynamicSimulationService.stop(receiver, resultUuid);
-        return ResponseEntity.ok().body(result);
+        dynamicSimulationService.stop(receiver, resultUuid);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping(value = "/providers", produces = APPLICATION_JSON_VALUE)
