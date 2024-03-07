@@ -30,7 +30,6 @@ import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
-import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -50,8 +49,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.*;
-import static org.gridsuite.ds.server.service.notification.NotificationService.FAIL_MESSAGE;
+import static org.gridsuite.ds.server.computation.service.NotificationService.*;
+import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATION_TYPE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -112,8 +111,8 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
                 new ResourceSet(DATA_IEEE14_BASE_DIR, NETWORK_FILE));
         Network network = Importers.importData("XIIDM", dataSource, null);
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_1_ID);
-        given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_STRING), PreloadingStrategy.COLLECTION)).willReturn(network);
-        given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_NOT_FOUND_STRING), PreloadingStrategy.COLLECTION)).willThrow(new PowsyblException());
+        given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_STRING), PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW)).willReturn(network);
+        given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_NOT_FOUND_STRING), PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW)).willThrow(new PowsyblException());
     }
 
     @Override
@@ -217,7 +216,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
         //TODO maybe find a more reliable way to test this : failed with 1000 * 30 timeout
         Message<byte[]> messageSwitch = output.receive(1000 * 40, dsResultDestination);
-        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(DynamicSimulationResultContext.HEADER_RESULT_UUID).toString()));
+        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
 
         // --- CHECK result at abstract level --- //
         // expected seriesNames
@@ -259,7 +258,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         doAnswer((InvocationOnMock invocation) -> {
             throw new RuntimeException(TEST_EXCEPTION_MESSAGE);
         }).
-        when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any(), any(), any());
+        when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any());
 
         // prepare parameters
         DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
@@ -280,6 +279,6 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
         // check uuid and failed message
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
-        assertEquals(FAIL_MESSAGE + " : " + TEST_EXCEPTION_MESSAGE, messageSwitch.getHeaders().get(HEADER_MESSAGE));
+        assertEquals(getFailedMessage(COMPUTATION_TYPE) + " : " + TEST_EXCEPTION_MESSAGE, messageSwitch.getHeaders().get(HEADER_MESSAGE));
     }
 }

@@ -32,7 +32,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
-import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -41,9 +40,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.gridsuite.ds.server.computation.service.NotificationService.*;
 import static org.gridsuite.ds.server.controller.utils.TestUtils.assertType;
-import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.*;
-import static org.gridsuite.ds.server.service.notification.NotificationService.FAIL_MESSAGE;
+import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATION_TYPE;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -85,7 +85,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 new ResourceSet("", TEST_FILE));
         Network network = Importers.importData("XIIDM", dataSource, null);
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_1_ID);
-        given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_STRING), PreloadingStrategy.COLLECTION)).willReturn(network);
+        given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_STRING), PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW)).willReturn(network);
     }
 
     @Override
@@ -148,8 +148,8 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
         Message<byte[]> messageSwitch = output.receive(1000 * 5, dsFailedDestination);
-        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
-        assertEquals(FAIL_MESSAGE + " : " + HttpStatus.NOT_FOUND, messageSwitch.getHeaders().get(HEADER_MESSAGE));
+        assertThat(UUID.fromString(Objects.requireNonNull(messageSwitch.getHeaders().get(HEADER_RESULT_UUID)).toString())).isEqualTo(runUuid);
+        assertThat(Objects.requireNonNull(messageSwitch.getHeaders().get(HEADER_MESSAGE)).toString()).contains(getFailedMessage(COMPUTATION_TYPE));
     }
 
     @Test
@@ -169,9 +169,9 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         );
 
         doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, timeLine)))
-                .when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any(), any(), any());
+                .when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any());
         doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, timeLine)))
-                .when(dynamicSimulationWorkerService).runAsync(any(), any(), isNull(), any(), any(), any(), any());
+                .when(dynamicSimulationWorkerService).runAsync(any(), any(), isNull(), any(), any());
 
         // prepare parameters
         DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
@@ -307,7 +307,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         List<TimelineEvent> timeLine = List.of();
 
         doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, timeLine)))
-                .when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any(), any(), any());
+                .when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any());
 
         // prepare parameters
         DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();

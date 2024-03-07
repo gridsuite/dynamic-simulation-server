@@ -12,9 +12,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.collections4.CollectionUtils;
+import org.gridsuite.ds.server.computation.utils.ReportContext;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
+import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.gridsuite.ds.server.DynamicSimulationApi.API_VERSION;
-import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.HEADER_USER_ID;
+import static org.gridsuite.ds.server.computation.service.NotificationService.HEADER_USER_ID;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
@@ -48,10 +50,21 @@ public class DynamicSimulationController {
                                           @RequestParam(name = "variantId", required = false) String variantId,
                                           @RequestParam(name = "receiver", required = false) String receiver,
                                           @RequestParam("mappingName") String mappingName,
+                                          @RequestParam(name = "reportUuid", required = false) UUID reportId,
+                                          @RequestParam(name = "reporterId", required = false) String reportName,
+                                          @RequestParam(name = "reportType", required = false, defaultValue = "DynamicSimulation") String reportType,
                                           @RequestParam(name = "provider", required = false) String provider,
                                           @RequestBody DynamicSimulationParametersInfos parameters,
                                           @RequestHeader(HEADER_USER_ID) String userId) {
-        UUID resultUuid = dynamicSimulationService.runAndSaveResult(receiver, networkUuid, variantId, mappingName, provider, parameters, userId);
+
+        DynamicSimulationRunContext dynamicSimulationRunContext = DynamicSimulationRunContext.builder()
+                .networkUuid(networkUuid)
+                .variantId(variantId)
+                .receiver(receiver)
+                .reportContext(ReportContext.builder().reportId(reportId).reportName(reportName).reportType(reportType).build())
+                .userId(userId)
+                .build();
+        UUID resultUuid = dynamicSimulationService.runAndSaveResult(dynamicSimulationRunContext, mappingName, provider, parameters);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
@@ -119,7 +132,7 @@ public class DynamicSimulationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation has been stopped")})
     public ResponseEntity<Void> stop(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
                                            @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver) {
-        dynamicSimulationService.stop(receiver, resultUuid);
+        dynamicSimulationService.stop(resultUuid, receiver);
         return ResponseEntity.ok().build();
     }
 

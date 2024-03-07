@@ -6,46 +6,23 @@
  */
 package org.gridsuite.ds.server.service.contexts;
 
-import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
+import lombok.Builder;
 import lombok.Getter;
+import org.gridsuite.ds.server.computation.service.AbstractComputationRunContext;
+import org.gridsuite.ds.server.computation.utils.ReportContext;
+import org.gridsuite.ds.server.service.parameters.DynamicSimulationParametersValues;
 
-import java.util.Objects;
 import java.util.UUID;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 @Getter
-public class DynamicSimulationRunContext {
+public class DynamicSimulationRunContext extends AbstractComputationRunContext<DynamicSimulationParametersValues> {
 
-    private final String provider;
-
-    private final String receiver;
-
-    private final UUID networkUuid;
-
-    private final String variantId;
-
-    private final byte[] dynamicModelContent;
-
-    private final byte[] eventModelContent;
-
-    private final byte[] curveContent;
-
-    private final DynamicSimulationParameters parameters;
-    private final String userId;
-
-    public DynamicSimulationRunContext(String provider, String receiver, UUID networkUuid, String variantId, byte[] dynamicModelContent,
-                                       byte[] eventModelContent, byte[] curveContent, DynamicSimulationParameters parameters, String userId) {
-        this.provider = provider;
-        this.receiver = receiver;
-        this.networkUuid = Objects.requireNonNull(networkUuid);
-        this.variantId = variantId;
-        this.dynamicModelContent = dynamicModelContent;
-        this.eventModelContent = eventModelContent;
-        this.curveContent = curveContent;
-        this.parameters = parameters;
-        this.userId = userId;
+    @Builder
+    public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, ReportContext reportContext, String userId, DynamicSimulationParametersValues parameters) {
+        super(networkUuid, variantId, receiver, reportContext, userId, 0.0F, provider, parameters);
     }
 }
 
