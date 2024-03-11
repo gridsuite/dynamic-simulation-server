@@ -57,18 +57,13 @@ public class DynamicSimulationController {
                                           @RequestBody DynamicSimulationParametersInfos parameters,
                                           @RequestHeader(HEADER_USER_ID) String userId) {
 
-        // check provider => if not found then set default provider
-        String dsProvider = dynamicSimulationService.getProviders().stream()
-                .filter(elem -> elem.equals(provider))
-                .findFirst().orElse(dynamicSimulationService.getDefaultProvider());
-
         DynamicSimulationRunContext dynamicSimulationRunContext = DynamicSimulationRunContext.builder()
                 .networkUuid(networkUuid)
                 .variantId(variantId)
                 .receiver(receiver)
                 .reportContext(ReportContext.builder().reportId(reportId).reportName(reportName).reportType(reportType).build())
                 .userId(userId)
-                .provider(dsProvider)
+                .provider(provider)
                 .mapping(mappingName)
                 .build();
         UUID resultUuid = dynamicSimulationService.runAndSaveResult(dynamicSimulationRunContext, parameters);

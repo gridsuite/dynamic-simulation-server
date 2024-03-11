@@ -30,7 +30,8 @@ public class RestResponseEntityExceptionHandler {
         DynamicSimulationException.Type type = exception.getType();
         return switch (type) {
             case DYNAMIC_MAPPING_NOT_FOUND,
-                    RESULT_UUID_NOT_FOUND
+                    RESULT_UUID_NOT_FOUND,
+                    PROVIDER_NOT_FOUND
                     -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
             case URI_SYNTAX,
                     CREATE_MAPPING_SCRIPT_ERROR,

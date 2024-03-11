@@ -29,6 +29,7 @@ import java.util.List;
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DynamicSimulationParametersInfos {
+    private String provider;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Double startTime;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)

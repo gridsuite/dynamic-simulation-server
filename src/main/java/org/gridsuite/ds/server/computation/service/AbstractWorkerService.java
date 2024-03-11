@@ -113,10 +113,10 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
         }
     }
 
-    protected abstract AbstractResultContext<R> fromMessage(Message<?> message);
+    protected abstract AbstractResultContext<R> fromMessage(Message<String> message);
 
     @Bean
-    public Consumer<Message<?>> consumeRun() {
+    public Consumer<Message<String>> consumeRun() {
         return message -> {
             AbstractResultContext<R> resultContext = fromMessage(message);
             try {

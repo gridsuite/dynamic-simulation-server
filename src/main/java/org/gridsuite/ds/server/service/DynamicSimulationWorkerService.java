@@ -76,8 +76,8 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     }
 
     @Override
-    protected AbstractResultContext<DynamicSimulationRunContext> fromMessage(Message<?> message) {
-        return DynamicSimulationResultContext.fromMessage(message);
+    protected AbstractResultContext<DynamicSimulationRunContext> fromMessage(Message<String> message) {
+        return DynamicSimulationResultContext.fromMessage(message, objectMapper);
     }
 
     public void updateResult(UUID resultUuid, DynamicSimulationResult result) {

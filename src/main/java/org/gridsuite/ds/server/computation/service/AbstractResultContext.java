@@ -67,7 +67,6 @@ public abstract class AbstractResultContext<R extends AbstractComputationRunCont
                 .setHeader(REPORT_UUID_HEADER, runContext.getReportContext().getReportId() != null ? runContext.getReportContext().getReportId().toString() : null)
                 .setHeader(REPORTER_ID_HEADER, runContext.getReportContext().getReportName())
                 .setHeader(REPORT_TYPE_HEADER, runContext.getReportContext().getReportType())
-                .setHeader(HEADER_LIMIT_REDUCTION, runContext.getLimitReduction() != null ? runContext.getLimitReduction().toString() : null)
             .build();
     }
 }

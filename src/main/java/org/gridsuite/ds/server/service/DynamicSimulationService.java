@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.PROVIDER_NOT_FOUND;
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.RESULT_UUID_NOT_FOUND;
 
 /**
@@ -73,12 +74,27 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
 
     public UUID runAndSaveResult(DynamicSimulationRunContext runContext, DynamicSimulationParametersInfos parametersInfos) {
 
+        // set provider for run context
+        String dsProvider = runContext.getProvider();
+        if (dsProvider == null) {
+            dsProvider = parametersInfos.getProvider();
+        }
+        if (dsProvider == null) {
+            dsProvider = getDefaultProvider();
+        }
+        runContext.setProvider(dsProvider);
+
+        // check provider
+        String provider = getProviders().stream()
+                .filter(elem -> elem.equals(runContext.getProvider()))
+                .findFirst().orElseThrow(() -> new DynamicSimulationException(PROVIDER_NOT_FOUND, "Dynamic simulation provider not found: " + runContext.getProvider()));
+
         // get script and parameters file from dynamic mapping server
         Script scriptObj = dynamicMappingClient.createFromMapping(runContext.getMapping());
 
         // get all dynamic simulation parameters
         String parametersFile = scriptObj.getParametersFile();
-        DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(parametersFile.getBytes(StandardCharsets.UTF_8), runContext.getProvider(), parametersInfos);
+        DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(parametersFile.getBytes(StandardCharsets.UTF_8), provider, parametersInfos);
 
         // set start and stop times
         parameters.setStartTime(parametersInfos.getStartTime().intValue()); // TODO remove intValue() when correct startTime to double in powsybl
@@ -105,7 +121,7 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
         ResultEntity resultEntity = getResultRepository().insertStatus(DynamicSimulationStatus.RUNNING.name());
 
         // emit a message to launch the simulation by the worker service
-        Message<byte[]> message = new DynamicSimulationResultContext(resultEntity.getId(), runContext).toMessage();
+        Message<String> message = new DynamicSimulationResultContext(resultEntity.getId(), runContext).toMessage(objectMapper);
         notificationService.sendRunMessage(message);
         return resultEntity.getId();
     }
@@ -156,11 +172,6 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
         timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeLineId());
         // then delete result
         super.deleteResult(resultUuid);
-    }
-
-    @Override
-    public void deleteResults() {
-        resultRepository.deleteAll();
     }
 
     public List<String> getProviders() {

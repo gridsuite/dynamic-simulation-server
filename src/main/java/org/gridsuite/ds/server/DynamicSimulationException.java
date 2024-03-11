@@ -6,8 +6,6 @@
  */
 package org.gridsuite.ds.server;
 
-import java.util.Objects;
-
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
@@ -15,6 +13,7 @@ public class DynamicSimulationException extends RuntimeException {
 
     public enum Type {
         URI_SYNTAX,
+        PROVIDER_NOT_FOUND,
         RESULT_UUID_NOT_FOUND,
         DYNAMIC_MAPPING_NOT_FOUND,
         CREATE_MAPPING_SCRIPT_ERROR,
@@ -23,11 +22,6 @@ public class DynamicSimulationException extends RuntimeException {
     }
 
     private final Type type;
-
-    public DynamicSimulationException(Type type) {
-        super(Objects.requireNonNull(type.name()));
-        this.type = type;
-    }
 
     public DynamicSimulationException(Type type, String message) {
         super(message);
