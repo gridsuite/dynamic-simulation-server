@@ -20,9 +20,12 @@ import java.util.UUID;
 @Getter
 public class DynamicSimulationRunContext extends AbstractComputationRunContext<DynamicSimulationParametersValues> {
 
+    private final String mapping;
+
     @Builder
-    public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, ReportContext reportContext, String userId, DynamicSimulationParametersValues parameters) {
+    public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping, ReportContext reportContext, String userId, DynamicSimulationParametersValues parameters) {
         super(networkUuid, variantId, receiver, reportContext, userId, 0.0F, provider, parameters);
+        this.mapping = mapping;
     }
 }
 

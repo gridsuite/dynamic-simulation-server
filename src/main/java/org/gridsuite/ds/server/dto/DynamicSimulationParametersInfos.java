@@ -33,6 +33,7 @@ public class DynamicSimulationParametersInfos {
     private Double startTime;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Double stopTime;
+    private String mapping;
     private String solverId;
     private List<SolverInfos> solvers;
     private NetworkInfos network;

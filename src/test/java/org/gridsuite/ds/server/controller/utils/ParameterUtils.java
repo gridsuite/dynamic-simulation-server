@@ -39,7 +39,7 @@ public final class ParameterUtils {
         List<SolverInfos> solvers = List.of(idaSolver, simSolver);
 
         NetworkInfos network = getDefaultNetwork();
-        return new DynamicSimulationParametersInfos(0.0, 50.0, idaSolver.getId(), solvers, network, null, null);
+        return new DynamicSimulationParametersInfos(0.0, 50.0, null, idaSolver.getId(), solvers, network, null, null);
     }
 
     public static IdaSolverInfos getDefaultIdaSolver() {

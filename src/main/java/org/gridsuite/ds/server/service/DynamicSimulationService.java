@@ -71,19 +71,14 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
         throw new UnsupportedOperationException("Waiting parameters moving from study-server to dynamic-simulation-server");
     }
 
-    public UUID runAndSaveResult(DynamicSimulationRunContext runContext, String mappingName, String provider, DynamicSimulationParametersInfos parametersInfos) {
-
-        // check provider => if not found then set default provider
-        String dsProvider = getProviders().stream()
-                .filter(elem -> elem.equals(provider))
-                .findFirst().orElse(getDefaultProvider());
+    public UUID runAndSaveResult(DynamicSimulationRunContext runContext, DynamicSimulationParametersInfos parametersInfos) {
 
         // get script and parameters file from dynamic mapping server
-        Script scriptObj = dynamicMappingClient.createFromMapping(mappingName);
+        Script scriptObj = dynamicMappingClient.createFromMapping(runContext.getMapping());
 
         // get all dynamic simulation parameters
         String parametersFile = scriptObj.getParametersFile();
-        DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(parametersFile.getBytes(StandardCharsets.UTF_8), dsProvider, parametersInfos);
+        DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(parametersFile.getBytes(StandardCharsets.UTF_8), runContext.getProvider(), parametersInfos);
 
         // set start and stop times
         parameters.setStartTime(parametersInfos.getStartTime().intValue()); // TODO remove intValue() when correct startTime to double in powsybl
@@ -96,7 +91,7 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
         byte[] curveModel = parametersService.getCurveModel(parametersInfos.getCurves());
 
         DynamicSimulationParametersValues parametersValues = DynamicSimulationParametersValues.builder()
-            .provider(dsProvider)
+            .provider(runContext.getProvider())
             .parameters(parameters)
             .dynamicModelContent(dynamicModel)
             .eventModelContent(eventModel)
@@ -104,7 +99,6 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
             .build();
 
         // enrich runContext
-        runContext.setProvider(dsProvider);
         runContext.setParameters(parametersValues);
 
         // update status to running status
@@ -161,7 +155,7 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
         timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeSeriesId());
         timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeLineId());
         // then delete result
-        getResultRepository().delete(resultUuid);
+        super.deleteResult(resultUuid);
     }
 
     @Override
