@@ -13,6 +13,7 @@ import org.gridsuite.ds.server.computation.utils.ReportContext;
 import org.gridsuite.ds.server.service.parameters.DynamicSimulationParametersValues;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.support.MessageBuilder;
 
 import java.io.UncheckedIOException;
 import java.util.Objects;
@@ -25,6 +26,10 @@ import static org.gridsuite.ds.server.computation.utils.ContextUtils.getNonNullH
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 public class DynamicSimulationResultContext extends AbstractResultContext<DynamicSimulationRunContext> {
+
+    public static final String HEADER_DYNAMIC_MODEL_CONTENT = "dynamicModelContent";
+    public static final String HEADER_EVENT_MODEL_CONTENT = "eventModelContent";
+    public static final String HEADER_CURVE_CONTENT = "curveContent";
 
     public DynamicSimulationResultContext(UUID resultUuid, DynamicSimulationRunContext runContext) {
         super(resultUuid, runContext);
@@ -62,7 +67,25 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
                 .userId(userId)
                 .parameters(parametersValues)
                 .build();
+
+        // specific headers for dynamic simulation
+        byte[] dynamicModelContent = (byte[]) headers.get(HEADER_DYNAMIC_MODEL_CONTENT);
+        byte[] eventModelContent = (byte[]) headers.get(HEADER_EVENT_MODEL_CONTENT);
+        byte[] curveContent = (byte[]) headers.get(HEADER_CURVE_CONTENT);
+        runContext.setDynamicModelContent(dynamicModelContent);
+        runContext.setEventModelContent(eventModelContent);
+        runContext.setCurveContent(curveContent);
+
         return new DynamicSimulationResultContext(resultUuid, runContext);
     }
 
+    @Override
+    public Message<String> toMessage(ObjectMapper objectMapper) {
+        return MessageBuilder.fromMessage(super.toMessage(objectMapper))
+                // specific headers for dynamic simulation
+                .setHeader(HEADER_DYNAMIC_MODEL_CONTENT, runContext.getDynamicModelContent())
+                .setHeader(HEADER_EVENT_MODEL_CONTENT, runContext.getEventModelContent())
+                .setHeader(HEADER_CURVE_CONTENT, runContext.getCurveContent())
+                .build();
+    }
 }

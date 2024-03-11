@@ -109,13 +109,13 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
         DynamicSimulationParametersValues parametersValues = DynamicSimulationParametersValues.builder()
             .provider(runContext.getProvider())
             .parameters(parameters)
-            .dynamicModelContent(dynamicModel)
-            .eventModelContent(eventModel)
-            .curveContent(curveModel)
             .build();
 
         // enrich runContext
         runContext.setParameters(parametersValues);
+        runContext.setDynamicModelContent(dynamicModel);
+        runContext.setEventModelContent(eventModel);
+        runContext.setCurveContent(curveModel);
 
         // update status to running status
         ResultEntity resultEntity = getResultRepository().insertStatus(DynamicSimulationStatus.RUNNING.name());

@@ -132,13 +132,13 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
 
         DynamicSimulationParametersValues parametersValues = runContext.getParameters();
         List<DynamicModelGroovyExtension> dynamicModelExtensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynaWaltzProvider.NAME);
-        DynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(new ByteArrayInputStream(parametersValues.dynamicModelContent()), dynamicModelExtensions);
+        DynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(new ByteArrayInputStream(runContext.getDynamicModelContent()), dynamicModelExtensions);
 
         List<EventModelGroovyExtension> eventModelExtensions = GroovyExtension.find(EventModelGroovyExtension.class, DynaWaltzProvider.NAME);
-        EventModelsSupplier eventModelsSupplier = new GroovyEventModelsSupplier(new ByteArrayInputStream(parametersValues.eventModelContent()), eventModelExtensions);
+        EventModelsSupplier eventModelsSupplier = new GroovyEventModelsSupplier(new ByteArrayInputStream(runContext.getEventModelContent()), eventModelExtensions);
 
         List<CurveGroovyExtension> curveExtensions = GroovyExtension.find(CurveGroovyExtension.class, DynaWaltzProvider.NAME);
-        CurvesSupplier curvesSupplier = new GroovyCurvesSupplier(new ByteArrayInputStream(parametersValues.curveContent()), curveExtensions);
+        CurvesSupplier curvesSupplier = new GroovyCurvesSupplier(new ByteArrayInputStream(runContext.getCurveContent()), curveExtensions);
 
         DynamicSimulationParameters parameters = parametersValues.parameters();
         LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {},", runContext.getNetworkUuid(), parameters.getStartTime(), parameters.getStopTime());

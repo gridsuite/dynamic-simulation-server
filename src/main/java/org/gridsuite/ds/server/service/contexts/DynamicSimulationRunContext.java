@@ -8,6 +8,7 @@ package org.gridsuite.ds.server.service.contexts;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 import org.gridsuite.ds.server.computation.service.AbstractComputationRunContext;
 import org.gridsuite.ds.server.computation.utils.ReportContext;
 import org.gridsuite.ds.server.service.parameters.DynamicSimulationParametersValues;
@@ -21,6 +22,12 @@ import java.util.UUID;
 public class DynamicSimulationRunContext extends AbstractComputationRunContext<DynamicSimulationParametersValues> {
 
     private final String mapping;
+
+    @Setter private byte[] dynamicModelContent;
+
+    @Setter private byte[] eventModelContent;
+
+    @Setter private byte[] curveContent;
 
     @Builder
     public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping, ReportContext reportContext, String userId, DynamicSimulationParametersValues parameters) {

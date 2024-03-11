@@ -16,8 +16,5 @@ import lombok.Builder;
 @Builder
 public record DynamicSimulationParametersValues(
     String provider,
-    DynamicSimulationParameters parameters,
-    byte[] dynamicModelContent,
-    byte[] eventModelContent,
-    byte[] curveContent
+    DynamicSimulationParameters parameters
 ) { }
