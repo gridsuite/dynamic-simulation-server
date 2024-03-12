@@ -22,7 +22,6 @@ import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClien
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
-import org.gridsuite.ds.server.service.parameters.DynamicSimulationParametersValues;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
@@ -106,13 +105,8 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
         byte[] eventModel = parametersService.getEventModel(parametersInfos.getEvents());
         byte[] curveModel = parametersService.getCurveModel(parametersInfos.getCurves());
 
-        DynamicSimulationParametersValues parametersValues = DynamicSimulationParametersValues.builder()
-            .provider(runContext.getProvider())
-            .parameters(parameters)
-            .build();
-
         // enrich runContext
-        runContext.setParameters(parametersValues);
+        runContext.setParameters(parameters);
         runContext.setDynamicModelContent(dynamicModel);
         runContext.setEventModelContent(eventModel);
         runContext.setCurveContent(curveModel);

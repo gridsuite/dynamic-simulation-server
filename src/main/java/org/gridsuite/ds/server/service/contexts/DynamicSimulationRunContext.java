@@ -6,12 +6,12 @@
  */
 package org.gridsuite.ds.server.service.contexts;
 
+import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.gridsuite.ds.server.computation.service.AbstractComputationRunContext;
 import org.gridsuite.ds.server.computation.utils.ReportContext;
-import org.gridsuite.ds.server.service.parameters.DynamicSimulationParametersValues;
 
 import java.util.UUID;
 
@@ -19,7 +19,7 @@ import java.util.UUID;
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 @Getter
-public class DynamicSimulationRunContext extends AbstractComputationRunContext<DynamicSimulationParametersValues> {
+public class DynamicSimulationRunContext extends AbstractComputationRunContext<DynamicSimulationParameters> {
 
     private final String mapping;
 
@@ -30,7 +30,7 @@ public class DynamicSimulationRunContext extends AbstractComputationRunContext<D
     @Setter private byte[] curveContent;
 
     @Builder
-    public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping, ReportContext reportContext, String userId, DynamicSimulationParametersValues parameters) {
+    public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping, ReportContext reportContext, String userId, DynamicSimulationParameters parameters) {
         super(networkUuid, variantId, receiver, reportContext, userId, provider, parameters);
         this.mapping = mapping;
     }

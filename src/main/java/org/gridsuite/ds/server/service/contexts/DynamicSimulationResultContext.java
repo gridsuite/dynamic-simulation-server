@@ -8,9 +8,9 @@ package org.gridsuite.ds.server.service.contexts;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import org.gridsuite.ds.server.computation.service.AbstractResultContext;
 import org.gridsuite.ds.server.computation.utils.ReportContext;
-import org.gridsuite.ds.server.service.parameters.DynamicSimulationParametersValues;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
@@ -39,9 +39,9 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
         Objects.requireNonNull(message);
 
         // decode the parameters values
-        DynamicSimulationParametersValues parametersValues;
+        DynamicSimulationParameters parameters;
         try {
-            parametersValues = objectMapper.treeToValue(objectMapper.readTree(message.getPayload()).get(MESSAGE_ROOT_NAME), DynamicSimulationParametersValues.class);
+            parameters = objectMapper.treeToValue(objectMapper.readTree(message.getPayload()).get(MESSAGE_ROOT_NAME), DynamicSimulationParameters.class);
         } catch (JsonProcessingException e) {
             throw new UncheckedIOException(e);
         }
@@ -65,7 +65,7 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
                 .provider(provider)
                 .reportContext(ReportContext.builder().reportId(reportUuid).reportName(reporterId).reportType(reportType).build())
                 .userId(userId)
-                .parameters(parametersValues)
+                .parameters(parameters)
                 .build();
 
         // specific headers for dynamic simulation

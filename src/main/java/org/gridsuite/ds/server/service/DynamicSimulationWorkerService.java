@@ -27,7 +27,6 @@ import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
-import org.gridsuite.ds.server.service.parameters.DynamicSimulationParametersValues;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.ComponentScan;
@@ -45,7 +44,7 @@ import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATI
  */
 @ComponentScan(basePackageClasses = {NetworkStoreService.class})
 @Service
-public class DynamicSimulationWorkerService extends AbstractWorkerService<DynamicSimulationResult, DynamicSimulationRunContext, DynamicSimulationParametersValues> {
+public class DynamicSimulationWorkerService extends AbstractWorkerService<DynamicSimulationResult, DynamicSimulationRunContext, DynamicSimulationParameters> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamicSimulationWorkerService.class);
 
@@ -130,7 +129,6 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     @Override
     protected CompletableFuture<DynamicSimulationResult> getCompletableFuture(Network network, DynamicSimulationRunContext runContext, String provider, Reporter reporter) {
 
-        DynamicSimulationParametersValues parametersValues = runContext.getParameters();
         List<DynamicModelGroovyExtension> dynamicModelExtensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynaWaltzProvider.NAME);
         DynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(new ByteArrayInputStream(runContext.getDynamicModelContent()), dynamicModelExtensions);
 
@@ -140,7 +138,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         List<CurveGroovyExtension> curveExtensions = GroovyExtension.find(CurveGroovyExtension.class, DynaWaltzProvider.NAME);
         CurvesSupplier curvesSupplier = new GroovyCurvesSupplier(new ByteArrayInputStream(runContext.getCurveContent()), curveExtensions);
 
-        DynamicSimulationParameters parameters = parametersValues.parameters();
+        DynamicSimulationParameters parameters = runContext.getParameters();
         LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {},", runContext.getNetworkUuid(), parameters.getStartTime(), parameters.getStopTime());
 
         DynamicSimulation.Runner runner = DynamicSimulation.find(provider);

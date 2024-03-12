@@ -6,12 +6,12 @@
  */
 package org.gridsuite.ds.server.service;
 
+import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.DynamicSimulationResult;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.NonNull;
 import org.gridsuite.ds.server.computation.service.AbstractComputationObserver;
-import org.gridsuite.ds.server.service.parameters.DynamicSimulationParametersValues;
 import org.springframework.stereotype.Service;
 
 import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATION_TYPE;
@@ -20,7 +20,7 @@ import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATI
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
-public class DynamicSimulationObserver extends AbstractComputationObserver<DynamicSimulationResult, DynamicSimulationParametersValues> {
+public class DynamicSimulationObserver extends AbstractComputationObserver<DynamicSimulationResult, DynamicSimulationParameters> {
 
     public DynamicSimulationObserver(@NonNull ObservationRegistry observationRegistry, @NonNull MeterRegistry meterRegistry) {
         super(observationRegistry, meterRegistry);
