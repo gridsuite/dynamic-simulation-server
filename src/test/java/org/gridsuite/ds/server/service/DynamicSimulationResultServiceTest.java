@@ -32,9 +32,9 @@ import static org.mockito.BDDMockito.given;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class DynamicSimulationServiceTest {
+public class DynamicSimulationResultServiceTest {
 
-    static Logger LOGGER = LoggerFactory.getLogger(DynamicSimulationServiceTest.class);
+    static Logger LOGGER = LoggerFactory.getLogger(DynamicSimulationResultServiceTest.class);
 
     private static final String RESULT_UUID_STRING = "99999999-0000-0000-0000-000000000000";
     private static final UUID RESULT_UUID = UUID.fromString(RESULT_UUID_STRING);
@@ -49,7 +49,7 @@ public class DynamicSimulationServiceTest {
     ObjectMapper objectMapper;
 
     @Autowired
-    DynamicSimulationService dynamicSimulationService;
+    DynamicSimulationResultService dynamicSimulationResultService;
 
     @Test
     public void testUpdateStatusGivenOneResult() {
@@ -61,7 +61,7 @@ public class DynamicSimulationServiceTest {
         given(resultRepository.saveAllAndFlush(resultEntities)).willReturn(resultEntities);
 
         // call method to be tested
-        List<UUID> updatedResultUuids = dynamicSimulationService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE.name());
+        List<UUID> updatedResultUuids = dynamicSimulationResultService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE.name());
 
         // check result
         // only one result
@@ -88,7 +88,7 @@ public class DynamicSimulationServiceTest {
         given(resultRepository.saveAllAndFlush(resultEntities)).willReturn(resultEntities);
 
         // call method to be tested
-        List<UUID> updatedResultUuids = dynamicSimulationService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE.name());
+        List<UUID> updatedResultUuids = dynamicSimulationResultService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE.name());
 
         // check result
         // only one result

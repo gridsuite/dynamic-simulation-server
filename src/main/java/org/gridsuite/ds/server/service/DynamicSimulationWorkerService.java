@@ -22,8 +22,6 @@ import com.powsybl.timeseries.TimeSeries;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.ds.server.computation.service.*;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
-import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
-import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.slf4j.Logger;
@@ -33,7 +31,10 @@ import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATION_TYPE;
@@ -47,8 +48,6 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamicSimulationWorkerService.class);
 
-    private final TimeSeriesClient timeSeriesClient;
-
     private final DynamicSimulationResultService dynamicSimulationResultService;
 
     public DynamicSimulationWorkerService(NetworkStoreService networkStoreService,
@@ -57,10 +56,8 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                                           ExecutionService executionService,
                                           DynamicSimulationObserver observer,
                                           ObjectMapper objectMapper,
-                                          TimeSeriesClient timeSeriesClient,
                                           DynamicSimulationResultService dynamicSimulationResultService) {
         super(networkStoreService, notificationService, reportService, executionService, observer, objectMapper);
-        this.timeSeriesClient = timeSeriesClient;
         this.dynamicSimulationResultService = dynamicSimulationResultService;
     }
 
@@ -96,22 +93,11 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
             timeLineSeries.add(TimeSeries.createString("timeLine", new IrregularTimeSeriesIndex(timeLineIndexes), timeLineValues));
         }
 
-        // send time-series/timeline to time-series-server
-        UUID timeSeriesUuid = Optional.ofNullable(timeSeriesClient.sendTimeSeries(timeSeries))
-                .map(TimeSeriesGroupInfos::getId)
-                .orElse(null);
-        UUID timeLineUuid = Optional.ofNullable(timeSeriesClient.sendTimeSeries(timeLineSeries))
-                .map(TimeSeriesGroupInfos::getId)
-                .orElse(null);
-
-        // update time-series/timeline uuids and result status to the db
         DynamicSimulationStatus status = result.getStatus() == DynamicSimulationResult.Status.SUCCESS ?
                 DynamicSimulationStatus.CONVERGED :
                 DynamicSimulationStatus.DIVERGED;
 
-        LOGGER.info("Update dynamic simulation [resultUuid={}, timeSeriesUuid={}, timeLineUuid={}, status={}",
-                resultUuid, timeSeriesUuid, timeLineUuid, status);
-        dynamicSimulationResultService.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
+        dynamicSimulationResultService.updateResult(resultUuid, timeSeries, timeLineSeries, status);
     }
 
     @Override

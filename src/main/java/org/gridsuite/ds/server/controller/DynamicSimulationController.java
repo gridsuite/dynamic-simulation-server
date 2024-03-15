@@ -15,6 +15,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.ds.server.computation.utils.ReportContext;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
+import org.gridsuite.ds.server.service.DynamicSimulationResultService;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.springframework.http.MediaType;
@@ -38,9 +39,11 @@ import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 public class DynamicSimulationController {
 
     private final DynamicSimulationService dynamicSimulationService;
+    private final DynamicSimulationResultService dynamicSimulationResultService;
 
-    public DynamicSimulationController(DynamicSimulationService dynamicSimulationService) {
+    public DynamicSimulationController(DynamicSimulationService dynamicSimulationService, DynamicSimulationResultService dynamicSimulationResultService) {
         this.dynamicSimulationService = dynamicSimulationService;
+        this.dynamicSimulationResultService = dynamicSimulationResultService;
     }
 
     @PostMapping(value = "/networks/{networkUuid}/run", produces = "application/json")
@@ -76,7 +79,7 @@ public class DynamicSimulationController {
         @ApiResponse(responseCode = "204", description = "Dynamic simulation series uuid is empty"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
     public ResponseEntity<UUID> getTimeSeriesResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        UUID result = dynamicSimulationService.getTimeSeriesId(resultUuid);
+        UUID result = dynamicSimulationResultService.getTimeSeriesId(resultUuid);
         return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result) :
                 ResponseEntity.noContent().build();
     }
@@ -87,7 +90,7 @@ public class DynamicSimulationController {
         @ApiResponse(responseCode = "204", description = "Dynamic simulation timeline uuid is empty"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
     public ResponseEntity<UUID> getTimeLineResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        UUID result = dynamicSimulationService.getTimeLineId(resultUuid);
+        UUID result = dynamicSimulationResultService.getTimeLineId(resultUuid);
         return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result) :
                 ResponseEntity.noContent().build();
     }
@@ -98,7 +101,7 @@ public class DynamicSimulationController {
         @ApiResponse(responseCode = "204", description = "Dynamic simulation status is empty"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
     public ResponseEntity<DynamicSimulationStatus> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        DynamicSimulationStatus result = dynamicSimulationService.getStatus(resultUuid);
+        DynamicSimulationStatus result = dynamicSimulationResultService.getStatus(resultUuid);
         return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result) :
                 ResponseEntity.noContent().build();
     }
@@ -108,7 +111,7 @@ public class DynamicSimulationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result uuids have been invalidated"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result has not been found")})
     public ResponseEntity<List<UUID>> invalidateStatus(@Parameter(description = "Result UUIDs") @RequestParam("resultUuid") List<UUID> resultUuids) {
-        List<UUID> result = dynamicSimulationService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE.name());
+        List<UUID> result = dynamicSimulationResultService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE.name());
         return CollectionUtils.isEmpty(result) ? ResponseEntity.notFound().build() :
                 ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result);
     }
