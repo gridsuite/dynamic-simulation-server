@@ -16,7 +16,6 @@ import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import org.apache.commons.lang3.StringUtils;
-import org.gridsuite.ds.server.computation.repositories.ComputationResultRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -53,14 +52,12 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
     protected final ExecutionService executionService;
     protected final NotificationService notificationService;
     protected final AbstractComputationObserver<S, P> observer;
-    protected final ComputationResultRepository resultRepository;
     protected final Map<UUID, CompletableFuture<S>> futures = new ConcurrentHashMap<>();
     protected final Map<UUID, CancelContext> cancelComputationRequests = new ConcurrentHashMap<>();
 
     protected AbstractWorkerService(NetworkStoreService networkStoreService,
                                     NotificationService notificationService,
                                     ReportService reportService,
-                                    ComputationResultRepository resultRepository,
                                     ExecutionService executionService,
                                     AbstractComputationObserver<S, P> observer,
                                     ObjectMapper objectMapper) {
@@ -70,7 +67,6 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
         this.executionService = executionService;
         this.observer = observer;
         this.objectMapper = objectMapper;
-        this.resultRepository = resultRepository;
     }
 
     protected Network getNetwork(AbstractComputationRunContext<P> runContext) {
@@ -88,7 +84,7 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
     }
 
     protected void cleanResultsAndPublishCancel(UUID resultUuid, String receiver) {
-        resultRepository.delete(resultUuid);
+        deleteResult(resultUuid);
         notificationService.publishStop(resultUuid, receiver, getComputationType());
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("{} (resultUuid='{}')",
@@ -152,7 +148,7 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
                     notificationService.publishFail(
                             resultContext.getResultUuid(), resultContext.getRunContext().getReceiver(),
                             e.getMessage(), resultContext.getRunContext().getUserId(), getComputationType());
-                    resultRepository.delete(resultContext.getResultUuid());
+                    deleteResult(resultContext.getResultUuid());
                 }
             } finally {
                 futures.remove(resultContext.getResultUuid());
@@ -194,7 +190,7 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
         return result;
     }
 
-    public CompletableFuture<S> runAsync(
+    protected CompletableFuture<S> runAsync(
             Network network,
             R runContext,
             String provider,
@@ -218,4 +214,6 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
     protected abstract String getComputationType();
 
     protected abstract CompletableFuture<S> getCompletableFuture(Network network, R runContext, String provider, Reporter reporter);
+
+    protected abstract void deleteResult(UUID resultUuid);
 }

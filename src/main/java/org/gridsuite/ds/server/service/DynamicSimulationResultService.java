@@ -9,11 +9,11 @@ import java.util.UUID;
 
 // This class is created to avoid self circular in DynamicSimulationWorkerService class
 @Service
-public class DynamicSimulationWorkerUpdateResult {
+public class DynamicSimulationResultService {
 
     private final ResultRepository resultRepository;
 
-    public DynamicSimulationWorkerUpdateResult(ResultRepository resultRepository) {
+    public DynamicSimulationResultService(ResultRepository resultRepository) {
         this.resultRepository = resultRepository;
     }
 

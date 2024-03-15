@@ -17,7 +17,7 @@ import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.model.ResultEntity;
-import org.gridsuite.ds.server.repository.DynamicSimulationResultRepository;
+import org.gridsuite.ds.server.repository.ResultRepository;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
@@ -46,24 +46,22 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
     private final DynamicMappingClient dynamicMappingClient;
     private final TimeSeriesClient timeSeriesClient;
     private final ParametersService parametersService;
+    private final ResultRepository resultRepository;
 
     public DynamicSimulationService(
             NotificationService notificationService,
-            DynamicSimulationResultRepository resultRepository,
+            ResultRepository resultRepository,
             ObjectMapper objectMapper,
             UuidGeneratorService uuidGeneratorService,
             DynamicMappingClient dynamicMappingClient,
             TimeSeriesClient timeSeriesClient,
             ParametersService parametersService,
             @Value("${dynamic-simulation.default-provider}") String defaultProvider) {
-        super(notificationService, resultRepository, objectMapper, uuidGeneratorService, defaultProvider);
+        super(notificationService, objectMapper, uuidGeneratorService, defaultProvider);
         this.dynamicMappingClient = Objects.requireNonNull(dynamicMappingClient);
         this.timeSeriesClient = Objects.requireNonNull(timeSeriesClient);
         this.parametersService = Objects.requireNonNull(parametersService);
-    }
-
-    public DynamicSimulationResultRepository getResultRepository() {
-        return (DynamicSimulationResultRepository) resultRepository;
+        this.resultRepository = resultRepository;
     }
 
     @Override
@@ -100,10 +98,9 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
         parameters.setStopTime(parametersInfos.getStopTime().intValue()); // TODO remove intValue() when correct stopTime to double in powsybl
 
         // groovy scripts
-        String script = scriptObj.getScript();
-        byte[] dynamicModel = script.getBytes(StandardCharsets.UTF_8);
-        byte[] eventModel = parametersService.getEventModel(parametersInfos.getEvents());
-        byte[] curveModel = parametersService.getCurveModel(parametersInfos.getCurves());
+        String dynamicModel = scriptObj.getScript();
+        String eventModel = parametersService.getEventModel(parametersInfos.getEvents());
+        String curveModel = parametersService.getCurveModel(parametersInfos.getCurves());
 
         // enrich runContext
         runContext.setParameters(parameters);
@@ -112,7 +109,7 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
         runContext.setCurveContent(curveModel);
 
         // update status to running status
-        ResultEntity resultEntity = getResultRepository().insertStatus(DynamicSimulationStatus.RUNNING.name());
+        ResultEntity resultEntity = insertStatus(DynamicSimulationStatus.RUNNING.name());
 
         // emit a message to launch the simulation by the worker service
         Message<String> message = new DynamicSimulationResultContext(resultEntity.getId(), runContext).toMessage(objectMapper);
@@ -120,43 +117,48 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
         return resultEntity.getId();
     }
 
+    public ResultEntity insertStatus(String status) {
+        return resultRepository.save(new ResultEntity(null, null, null, status));
+    }
+
     @Transactional
     public List<UUID> updateStatus(List<UUID> resultUuids, String status) {
         // find result entities
-        List<ResultEntity> resultEntities = getResultRepository().findAllById(resultUuids);
+        List<ResultEntity> resultEntities = resultRepository.findAllById(resultUuids);
         // set entity with new values
         resultEntities.forEach(resultEntity -> resultEntity.setStatus(status));
         // save entities into database
-        return getResultRepository().saveAllAndFlush(resultEntities).stream().map(ResultEntity::getId).toList();
+        return resultRepository.saveAllAndFlush(resultEntities).stream().map(ResultEntity::getId).toList();
     }
 
     public UUID getTimeSeriesId(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return getResultRepository().findById(resultUuid)
+        return resultRepository.findById(resultUuid)
                 .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
                 .getTimeSeriesId();
     }
 
     public UUID getTimeLineId(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return getResultRepository().findById(resultUuid)
+        return resultRepository.findById(resultUuid)
                 .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
                 .getTimeLineId();
     }
 
     public DynamicSimulationStatus getStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        String status = getResultRepository().findById(resultUuid)
+        String status = resultRepository.findById(resultUuid)
                 .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
                 .getStatus();
 
         return status == null ? null : DynamicSimulationStatus.valueOf(status);
     }
 
+    @Transactional
     @Override
     public void deleteResult(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        ResultEntity resultEntity = getResultRepository().findById(resultUuid).orElse(null);
+        ResultEntity resultEntity = resultRepository.findById(resultUuid).orElse(null);
         if (resultEntity == null) {
             return;
         }
@@ -164,8 +166,23 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
         // call time series client to delete time-series and timeline
         timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeSeriesId());
         timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeLineId());
-        // then delete result
-        super.deleteResult(resultUuid);
+        // then delete result in local db
+        resultRepository.deleteById(resultUuid);
+    }
+
+    @Transactional
+    @Override
+    public void deleteResults() {
+        List<ResultEntity> resultEntities = resultRepository.findAll();
+
+        // call time series client to delete time-series and timeline
+        for (ResultEntity resultEntity : resultEntities) {
+            timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeSeriesId());
+            timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeLineId());
+        }
+
+        // then delete all results in local db
+        resultRepository.deleteAllById(resultEntities.stream().map(ResultEntity::getId).toList());
     }
 
     public List<String> getProviders() {

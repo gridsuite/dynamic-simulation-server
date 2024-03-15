@@ -41,7 +41,6 @@ public class NotificationService {
     public static final String HEADER_PROVIDER = "provider";
     public static final String HEADER_MESSAGE = "message";
     public static final String HEADER_USER_ID = "userId";
-    public static final String HEADER_LIMIT_REDUCTION = "limitReduction";
 
     public static final String SENDING_MESSAGE = "Sending message : {}";
 
@@ -52,7 +51,7 @@ public class NotificationService {
         this.publisher = publisher;
     }
 
-    public void sendRunMessage(Message<?> message) {
+    public void sendRunMessage(Message<String> message) {
         RUN_MESSAGE_LOGGER.debug(SENDING_MESSAGE, message);
         publisher.send("publishRun-out-0", message);
     }
@@ -91,7 +90,8 @@ public class NotificationService {
                 .withPayload("")
                 .setHeader(HEADER_RESULT_UUID, resultUuid.toString())
                 .setHeader(HEADER_RECEIVER, receiver)
-                .setHeader(HEADER_MESSAGE, getFailedMessage(computationLabel) + " : " + shortenMessage(causeMessage))
+                .setHeader(HEADER_MESSAGE, shortenMessage(
+                        getFailedMessage(computationLabel) + " : " + causeMessage))
                 .setHeader(HEADER_USER_ID, userId)
                 .build();
         FAILED_MESSAGE_LOGGER.debug(SENDING_MESSAGE, message);

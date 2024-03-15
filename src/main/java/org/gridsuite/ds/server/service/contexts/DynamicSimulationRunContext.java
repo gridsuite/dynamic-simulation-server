@@ -23,11 +23,11 @@ public class DynamicSimulationRunContext extends AbstractComputationRunContext<D
 
     private final String mapping;
 
-    @Setter private byte[] dynamicModelContent;
+    @Setter private String dynamicModelContent;
 
-    @Setter private byte[] eventModelContent;
+    @Setter private String eventModelContent;
 
-    @Setter private byte[] curveContent;
+    @Setter private String curveContent;
 
     @Builder
     public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping, ReportContext reportContext, String userId, DynamicSimulationParameters parameters) {

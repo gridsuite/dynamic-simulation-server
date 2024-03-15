@@ -58,14 +58,14 @@ public class DynamicSimulationController {
                                           @RequestHeader(HEADER_USER_ID) String userId) {
 
         DynamicSimulationRunContext dynamicSimulationRunContext = DynamicSimulationRunContext.builder()
-                .networkUuid(networkUuid)
-                .variantId(variantId)
-                .receiver(receiver)
-                .reportContext(ReportContext.builder().reportId(reportId).reportName(reportName).reportType(reportType).build())
-                .userId(userId)
-                .provider(provider)
-                .mapping(mappingName)
-                .build();
+            .networkUuid(networkUuid)
+            .variantId(variantId)
+            .receiver(receiver)
+            .reportContext(ReportContext.builder().reportId(reportId).reportName(reportName).reportType(reportType).build())
+            .userId(userId)
+            .provider(provider)
+            .mapping(mappingName)
+            .build();
         UUID resultUuid = dynamicSimulationService.runAndSaveResult(dynamicSimulationRunContext, parameters);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }

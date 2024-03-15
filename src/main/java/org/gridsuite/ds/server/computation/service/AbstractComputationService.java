@@ -8,7 +8,6 @@ package org.gridsuite.ds.server.computation.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
-import org.gridsuite.ds.server.computation.repositories.ComputationResultRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,16 +29,15 @@ public abstract class AbstractComputationService<R> {
     protected String defaultProvider;
 
     protected UuidGeneratorService uuidGeneratorService;
-    protected ComputationResultRepository resultRepository;
 
-    protected AbstractComputationService(NotificationService notificationService, ComputationResultRepository resultRepository,
-                                         ObjectMapper objectMapper, UuidGeneratorService uuidGeneratorService,
+    protected AbstractComputationService(NotificationService notificationService,
+                                         ObjectMapper objectMapper,
+                                         UuidGeneratorService uuidGeneratorService,
                                          String defaultProvider) {
         this.notificationService = Objects.requireNonNull(notificationService);
         this.objectMapper = Objects.requireNonNull(objectMapper);
         this.uuidGeneratorService = Objects.requireNonNull(uuidGeneratorService);
         this.defaultProvider = Objects.requireNonNull(defaultProvider);
-        this.resultRepository = Objects.requireNonNull(resultRepository);
     }
 
     public void stop(UUID resultUuid, String receiver) {
@@ -50,19 +48,7 @@ public abstract class AbstractComputationService<R> {
 
     public abstract UUID runAndSaveResult(R runContext, UUID parametersUuid);
 
-    public void deleteResult(UUID resultUuid) {
-        resultRepository.delete(resultUuid);
-    }
+    public abstract void deleteResult(UUID resultUuid);
 
-    public void deleteResults(List<UUID> resultUuids) {
-        if (resultUuids != null && !resultUuids.isEmpty()) {
-            resultUuids.forEach(resultRepository::delete);
-        } else {
-            deleteResults();
-        }
-    }
-
-    public void deleteResults() {
-        resultRepository.deleteAll();
-    }
+    public abstract void deleteResults();
 }

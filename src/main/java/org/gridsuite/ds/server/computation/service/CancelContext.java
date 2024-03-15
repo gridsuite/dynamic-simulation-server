@@ -14,6 +14,8 @@ import org.springframework.messaging.support.MessageBuilder;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.gridsuite.ds.server.computation.service.NotificationService.HEADER_RECEIVER;
+import static org.gridsuite.ds.server.computation.service.NotificationService.HEADER_RESULT_UUID;
 import static org.gridsuite.ds.server.computation.utils.ContextUtils.getNonNullHeader;
 
 /**
@@ -34,15 +36,15 @@ public class CancelContext {
     public static CancelContext fromMessage(Message<String> message) {
         Objects.requireNonNull(message);
         MessageHeaders headers = message.getHeaders();
-        UUID resultUuid = UUID.fromString(getNonNullHeader(headers, "resultUuid"));
-        String receiver = (String) headers.get("receiver");
+        UUID resultUuid = UUID.fromString(getNonNullHeader(headers, HEADER_RESULT_UUID));
+        String receiver = (String) headers.get(HEADER_RECEIVER);
         return new CancelContext(resultUuid, receiver);
     }
 
     public Message<String> toMessage() {
         return MessageBuilder.withPayload("")
-                .setHeader("resultUuid", resultUuid.toString())
-                .setHeader("receiver", receiver)
+                .setHeader(HEADER_RESULT_UUID, resultUuid.toString())
+                .setHeader(HEADER_RECEIVER, receiver)
                 .build();
     }
 }

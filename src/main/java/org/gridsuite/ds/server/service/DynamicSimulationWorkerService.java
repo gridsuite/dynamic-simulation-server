@@ -20,7 +20,6 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.TimeSeries;
 import org.apache.commons.collections4.CollectionUtils;
-import org.gridsuite.ds.server.computation.repositories.ComputationResultRepository;
 import org.gridsuite.ds.server.computation.service.*;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
@@ -50,20 +49,19 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
 
     private final TimeSeriesClient timeSeriesClient;
 
-    private final DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult;
+    private final DynamicSimulationResultService dynamicSimulationResultService;
 
     public DynamicSimulationWorkerService(NetworkStoreService networkStoreService,
                                           NotificationService notificationService,
                                           ReportService reportService,
-                                          ComputationResultRepository resultRepository,
                                           ExecutionService executionService,
                                           DynamicSimulationObserver observer,
                                           ObjectMapper objectMapper,
                                           TimeSeriesClient timeSeriesClient,
-                                          DynamicSimulationWorkerUpdateResult dynamicSimulationWorkerUpdateResult) {
-        super(networkStoreService, notificationService, reportService, resultRepository, executionService, observer, objectMapper);
+                                          DynamicSimulationResultService dynamicSimulationResultService) {
+        super(networkStoreService, notificationService, reportService, executionService, observer, objectMapper);
         this.timeSeriesClient = timeSeriesClient;
-        this.dynamicSimulationWorkerUpdateResult = dynamicSimulationWorkerUpdateResult;
+        this.dynamicSimulationResultService = dynamicSimulationResultService;
     }
 
     /**
@@ -113,7 +111,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
 
         LOGGER.info("Update dynamic simulation [resultUuid={}, timeSeriesUuid={}, timeLineUuid={}, status={}",
                 resultUuid, timeSeriesUuid, timeLineUuid, status);
-        dynamicSimulationWorkerUpdateResult.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
+        dynamicSimulationResultService.doUpdateResult(resultUuid, timeSeriesUuid, timeLineUuid, status);
     }
 
     @Override
@@ -127,16 +125,16 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     }
 
     @Override
-    protected CompletableFuture<DynamicSimulationResult> getCompletableFuture(Network network, DynamicSimulationRunContext runContext, String provider, Reporter reporter) {
+    public CompletableFuture<DynamicSimulationResult> getCompletableFuture(Network network, DynamicSimulationRunContext runContext, String provider, Reporter reporter) {
 
         List<DynamicModelGroovyExtension> dynamicModelExtensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynaWaltzProvider.NAME);
-        DynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(new ByteArrayInputStream(runContext.getDynamicModelContent()), dynamicModelExtensions);
+        DynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(new ByteArrayInputStream(runContext.getDynamicModelContent().getBytes()), dynamicModelExtensions);
 
         List<EventModelGroovyExtension> eventModelExtensions = GroovyExtension.find(EventModelGroovyExtension.class, DynaWaltzProvider.NAME);
-        EventModelsSupplier eventModelsSupplier = new GroovyEventModelsSupplier(new ByteArrayInputStream(runContext.getEventModelContent()), eventModelExtensions);
+        EventModelsSupplier eventModelsSupplier = new GroovyEventModelsSupplier(new ByteArrayInputStream(runContext.getEventModelContent().getBytes()), eventModelExtensions);
 
         List<CurveGroovyExtension> curveExtensions = GroovyExtension.find(CurveGroovyExtension.class, DynaWaltzProvider.NAME);
-        CurvesSupplier curvesSupplier = new GroovyCurvesSupplier(new ByteArrayInputStream(runContext.getCurveContent()), curveExtensions);
+        CurvesSupplier curvesSupplier = new GroovyCurvesSupplier(new ByteArrayInputStream(runContext.getCurveContent().getBytes()), curveExtensions);
 
         DynamicSimulationParameters parameters = runContext.getParameters();
         LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {},", runContext.getNetworkUuid(), parameters.getStartTime(), parameters.getStopTime());
@@ -144,5 +142,10 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         DynamicSimulation.Runner runner = DynamicSimulation.find(provider);
         return runner.runAsync(network, dynamicModelsSupplier, eventModelsSupplier, curvesSupplier, runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
                 getComputationManager(), parameters, reporter);
+    }
+
+    @Override
+    protected void deleteResult(UUID resultUuid) {
+        dynamicSimulationResultService.deleteResult(resultUuid);
     }
 }

@@ -169,9 +169,9 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         );
 
         doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, timeLine)))
-                .when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any());
+                .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any(), any());
         doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, timeLine)))
-                .when(dynamicSimulationWorkerService).runAsync(any(), any(), isNull(), any(), any());
+                .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), isNull(), any());
 
         // prepare parameters
         DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
@@ -307,7 +307,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         List<TimelineEvent> timeLine = List.of();
 
         doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, timeLine)))
-                .when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any());
+                .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any(), any());
 
         // prepare parameters
         DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();

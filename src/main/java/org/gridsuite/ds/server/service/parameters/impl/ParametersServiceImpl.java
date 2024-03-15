@@ -10,8 +10,8 @@ import com.powsybl.commons.exceptions.UncheckedXmlStreamException;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynawaltz.DynaWaltzParameters;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
-import com.powsybl.dynawaltz.xml.ParametersXml;
 import com.powsybl.dynawaltz.parameters.ParametersSet;
+import com.powsybl.dynawaltz.xml.ParametersXml;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.XmlSerializableParameter;
@@ -28,8 +28,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.xml.stream.XMLStreamException;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.Collections;
 import java.util.List;
 
@@ -52,17 +52,17 @@ public class ParametersServiceImpl implements ParametersService {
     }
 
     @Override
-    public byte[] getEventModel(List<EventInfos> events) {
+    public String getEventModel(List<EventInfos> events) {
         String generatedGroovyEvents = eventGroovyGeneratorService.generate(events != null ? events : Collections.emptyList());
         LOGGER.info(generatedGroovyEvents);
-        return generatedGroovyEvents.getBytes(StandardCharsets.UTF_8);
+        return generatedGroovyEvents;
     }
 
     @Override
-    public byte[] getCurveModel(List<CurveInfos> curves) {
+    public String getCurveModel(List<CurveInfos> curves) {
         String generatedGroovyCurves = curveGroovyGeneratorService.generate(curves != null ? curves : Collections.emptyList());
         LOGGER.info(generatedGroovyCurves);
-        return generatedGroovyCurves.getBytes(StandardCharsets.UTF_8);
+        return generatedGroovyCurves;
     }
 
     @Override

@@ -13,9 +13,9 @@ import org.gridsuite.ds.server.computation.service.AbstractResultContext;
 import org.gridsuite.ds.server.computation.utils.ReportContext;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.support.MessageBuilder;
 
 import java.io.UncheckedIOException;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -41,7 +41,7 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
         // decode the parameters values
         DynamicSimulationParameters parameters;
         try {
-            parameters = objectMapper.treeToValue(objectMapper.readTree(message.getPayload()).get(MESSAGE_ROOT_NAME), DynamicSimulationParameters.class);
+            parameters = objectMapper.readValue(message.getPayload(), DynamicSimulationParameters.class);
         } catch (JsonProcessingException e) {
             throw new UncheckedIOException(e);
         }
@@ -59,19 +59,19 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
         String userId = (String) headers.get(HEADER_USER_ID);
 
         DynamicSimulationRunContext runContext = DynamicSimulationRunContext.builder()
-                .networkUuid(networkUuid)
-                .variantId(variantId)
-                .receiver(receiver)
-                .provider(provider)
-                .reportContext(ReportContext.builder().reportId(reportUuid).reportName(reporterId).reportType(reportType).build())
-                .userId(userId)
-                .parameters(parameters)
-                .build();
+            .networkUuid(networkUuid)
+            .variantId(variantId)
+            .receiver(receiver)
+            .provider(provider)
+            .reportContext(ReportContext.builder().reportId(reportUuid).reportName(reporterId).reportType(reportType).build())
+            .userId(userId)
+            .parameters(parameters)
+            .build();
 
         // specific headers for dynamic simulation
-        byte[] dynamicModelContent = (byte[]) headers.get(HEADER_DYNAMIC_MODEL_CONTENT);
-        byte[] eventModelContent = (byte[]) headers.get(HEADER_EVENT_MODEL_CONTENT);
-        byte[] curveContent = (byte[]) headers.get(HEADER_CURVE_CONTENT);
+        String dynamicModelContent = (String) headers.get(HEADER_DYNAMIC_MODEL_CONTENT);
+        String eventModelContent = (String) headers.get(HEADER_EVENT_MODEL_CONTENT);
+        String curveContent = (String) headers.get(HEADER_CURVE_CONTENT);
         runContext.setDynamicModelContent(dynamicModelContent);
         runContext.setEventModelContent(eventModelContent);
         runContext.setCurveContent(curveContent);
@@ -80,12 +80,9 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
     }
 
     @Override
-    public Message<String> toMessage(ObjectMapper objectMapper) {
-        return MessageBuilder.fromMessage(super.toMessage(objectMapper))
-                // specific headers for dynamic simulation
-                .setHeader(HEADER_DYNAMIC_MODEL_CONTENT, runContext.getDynamicModelContent())
-                .setHeader(HEADER_EVENT_MODEL_CONTENT, runContext.getEventModelContent())
-                .setHeader(HEADER_CURVE_CONTENT, runContext.getCurveContent())
-                .build();
+    public Map<String, String> getSpecificMsgHeaders() {
+        return Map.of(HEADER_DYNAMIC_MODEL_CONTENT, runContext.getDynamicModelContent(),
+            HEADER_EVENT_MODEL_CONTENT, runContext.getEventModelContent(),
+            HEADER_CURVE_CONTENT, runContext.getCurveContent());
     }
 }

@@ -258,7 +258,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         doAnswer((InvocationOnMock invocation) -> {
             throw new RuntimeException(TEST_EXCEPTION_MESSAGE);
         }).
-        when(dynamicSimulationWorkerService).runAsync(any(), any(), any(), any(), any());
+        when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any(), any());
 
         // prepare parameters
         DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
