@@ -136,7 +136,7 @@ public class DynamicSimulationController {
     @Operation(summary = "Stop a dynamic simulation computation")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation has been stopped")})
     public ResponseEntity<Void> stop(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
-                                           @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver) {
+                                           @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false, defaultValue = "") String receiver) {
         dynamicSimulationService.stop(resultUuid, receiver);
         return ResponseEntity.ok().build();
     }

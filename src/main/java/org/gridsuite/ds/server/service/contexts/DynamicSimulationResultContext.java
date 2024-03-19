@@ -69,12 +69,14 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
             .build();
 
         // specific headers for dynamic simulation
-        String dynamicModelContent = (String) headers.get(HEADER_DYNAMIC_MODEL_CONTENT);
-        String eventModelContent = (String) headers.get(HEADER_EVENT_MODEL_CONTENT);
-        String curveContent = (String) headers.get(HEADER_CURVE_CONTENT);
-        runContext.setDynamicModelContent(dynamicModelContent);
-        runContext.setEventModelContent(eventModelContent);
-        runContext.setCurveContent(curveContent);
+        // rabbit amqp by default convert a string with size more than 1024 to LongString
+        // so need to call toString() in every cases
+        Object dynamicModelContent = headers.get(HEADER_DYNAMIC_MODEL_CONTENT);
+        runContext.setDynamicModelContent(dynamicModelContent != null ? dynamicModelContent.toString() : "");
+        Object eventModelContent = headers.get(HEADER_EVENT_MODEL_CONTENT);
+        runContext.setEventModelContent(eventModelContent != null ? eventModelContent.toString() : "");
+        Object curveContent = headers.get(HEADER_CURVE_CONTENT);
+        runContext.setCurveContent(curveContent != null ? curveContent.toString() : "");
 
         return new DynamicSimulationResultContext(resultUuid, runContext);
     }
