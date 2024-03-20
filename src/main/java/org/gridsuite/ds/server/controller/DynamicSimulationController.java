@@ -120,7 +120,7 @@ public class DynamicSimulationController {
     @Operation(summary = "Delete a dynamic simulation result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result has been deleted")})
     public ResponseEntity<Void> deleteResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        dynamicSimulationService.deleteResult(resultUuid);
+        dynamicSimulationResultService.deleteResult(resultUuid);
         return ResponseEntity.ok().build();
     }
 
@@ -128,7 +128,7 @@ public class DynamicSimulationController {
     @Operation(summary = "Delete all dynamic simulation results from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All dynamic simulation results have been deleted")})
     public ResponseEntity<Void> deleteResults() {
-        dynamicSimulationService.deleteResults();
+        dynamicSimulationResultService.deleteResults();
         return ResponseEntity.ok().build();
     }
 
