@@ -42,7 +42,7 @@
     </developers>
 
     <properties>
-        <powsybl-ws-dependencies.version>2.7.0</powsybl-ws-dependencies.version>
+        <powsybl-ws-dependencies.version>2.8.0</powsybl-ws-dependencies.version>
         <jib.from.image>powsybl/java-dynawo:2.1.0</jib.from.image>
 
         <h2database.version>1.4.200</h2database.version>

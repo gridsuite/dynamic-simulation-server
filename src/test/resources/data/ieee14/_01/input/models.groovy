@@ -8,7 +8,6 @@
 import com.powsybl.iidm.network.Generator
 import com.powsybl.iidm.network.StaticVarCompensator
 import com.powsybl.iidm.network.Load
-import com.powsybl.dynawaltz.models.automatons.CurrentLimitAutomaton
 import com.powsybl.iidm.network.TwoSides
 
 for (Generator equipment : network.generators) {
