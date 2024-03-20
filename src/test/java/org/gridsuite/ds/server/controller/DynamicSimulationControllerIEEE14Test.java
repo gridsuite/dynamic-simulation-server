@@ -32,7 +32,6 @@ import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClien
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
@@ -49,13 +48,12 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static org.gridsuite.ds.server.computation.service.NotificationService.*;
-import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATION_TYPE;
+import static org.gridsuite.ds.server.computation.service.NotificationService.HEADER_RESULT_UUID;
+import static org.gridsuite.ds.server.computation.service.NotificationService.HEADER_USER_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doAnswer;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -81,7 +79,6 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     private static final String NETWORK_UUID_NOT_FOUND_STRING = "22222222-0000-0000-0000-000000000000";
     private static final String VARIANT_1_ID = "variant_1";
     private static final String NETWORK_FILE = "IEEE14.iidm";
-    private static final String TEST_EXCEPTION_MESSAGE = "Test exception";
 
     private final Map<UUID, List<TimeSeries<?, ?>>> timeSeriesMockBd = new HashMap<>();
 
@@ -250,35 +247,5 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
         // compare result only timeseries
         assertEquals(objectMapper.readTree(jsonExpectedTimeSeries), objectMapper.readTree(jsonResultTimeSeries));
-    }
-
-    @Test
-    public void test01GivenRunWithException() throws Exception {
-        // setup spy bean
-        doAnswer((InvocationOnMock invocation) -> {
-            throw new RuntimeException(TEST_EXCEPTION_MESSAGE);
-        }).
-        when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any(), any());
-
-        // prepare parameters
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
-
-        //run the dynamic simulation
-        MvcResult result = mockMvc.perform(
-                        post("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING)
-                                .contentType(APPLICATION_JSON)
-                                .header(HEADER_USER_ID, "testUserId")
-                                .content(objectMapper.writeValueAsString(parameters)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
-
-        // Message failed must be sent
-        Message<byte[]> messageSwitch = output.receive(1000 * 5, dsFailedDestination);
-
-        // check uuid and failed message
-        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
-        assertEquals(getFailedMessage(COMPUTATION_TYPE) + " : " + TEST_EXCEPTION_MESSAGE, messageSwitch.getHeaders().get(HEADER_MESSAGE));
     }
 }

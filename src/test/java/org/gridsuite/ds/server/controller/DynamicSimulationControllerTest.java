@@ -20,6 +20,7 @@ import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.timeseries.*;
 import org.apache.commons.collections4.CollectionUtils;
+import org.gridsuite.ds.server.computation.service.NotificationService;
 import org.gridsuite.ds.server.controller.utils.ParameterUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
@@ -29,7 +30,9 @@ import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.messaging.Message;
@@ -39,7 +42,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
+import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.ds.server.computation.service.NotificationService.*;
 import static org.gridsuite.ds.server.controller.utils.TestUtils.assertType;
@@ -68,11 +74,15 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     @Autowired
     private InputDestination input;
 
+    @SpyBean
+    private NotificationService notificationService;
+
     private static final String MAPPING_NAME = "IEEE14";
     private static final String NETWORK_UUID_STRING = "11111111-0000-0000-0000-000000000000";
     private static final String NETWORK_UUID_NOT_FOUND_STRING = "22222222-0000-0000-0000-000000000000";
     private static final String VARIANT_1_ID = "variant_1";
     private static final String TEST_FILE = "IEEE14.iidm";
+    private static final String TEST_EXCEPTION_MESSAGE = "Test exception";
 
     @Override
     public OutputDestination getOutputDestination() {
@@ -323,7 +333,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 .andReturn();
         UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
-        Message<byte[]> messageSwitch = output.receive(1000 * 10, dsResultDestination);
+        Message<byte[]> messageSwitch = output.receive(1000, dsResultDestination);
         assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
 
         // get the ending status of the calculation which must be is converged
@@ -346,5 +356,85 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                         get("/v1/results/{resultUuid}/timeline", runUuid))
                 .andExpect(status().isNoContent());
 
+    }
+
+    @Test
+    public void testGivenRunWithException() throws Exception {
+        // setup spy bean
+        doAnswer((InvocationOnMock invocation) -> CompletableFuture.supplyAsync(() -> {
+            throw new RuntimeException(TEST_EXCEPTION_MESSAGE);
+        }))
+        .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any(), any());
+
+        // prepare parameters
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
+
+        //run the dynamic simulation
+        MvcResult result = mockMvc.perform(
+                        post("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
+                                .contentType(APPLICATION_JSON)
+                                .header(HEADER_USER_ID, "testUserId")
+                                .content(objectMapper.writeValueAsString(parameters)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
+
+        // Message failed must be sent
+        Message<byte[]> messageSwitch = output.receive(1000, dsFailedDestination);
+
+        // check uuid and failed message
+        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
+        assertThat(Objects.requireNonNull(messageSwitch.getHeaders().get(HEADER_MESSAGE)).toString()).contains(TEST_EXCEPTION_MESSAGE);
+    }
+
+    @Test
+    public void testStop() throws Exception {
+        // Emit messages in separate threads, like in production.
+        // In test environment, the test binder calls consumers directly in the caller thread, i.e. the controller thead.
+        // By consequence, a real asynchronous Producer/Consumer can not be simulated like prod
+        // So mocking producer in a separated thread differing to the controller thread
+        doAnswer(invocation -> CompletableFuture.supplyAsync(() -> {
+            try {
+                return invocation.callRealMethod();
+            } catch (Throwable e) {
+                throw new RuntimeException("Error while wrapping sendRunMessage in a separated thread", e);
+            }
+        }))
+        .when(notificationService).sendRunMessage(any());
+
+        // mock DynamicSimulationWorkerService to fake a long task
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        doAnswer(invocation -> {
+            countDownLatch.countDown();
+            return CompletableFuture.supplyAsync(() ->
+                    new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), List.of()),
+                    CompletableFuture.delayedExecutor(1000, TimeUnit.MILLISECONDS)
+           );
+        })
+        .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any(), any());
+
+        // prepare parameters
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
+
+        //run the dynamic simulation on a specific variant
+        MvcResult result = mockMvc.perform(
+                        post("/v1/networks/{networkUuid}/run?variantId=" +
+                             VARIANT_1_ID + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING, NETWORK_UUID_STRING)
+                                .contentType(APPLICATION_JSON)
+                                .header(HEADER_USER_ID, "testUserId")
+                                .content(objectMapper.writeValueAsString(parameters)))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
+
+        // stop dynamic simulation
+        countDownLatch.await();
+        mockMvc.perform(put("/" + VERSION + "/results/{resultUuid}/stop", runUuid))
+                .andExpect(status().isOk());
+
+        Message<byte[]> message = output.receive(1000, dsStoppedDestination);
+        assertThat(message.getHeaders()).containsEntry("resultUuid", runUuid.toString());
+        assertThat(message.getHeaders()).containsEntry("message", getCancelMessage(COMPUTATION_TYPE));
     }
 }
