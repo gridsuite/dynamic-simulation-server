@@ -48,10 +48,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.ds.server.computation.service.NotificationService.HEADER_RESULT_UUID;
 import static org.gridsuite.ds.server.computation.service.NotificationService.HEADER_USER_ID;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -213,7 +212,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
         //TODO maybe find a more reliable way to test this : failed with 1000 * 30 timeout
         Message<byte[]> messageSwitch = output.receive(1000 * 40, dsResultDestination);
-        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
+        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
 
         // --- CHECK result at abstract level --- //
         // expected seriesNames
@@ -228,7 +227,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         // compare result only series' names
         expectedSeriesNames.forEach(expectedSeriesName -> {
             logger.info(String.format("Check time series %s exists or not : %b", expectedSeriesName, seriesNames.contains(expectedSeriesName)));
-            assertTrue(seriesNames.contains(expectedSeriesName));
+            assertThat(seriesNames).contains(expectedSeriesName);
         });
 
         // --- CHECK result at detail level --- //
@@ -246,6 +245,6 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         FileUtils.writeStringToFile(this, outputDir + RESOURCE_PATH_DELIMETER + "exported_" + RESULT_SIM_JSON, jsonResultTimeSeries);
 
         // compare result only timeseries
-        assertEquals(objectMapper.readTree(jsonExpectedTimeSeries), objectMapper.readTree(jsonResultTimeSeries));
+        assertThat(objectMapper.readTree(jsonResultTimeSeries)).isEqualTo(objectMapper.readTree(jsonExpectedTimeSeries));
     }
 }

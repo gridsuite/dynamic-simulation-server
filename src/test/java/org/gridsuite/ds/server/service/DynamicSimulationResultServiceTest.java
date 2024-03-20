@@ -7,11 +7,16 @@
 
 package org.gridsuite.ds.server.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.powsybl.timeseries.StoredDoubleTimeSeries;
+import com.powsybl.timeseries.StringTimeSeries;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
+import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.model.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
+import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -22,10 +27,13 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.BDDMockito.given;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -36,71 +44,94 @@ public class DynamicSimulationResultServiceTest {
 
     static Logger LOGGER = LoggerFactory.getLogger(DynamicSimulationResultServiceTest.class);
 
-    private static final String RESULT_UUID_STRING = "99999999-0000-0000-0000-000000000000";
-    private static final UUID RESULT_UUID = UUID.fromString(RESULT_UUID_STRING);
-
-    private static final String RESULT_UUID_2_STRING = "99999999-1111-0000-0000-000000000000";
-    private static final UUID RESULT_UUID_2 = UUID.fromString(RESULT_UUID_2_STRING);
-
-    @MockBean
+    @Autowired
     ResultRepository resultRepository;
 
     @Autowired
     ObjectMapper objectMapper;
 
+    @MockBean
+    TimeSeriesClient timeSeriesClient;
+
     @Autowired
     DynamicSimulationResultService dynamicSimulationResultService;
 
-    @Test
-    public void testUpdateStatusGivenOneResult() {
+    @Before
+    public void setUp() {
+        when(timeSeriesClient.sendTimeSeries(anyList())).thenReturn(new TimeSeriesGroupInfos(UUID.randomUUID()));
+    }
 
-        // setup resultRepository mock
-        List<ResultEntity> resultEntities = List.of(new ResultEntity(RESULT_UUID, null, null, DynamicSimulationStatus.CONVERGED.name()));
-        List<UUID> resultUuids = List.of(RESULT_UUID);
-        given(resultRepository.findAllById(resultUuids)).willReturn(resultEntities);
-        given(resultRepository.saveAllAndFlush(resultEntities)).willReturn(resultEntities);
-
-        // call method to be tested
-        List<UUID> updatedResultUuids = dynamicSimulationResultService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE.name());
-
-        // check result
-        // only one result
-        LOGGER.info("Size of expected updatedResultUuids = " + 1);
-        LOGGER.info("Size of actual updatedResultUuids = " + updatedResultUuids.size());
-        assertEquals(1, updatedResultUuids.size());
-
-        // the updated result must be identical to the expected one
-        LOGGER.info("Expected result uuid = " + RESULT_UUID);
-        LOGGER.info("Actual updated result uuid = " + updatedResultUuids.get(0));
-        assertEquals(RESULT_UUID, updatedResultUuids.get(0));
+    @After
+    public void cleanDB() {
+        resultRepository.deleteAll();
     }
 
     @Test
-    public void testUpdateStatusGivenTwoResults() throws JsonProcessingException {
+    public void testCrud() {
+        // --- insert an entity in the db --- //
+        ResultEntity resultEntity = dynamicSimulationResultService.insertStatus(DynamicSimulationStatus.CONVERGED.name());
 
-        // setup resultRepository mock
-        List<ResultEntity> resultEntities = List.of(
-                new ResultEntity(RESULT_UUID, null, null, DynamicSimulationStatus.CONVERGED.name()),
-                new ResultEntity(RESULT_UUID_2, null, null, DynamicSimulationStatus.CONVERGED.name())
-                );
-        List<UUID> resultUuids = List.of(RESULT_UUID, RESULT_UUID_2);
-        given(resultRepository.findAllById(resultUuids)).willReturn(resultEntities);
-        given(resultRepository.saveAllAndFlush(resultEntities)).willReturn(resultEntities);
+        assertThat(resultEntity.getId()).isNotNull();
 
-        // call method to be tested
-        List<UUID> updatedResultUuids = dynamicSimulationResultService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE.name());
+        Optional<ResultEntity> insertedResultEntityOpt = resultRepository.findById(resultEntity.getId());
+        LOGGER.info("Expected result status = " + DynamicSimulationStatus.CONVERGED);
+        LOGGER.info("Actual inserted result status = " + insertedResultEntityOpt.get().getStatus());
+        assertThat(insertedResultEntityOpt.get().getStatus()).isEqualTo(DynamicSimulationStatus.CONVERGED.name());
 
-        // check result
-        // only one result
-        LOGGER.info("Size of expected updatedResultUuids = " + 2);
-        LOGGER.info("Size of actual updatedResultUuids = " + updatedResultUuids.size());
-        assertEquals(2, updatedResultUuids.size());
+        // --- get status of the entity -- //
+        DynamicSimulationStatus status = dynamicSimulationResultService.getStatus(resultEntity.getId());
 
-        // the updated result must be identical to the expected one
-        String expectedResultUuidsJson = objectMapper.writeValueAsString(resultUuids);
-        String actualUpdatedResultUuids = objectMapper.writeValueAsString(updatedResultUuids);
-        LOGGER.info("Expected result uuids = " + expectedResultUuidsJson);
-        LOGGER.info("Actual updated result uuids = " + actualUpdatedResultUuids);
-        assertEquals(objectMapper.readTree(expectedResultUuidsJson), objectMapper.readTree(actualUpdatedResultUuids));
+        LOGGER.info("Expected result status = " + DynamicSimulationStatus.CONVERGED);
+        LOGGER.info("Actual get result status = " + insertedResultEntityOpt.get().getStatus());
+        assertThat(status).isEqualTo(DynamicSimulationStatus.CONVERGED);
+
+        // --- update the entity --- //
+        List<UUID> updatedResultUuids = dynamicSimulationResultService.updateStatus(List.of(resultEntity.getId()), DynamicSimulationStatus.NOT_DONE.name());
+
+        Optional<ResultEntity> updatedResultEntityOpt = resultRepository.findById(updatedResultUuids.get(0));
+        // status must be changed
+        LOGGER.info("Expected result status = " + DynamicSimulationStatus.NOT_DONE);
+        LOGGER.info("Actual updated result status = " + updatedResultEntityOpt.get().getStatus());
+        assertThat(updatedResultEntityOpt.get().getStatus()).isEqualTo(DynamicSimulationStatus.NOT_DONE.name());
+
+        // --- update the result with time-series and timeline --- //
+        dynamicSimulationResultService.updateResult(
+                resultEntity.getId(),
+                List.of(mock(StoredDoubleTimeSeries.class)),
+                List.of(mock(StringTimeSeries.class)),
+                DynamicSimulationStatus.CONVERGED
+        );
+
+        // new uuids time-series and timeline must be inserted
+        updatedResultEntityOpt = resultRepository.findById(resultEntity.getId());
+        assertThat(updatedResultEntityOpt.get().getTimeSeriesId()).isNotNull();
+        assertThat(updatedResultEntityOpt.get().getTimeLineId()).isNotNull();
+
+        // --- update the result without time-series and timeline --- //
+        dynamicSimulationResultService.updateResult(
+                resultEntity.getId(),
+                null,
+                null,
+                DynamicSimulationStatus.CONVERGED
+        );
+        // no uuids time-series and timeline
+        updatedResultEntityOpt = resultRepository.findById(resultEntity.getId());
+        assertThat(updatedResultEntityOpt.get().getTimeSeriesId()).isNull();
+        assertThat(updatedResultEntityOpt.get().getTimeLineId()).isNull();
+
+        // --- delete result --- //
+        dynamicSimulationResultService.deleteResult(resultEntity.getId());
+
+        Optional<ResultEntity> foundResultEntity = resultRepository.findById(resultEntity.getId());
+        assertThat(foundResultEntity).isNotPresent();
+
+        // --- delete all --- //
+        resultRepository.saveAllAndFlush(List.of(
+                new ResultEntity(null, null, null, DynamicSimulationStatus.RUNNING.name()),
+                new ResultEntity(null, null, null, DynamicSimulationStatus.RUNNING.name())
+        )).stream().map(ResultEntity::getId).toList();
+
+        dynamicSimulationResultService.deleteResults();
+        assertThat(resultRepository.findAll()).isEmpty();
     }
 }

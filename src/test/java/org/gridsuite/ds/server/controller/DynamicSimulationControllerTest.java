@@ -50,7 +50,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.ds.server.computation.service.NotificationService.*;
 import static org.gridsuite.ds.server.controller.utils.TestUtils.assertType;
 import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATION_TYPE;
-import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -158,8 +157,9 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
         Message<byte[]> messageSwitch = output.receive(1000 * 5, dsFailedDestination);
-        assertThat(UUID.fromString(Objects.requireNonNull(messageSwitch.getHeaders().get(HEADER_RESULT_UUID)).toString())).isEqualTo(runUuid);
-        assertThat(Objects.requireNonNull(messageSwitch.getHeaders().get(HEADER_MESSAGE)).toString()).contains(getFailedMessage(COMPUTATION_TYPE));
+        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
+        assertThat(Objects.requireNonNull(messageSwitch.getHeaders().get(HEADER_MESSAGE)).toString())
+            .contains(getFailedMessage(COMPUTATION_TYPE));
     }
 
     @Test
@@ -198,7 +198,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
         Message<byte[]> messageSwitch = output.receive(1000 * 10, dsResultDestination);
-        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
+        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
 
         //run the dynamic simulation on the implicit default variant
         result = mockMvc.perform(
@@ -212,7 +212,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
         messageSwitch = output.receive(1000 * 10, dsResultDestination);
-        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
+        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
 
         //get the calculation status
         result = mockMvc.perform(
@@ -223,8 +223,8 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         DynamicSimulationStatus status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
 
         //depending on the execution speed it can be both
-        assertTrue(DynamicSimulationStatus.CONVERGED == status
-                || DynamicSimulationStatus.RUNNING == status);
+        assertThat(DynamicSimulationStatus.CONVERGED == status
+                   || DynamicSimulationStatus.RUNNING == status).isTrue();
 
         //get the status of a non-existing simulation and expect a not found
         mockMvc.perform(
@@ -267,7 +267,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
 
-        assertSame(DynamicSimulationStatus.CONVERGED, status);
+        assertThat(status).isSameAs(DynamicSimulationStatus.CONVERGED);
 
         // test invalidate status => i.e. set NOT_DONE
         // set NOT_DONE
@@ -282,7 +282,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
             .andReturn();
         DynamicSimulationStatus statusAfterInvalidate = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
 
-        assertEquals(DynamicSimulationStatus.NOT_DONE, statusAfterInvalidate);
+        assertThat(statusAfterInvalidate).isSameAs(DynamicSimulationStatus.NOT_DONE);
 
         // set NOT_DONE for none existing result
         mockMvc.perform(
@@ -334,7 +334,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
         Message<byte[]> messageSwitch = output.receive(1000, dsResultDestination);
-        assertEquals(runUuid, UUID.fromString(messageSwitch.getHeaders().get(HEADER_RESULT_UUID).toString()));
+        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
 
         // get the ending status of the calculation which must be is converged
         result = mockMvc.perform(
@@ -344,7 +344,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         DynamicSimulationStatus status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
 
-        assertSame(DynamicSimulationStatus.CONVERGED, status);
+        assertThat(status).isSameAs(DynamicSimulationStatus.CONVERGED);
 
         //get time-series uuid of the calculation
         mockMvc.perform(
@@ -385,13 +385,14 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         // check uuid and failed message
         assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
-        assertThat(Objects.requireNonNull(messageSwitch.getHeaders().get(HEADER_MESSAGE)).toString()).contains(TEST_EXCEPTION_MESSAGE);
+        assertThat(Objects.requireNonNull(messageSwitch.getHeaders().get(HEADER_MESSAGE)).toString())
+            .contains(TEST_EXCEPTION_MESSAGE);
     }
 
     @Test
     public void testStop() throws Exception {
         // Emit messages in separate threads, like in production.
-        // In test environment, the test binder calls consumers directly in the caller thread, i.e. the controller thead.
+        // In test environment, the test binder calls consumers directly in the caller thread, i.e. the controller thread.
         // By consequence, a real asynchronous Producer/Consumer can not be simulated like prod
         // So mocking producer in a separated thread differing to the controller thread
         doAnswer(invocation -> CompletableFuture.supplyAsync(() -> {
@@ -401,18 +402,19 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 throw new RuntimeException("Error while wrapping sendRunMessage in a separated thread", e);
             }
         }))
-        .when(notificationService).sendRunMessage(any());
+                .when(notificationService).sendRunMessage(any());
 
         // mock DynamicSimulationWorkerService to fake a long task
         CountDownLatch countDownLatch = new CountDownLatch(1);
         doAnswer(invocation -> {
+            // using latch to trigger stop dynamic simulation
             countDownLatch.countDown();
             return CompletableFuture.supplyAsync(() ->
-                    new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), List.of()),
+                            new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), List.of()),
                     CompletableFuture.delayedExecutor(1000, TimeUnit.MILLISECONDS)
-           );
+            );
         })
-        .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any(), any());
+                .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any(), any());
 
         // prepare parameters
         DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
@@ -434,7 +436,8 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 .andExpect(status().isOk());
 
         Message<byte[]> message = output.receive(1000, dsStoppedDestination);
-        assertThat(message.getHeaders()).containsEntry("resultUuid", runUuid.toString());
-        assertThat(message.getHeaders()).containsEntry("message", getCancelMessage(COMPUTATION_TYPE));
+        assertThat(message.getHeaders())
+                .containsEntry("resultUuid", runUuid.toString())
+                .containsEntry("message", getCancelMessage(COMPUTATION_TYPE));
     }
 }
