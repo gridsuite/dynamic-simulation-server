@@ -94,7 +94,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 new ResourceSet("", TEST_FILE));
         Network network = Importers.importData("XIIDM", dataSource, null);
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_1_ID);
-        given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_STRING), PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW)).willReturn(network);
+        given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_STRING), PreloadingStrategy.COLLECTION)).willReturn(network);
     }
 
     @Override

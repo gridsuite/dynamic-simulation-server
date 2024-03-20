@@ -101,7 +101,7 @@ public class DynamicSimulationController {
         @ApiResponse(responseCode = "204", description = "Dynamic simulation status is empty"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
     public ResponseEntity<DynamicSimulationStatus> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        DynamicSimulationStatus result = dynamicSimulationResultService.getStatus(resultUuid);
+        DynamicSimulationStatus result = dynamicSimulationResultService.findStatus(resultUuid);
         return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result) :
                 ResponseEntity.noContent().build();
     }
@@ -111,7 +111,7 @@ public class DynamicSimulationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result uuids have been invalidated"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result has not been found")})
     public ResponseEntity<List<UUID>> invalidateStatus(@Parameter(description = "Result UUIDs") @RequestParam("resultUuid") List<UUID> resultUuids) {
-        List<UUID> result = dynamicSimulationResultService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE.name());
+        List<UUID> result = dynamicSimulationResultService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE);
         return CollectionUtils.isEmpty(result) ? ResponseEntity.notFound().build() :
                 ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result);
     }
@@ -120,7 +120,7 @@ public class DynamicSimulationController {
     @Operation(summary = "Delete a dynamic simulation result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result has been deleted")})
     public ResponseEntity<Void> deleteResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        dynamicSimulationResultService.deleteResult(resultUuid);
+        dynamicSimulationResultService.delete(resultUuid);
         return ResponseEntity.ok().build();
     }
 
@@ -128,7 +128,7 @@ public class DynamicSimulationController {
     @Operation(summary = "Delete all dynamic simulation results from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All dynamic simulation results have been deleted")})
     public ResponseEntity<Void> deleteResults() {
-        dynamicSimulationResultService.deleteResults();
+        dynamicSimulationResultService.deleteAll();
         return ResponseEntity.ok().build();
     }
 

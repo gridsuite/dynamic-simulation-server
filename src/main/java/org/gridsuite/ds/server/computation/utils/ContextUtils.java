@@ -4,22 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.ds.server.computation.utils;
 
 import com.powsybl.commons.PowsyblException;
 import org.springframework.messaging.MessageHeaders;
 
-/**
- * @author Thang PHAM <quyet-thang.pham at rte-france.com>
- */
 public final class ContextUtils {
-
     public static final int MSG_MAX_LENGTH = 256;
 
-    private ContextUtils() {
-
-    }
+    private ContextUtils() { }
 
     public static String getNonNullHeader(MessageHeaders headers, String name) {
         String header = (String) headers.get(name);

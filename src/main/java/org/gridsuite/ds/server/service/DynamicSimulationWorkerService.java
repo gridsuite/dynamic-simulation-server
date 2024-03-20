@@ -44,11 +44,9 @@ import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATI
  */
 @ComponentScan(basePackageClasses = {NetworkStoreService.class})
 @Service
-public class DynamicSimulationWorkerService extends AbstractWorkerService<DynamicSimulationResult, DynamicSimulationRunContext, DynamicSimulationParameters> {
+public class DynamicSimulationWorkerService extends AbstractWorkerService<DynamicSimulationResult, DynamicSimulationRunContext, DynamicSimulationParameters, DynamicSimulationResultService> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamicSimulationWorkerService.class);
-
-    private final DynamicSimulationResultService dynamicSimulationResultService;
 
     public DynamicSimulationWorkerService(NetworkStoreService networkStoreService,
                                           NotificationService notificationService,
@@ -57,8 +55,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                                           DynamicSimulationObserver observer,
                                           ObjectMapper objectMapper,
                                           DynamicSimulationResultService dynamicSimulationResultService) {
-        super(networkStoreService, notificationService, reportService, executionService, observer, objectMapper);
-        this.dynamicSimulationResultService = dynamicSimulationResultService;
+        super(networkStoreService, notificationService, reportService, dynamicSimulationResultService, executionService, observer, objectMapper);
     }
 
     /**
@@ -97,7 +94,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 DynamicSimulationStatus.CONVERGED :
                 DynamicSimulationStatus.DIVERGED;
 
-        dynamicSimulationResultService.updateResult(resultUuid, timeSeries, timeLineSeries, status);
+        resultService.updateResult(resultUuid, timeSeries, timeLineSeries, status);
     }
 
     @Override
@@ -128,10 +125,5 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         DynamicSimulation.Runner runner = DynamicSimulation.find(provider);
         return runner.runAsync(network, dynamicModelsSupplier, eventModelsSupplier, curvesSupplier, runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
                 getComputationManager(), parameters, reporter);
-    }
-
-    @Override
-    protected void deleteResult(UUID resultUuid) {
-        dynamicSimulationResultService.deleteResult(resultUuid);
     }
 }

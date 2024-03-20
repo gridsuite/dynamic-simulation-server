@@ -10,6 +10,7 @@ package org.gridsuite.ds.server.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.timeseries.StoredDoubleTimeSeries;
 import com.powsybl.timeseries.StringTimeSeries;
+import org.gridsuite.ds.server.computation.service.UuidGeneratorService;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.model.ResultEntity;
@@ -54,6 +55,9 @@ public class DynamicSimulationResultServiceTest {
     TimeSeriesClient timeSeriesClient;
 
     @Autowired
+    UuidGeneratorService uuidGeneratorService;
+
+    @Autowired
     DynamicSimulationResultService dynamicSimulationResultService;
 
     @Before
@@ -69,69 +73,68 @@ public class DynamicSimulationResultServiceTest {
     @Test
     public void testCrud() {
         // --- insert an entity in the db --- //
-        ResultEntity resultEntity = dynamicSimulationResultService.insertStatus(DynamicSimulationStatus.CONVERGED.name());
+        UUID entityUuid = uuidGeneratorService.generate();
+        dynamicSimulationResultService.insertStatus(List.of(entityUuid), DynamicSimulationStatus.CONVERGED);
 
-        assertThat(resultEntity.getId()).isNotNull();
-
-        Optional<ResultEntity> insertedResultEntityOpt = resultRepository.findById(resultEntity.getId());
+        Optional<ResultEntity> insertedResultEntityOpt = resultRepository.findById(entityUuid);
         LOGGER.info("Expected result status = " + DynamicSimulationStatus.CONVERGED);
         LOGGER.info("Actual inserted result status = " + insertedResultEntityOpt.get().getStatus());
-        assertThat(insertedResultEntityOpt.get().getStatus()).isEqualTo(DynamicSimulationStatus.CONVERGED.name());
+        assertThat(insertedResultEntityOpt.get().getStatus()).isSameAs(DynamicSimulationStatus.CONVERGED);
 
         // --- get status of the entity -- //
-        DynamicSimulationStatus status = dynamicSimulationResultService.getStatus(resultEntity.getId());
+        DynamicSimulationStatus status = dynamicSimulationResultService.findStatus(entityUuid);
 
         LOGGER.info("Expected result status = " + DynamicSimulationStatus.CONVERGED);
         LOGGER.info("Actual get result status = " + insertedResultEntityOpt.get().getStatus());
         assertThat(status).isEqualTo(DynamicSimulationStatus.CONVERGED);
 
         // --- update the entity --- //
-        List<UUID> updatedResultUuids = dynamicSimulationResultService.updateStatus(List.of(resultEntity.getId()), DynamicSimulationStatus.NOT_DONE.name());
+        List<UUID> updatedResultUuids = dynamicSimulationResultService.updateStatus(List.of(entityUuid), DynamicSimulationStatus.NOT_DONE);
 
         Optional<ResultEntity> updatedResultEntityOpt = resultRepository.findById(updatedResultUuids.get(0));
         // status must be changed
         LOGGER.info("Expected result status = " + DynamicSimulationStatus.NOT_DONE);
         LOGGER.info("Actual updated result status = " + updatedResultEntityOpt.get().getStatus());
-        assertThat(updatedResultEntityOpt.get().getStatus()).isEqualTo(DynamicSimulationStatus.NOT_DONE.name());
+        assertThat(updatedResultEntityOpt.get().getStatus()).isSameAs(DynamicSimulationStatus.NOT_DONE);
 
         // --- update the result with time-series and timeline --- //
         dynamicSimulationResultService.updateResult(
-                resultEntity.getId(),
+                entityUuid,
                 List.of(mock(StoredDoubleTimeSeries.class)),
                 List.of(mock(StringTimeSeries.class)),
                 DynamicSimulationStatus.CONVERGED
         );
 
         // new uuids time-series and timeline must be inserted
-        updatedResultEntityOpt = resultRepository.findById(resultEntity.getId());
+        updatedResultEntityOpt = resultRepository.findById(entityUuid);
         assertThat(updatedResultEntityOpt.get().getTimeSeriesId()).isNotNull();
         assertThat(updatedResultEntityOpt.get().getTimeLineId()).isNotNull();
 
         // --- update the result without time-series and timeline --- //
         dynamicSimulationResultService.updateResult(
-                resultEntity.getId(),
+                entityUuid,
                 null,
                 null,
                 DynamicSimulationStatus.CONVERGED
         );
         // no uuids time-series and timeline
-        updatedResultEntityOpt = resultRepository.findById(resultEntity.getId());
+        updatedResultEntityOpt = resultRepository.findById(entityUuid);
         assertThat(updatedResultEntityOpt.get().getTimeSeriesId()).isNull();
         assertThat(updatedResultEntityOpt.get().getTimeLineId()).isNull();
 
         // --- delete result --- //
-        dynamicSimulationResultService.deleteResult(resultEntity.getId());
+        dynamicSimulationResultService.delete(entityUuid);
 
-        Optional<ResultEntity> foundResultEntity = resultRepository.findById(resultEntity.getId());
+        Optional<ResultEntity> foundResultEntity = resultRepository.findById(entityUuid);
         assertThat(foundResultEntity).isNotPresent();
 
         // --- delete all --- //
         resultRepository.saveAllAndFlush(List.of(
-                new ResultEntity(null, null, null, DynamicSimulationStatus.RUNNING.name()),
-                new ResultEntity(null, null, null, DynamicSimulationStatus.RUNNING.name())
+                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING),
+                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING)
         )).stream().map(ResultEntity::getId).toList();
 
-        dynamicSimulationResultService.deleteResults();
+        dynamicSimulationResultService.deleteAll();
         assertThat(resultRepository.findAll()).isEmpty();
     }
 }

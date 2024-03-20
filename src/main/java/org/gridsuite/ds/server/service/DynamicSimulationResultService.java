@@ -2,6 +2,7 @@ package org.gridsuite.ds.server.service;
 
 import com.powsybl.timeseries.TimeSeries;
 import org.gridsuite.ds.server.DynamicSimulationException;
+import org.gridsuite.ds.server.computation.service.AbstractComputationResultService;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.model.ResultEntity;
@@ -20,7 +21,7 @@ import java.util.UUID;
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.RESULT_UUID_NOT_FOUND;
 
 @Service
-public class DynamicSimulationResultService {
+public class DynamicSimulationResultService extends AbstractComputationResultService<DynamicSimulationStatus> {
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamicSimulationResultService.class);
 
     public static final String MSG_RESULT_UUID_NOT_FOUND = "Result uuid not found: ";
@@ -31,10 +32,6 @@ public class DynamicSimulationResultService {
     public DynamicSimulationResultService(ResultRepository resultRepository, TimeSeriesClient timeSeriesClient) {
         this.resultRepository = resultRepository;
         this.timeSeriesClient = timeSeriesClient;
-    }
-
-    public ResultEntity insertStatus(String status) {
-        return resultRepository.save(new ResultEntity(null, null, null, status));
     }
 
     public UUID getTimeSeriesId(UUID resultUuid) {
@@ -51,17 +48,8 @@ public class DynamicSimulationResultService {
                 .getTimeLineId();
     }
 
-    public DynamicSimulationStatus getStatus(UUID resultUuid) {
-        Objects.requireNonNull(resultUuid);
-        String status = resultRepository.findById(resultUuid)
-                .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
-                .getStatus();
-
-        return status == null ? null : DynamicSimulationStatus.valueOf(status);
-    }
-
     @Transactional
-    public List<UUID> updateStatus(List<UUID> resultUuids, String status) {
+    public List<UUID> updateStatus(List<UUID> resultUuids, DynamicSimulationStatus status) {
         // find result entities
         List<ResultEntity> resultEntities = resultRepository.findAllById(resultUuids);
         // set entity with new values
@@ -88,11 +76,20 @@ public class DynamicSimulationResultService {
         ResultEntity resultEntity = resultRepository.findById(resultUuid).orElseThrow();
         resultEntity.setTimeSeriesId(timeSeriesUuid);
         resultEntity.setTimeLineId(timeLineUuid);
-        resultEntity.setStatus(status.name());
+        resultEntity.setStatus(status);
     }
 
+    @Override
     @Transactional
-    public void deleteResult(UUID resultUuid) {
+    public void insertStatus(List<UUID> resultUuids, DynamicSimulationStatus status) {
+        Objects.requireNonNull(resultUuids);
+        resultRepository.saveAll(resultUuids.stream()
+                .map(uuid -> new ResultEntity(uuid, null, null, status)).toList());
+    }
+
+    @Override
+    @Transactional
+    public void delete(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         ResultEntity resultEntity = resultRepository.findById(resultUuid).orElse(null);
         if (resultEntity == null) {
@@ -106,8 +103,9 @@ public class DynamicSimulationResultService {
         resultRepository.deleteById(resultUuid);
     }
 
+    @Override
     @Transactional
-    public void deleteResults() {
+    public void deleteAll() {
         List<ResultEntity> resultEntities = resultRepository.findAll();
 
         // call time series client to delete time-series and timeline
@@ -118,5 +116,13 @@ public class DynamicSimulationResultService {
 
         // then delete all results in local db
         resultRepository.deleteAllById(resultEntities.stream().map(ResultEntity::getId).toList());
+    }
+
+    @Override
+    public DynamicSimulationStatus findStatus(UUID resultUuid) {
+        Objects.requireNonNull(resultUuid);
+        return resultRepository.findById(resultUuid)
+                .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
+                .getStatus();
     }
 }

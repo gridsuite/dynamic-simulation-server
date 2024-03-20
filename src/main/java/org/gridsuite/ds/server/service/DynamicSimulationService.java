@@ -16,7 +16,6 @@ import org.gridsuite.ds.server.computation.service.UuidGeneratorService;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
-import org.gridsuite.ds.server.model.ResultEntity;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
@@ -36,11 +35,10 @@ import static org.gridsuite.ds.server.DynamicSimulationException.Type.PROVIDER_N
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 @Service
-public class DynamicSimulationService extends AbstractComputationService<DynamicSimulationRunContext> {
+public class DynamicSimulationService extends AbstractComputationService<DynamicSimulationRunContext, DynamicSimulationResultService, DynamicSimulationStatus> {
     public static final String COMPUTATION_TYPE = "dynamic simulation";
     private final DynamicMappingClient dynamicMappingClient;
     private final ParametersService parametersService;
-    private final DynamicSimulationResultService dynamicSimulationResultService;
 
     public DynamicSimulationService(
             NotificationService notificationService,
@@ -50,14 +48,13 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
             ParametersService parametersService,
             DynamicSimulationResultService dynamicSimulationResultService,
             @Value("${dynamic-simulation.default-provider}") String defaultProvider) {
-        super(notificationService, objectMapper, uuidGeneratorService, defaultProvider);
+        super(notificationService, dynamicSimulationResultService, objectMapper, uuidGeneratorService, defaultProvider);
         this.dynamicMappingClient = Objects.requireNonNull(dynamicMappingClient);
         this.parametersService = Objects.requireNonNull(parametersService);
-        this.dynamicSimulationResultService = dynamicSimulationResultService;
     }
 
     @Override
-    public UUID runAndSaveResult(DynamicSimulationRunContext runContext, UUID parametersUuid) {
+    public UUID runAndSaveResult(DynamicSimulationRunContext runContext) {
         throw new UnsupportedOperationException("Waiting parameters moving from study-server to dynamic-simulation-server");
     }
 
@@ -100,23 +97,14 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
         runContext.setEventModelContent(eventModel);
         runContext.setCurveContent(curveModel);
 
-        // update status to running status
-        ResultEntity resultEntity = dynamicSimulationResultService.insertStatus(DynamicSimulationStatus.RUNNING.name());
+        // insert a new result entity with running status
+        UUID resultUuid = uuidGeneratorService.generate();
+        resultService.insertStatus(List.of(resultUuid), DynamicSimulationStatus.RUNNING);
 
         // emit a message to launch the simulation by the worker service
-        Message<String> message = new DynamicSimulationResultContext(resultEntity.getId(), runContext).toMessage(objectMapper);
+        Message<String> message = new DynamicSimulationResultContext(resultUuid, runContext).toMessage(objectMapper);
         notificationService.sendRunMessage(message);
-        return resultEntity.getId();
-    }
-
-    @Override
-    public void deleteResult(UUID resultUuid) {
-        dynamicSimulationResultService.deleteResult(resultUuid);
-    }
-
-    @Override
-    public void deleteResults() {
-        dynamicSimulationResultService.deleteResults();
+        return resultUuid;
     }
 
     public List<String> getProviders() {

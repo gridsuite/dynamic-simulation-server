@@ -6,6 +6,7 @@
  */
 package org.gridsuite.ds.server.computation.service;
 
+import org.gridsuite.ds.server.computation.utils.ContextUtils;
 import org.gridsuite.ds.server.computation.utils.annotations.PostCompletion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,8 +17,6 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
-
-import static org.gridsuite.ds.server.computation.utils.ContextUtils.shortenMessage;
 
 /**
  * @author Anis Touri <anis.touri at rte-france.com
@@ -41,7 +40,6 @@ public class NotificationService {
     public static final String HEADER_PROVIDER = "provider";
     public static final String HEADER_MESSAGE = "message";
     public static final String HEADER_USER_ID = "userId";
-
     public static final String SENDING_MESSAGE = "Sending message : {}";
 
     private final StreamBridge publisher;
@@ -90,7 +88,7 @@ public class NotificationService {
                 .withPayload("")
                 .setHeader(HEADER_RESULT_UUID, resultUuid.toString())
                 .setHeader(HEADER_RECEIVER, receiver)
-                .setHeader(HEADER_MESSAGE, shortenMessage(
+                .setHeader(HEADER_MESSAGE, ContextUtils.shortenMessage(
                         getFailedMessage(computationLabel) + " : " + causeMessage))
                 .setHeader(HEADER_USER_ID, userId)
                 .build();

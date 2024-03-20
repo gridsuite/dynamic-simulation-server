@@ -6,11 +6,12 @@
  */
 package org.gridsuite.ds.server.model;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 
-import jakarta.persistence.*;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -22,9 +23,9 @@ import java.util.UUID;
 @Table(name = "result")
 @NoArgsConstructor
 @Entity
-public class ResultEntity extends AbstractManuallyAssignedIdentifierEntity<UUID> implements Serializable {
+public class ResultEntity implements Serializable {
 
-    public ResultEntity(UUID id, UUID timeSeriesId, UUID timeLineId, String status) {
+    public ResultEntity(UUID id, UUID timeSeriesId, UUID timeLineId, DynamicSimulationStatus status) {
         this.id = id;
         this.timeSeriesId = timeSeriesId;
         this.timeLineId = timeLineId;
@@ -33,7 +34,6 @@ public class ResultEntity extends AbstractManuallyAssignedIdentifierEntity<UUID>
 
     @Id
     @Column(name = "resultUuid")
-    @GeneratedValue
     private UUID id;
 
     @Column(name = "timeSeriesUuid")
@@ -43,6 +43,7 @@ public class ResultEntity extends AbstractManuallyAssignedIdentifierEntity<UUID>
     private UUID timeLineId;
 
     @Column(name = "status")
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private DynamicSimulationStatus status;
 
 }
