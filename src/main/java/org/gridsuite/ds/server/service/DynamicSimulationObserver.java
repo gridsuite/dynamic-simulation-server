@@ -26,7 +26,7 @@ public class DynamicSimulationObserver {
     private static final String TYPE_TAG_NAME = "type";
     private static final String STATUS_TAG_NAME = "status";
 
-    private static final String COMPUTATION_TYPE = "dynamicSimulation";
+    private static final String COMPUTATION_TYPE = "ds";
 
     private static final String COMPUTATION_COUNTER_NAME = OBSERVATION_PREFIX + "count";
 
