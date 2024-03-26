@@ -389,9 +389,8 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
             .contains(TEST_EXCEPTION_MESSAGE);
     }
 
-    @Test
-    public void testStop() throws Exception {
-        // Emit messages in separate threads, like in production.
+    // --- BEGIN Test cancelling a running computation ---//
+    private void mockSendRunMessage() {
         // In test environment, the test binder calls consumers directly in the caller thread, i.e. the controller thread.
         // By consequence, a real asynchronous Producer/Consumer can not be simulated like prod
         // So mocking producer in a separated thread differing to the controller thread
@@ -403,19 +402,27 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
             }
         }))
                 .when(notificationService).sendRunMessage(any());
+    }
 
-        // mock DynamicSimulationWorkerService to fake a long task
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        doAnswer(invocation -> {
-            // using latch to trigger stop dynamic simulation
-            countDownLatch.countDown();
-            return CompletableFuture.supplyAsync(() ->
-                            new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), List.of()),
-                    CompletableFuture.delayedExecutor(1000, TimeUnit.MILLISECONDS)
-            );
-        })
-                .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any(), any());
+    private void assertNotFoundResult(UUID runUuid) throws Exception {
+        mockMvc.perform(
+                        get("/v1/results/{resultUuid}/status", runUuid))
+                .andExpect(status().isNotFound());
+    }
 
+    private void assertRunningStatus(UUID runUuid) throws Exception {
+        //get the calculation status
+        MvcResult result = mockMvc.perform(
+                        get("/v1/results/{resultUuid}/status", runUuid))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        DynamicSimulationStatus status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
+
+        assertThat(status).isSameAs(DynamicSimulationStatus.RUNNING);
+    }
+
+    private UUID runAndCancel(CountDownLatch cancelLatch, int cancelDelay) throws Exception {
         // prepare parameters
         DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
 
@@ -430,14 +437,115 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 .andReturn();
         UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
+        assertRunningStatus(runUuid);
+
         // stop dynamic simulation
-        countDownLatch.await();
+        cancelLatch.await();
+        Thread.sleep(cancelDelay);
+
         mockMvc.perform(put("/" + VERSION + "/results/{resultUuid}/stop", runUuid))
                 .andExpect(status().isOk());
 
+        return runUuid;
+    }
+
+    @Test
+    public void testStopOnTime() throws Exception {
+        // Emit messages in separate threads, like in production.
+        mockSendRunMessage();
+
+        // mock DynamicSimulationWorkerService to fake a long task
+        CountDownLatch cancelLatch = new CountDownLatch(1);
+
+        doAnswer(invocation -> {
+            // using latch to trigger stop dynamic simulation
+            cancelLatch.countDown();
+            return CompletableFuture.supplyAsync(() ->
+                            new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), List.of()),
+                    CompletableFuture.delayedExecutor(1000, TimeUnit.MILLISECONDS)
+            );
+        })
+                .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any(), any());
+
+        // test run then cancel
+        UUID runUuid = runAndCancel(cancelLatch, 0);
+
+        // check result
+        // Must have a cancel message in the stop queue
         Message<byte[]> message = output.receive(1000, dsStoppedDestination);
         assertThat(message.getHeaders())
                 .containsEntry("resultUuid", runUuid.toString())
                 .containsEntry("message", getCancelMessage(COMPUTATION_TYPE));
+        // result has been deleted by cancel so not found
+        assertNotFoundResult(runUuid);
     }
+
+    @Test
+    public void testStopEarly() throws Exception {
+        // Emit messages in separate threads, like in production.
+        mockSendRunMessage();
+
+        // mock DynamicSimulationWorkerService to fake a long process before run task
+        CountDownLatch cancelLatch = new CountDownLatch(1);
+        doAnswer(invocation -> {
+            // using latch to trigger stop dynamic simulation
+            cancelLatch.countDown();
+
+            Thread.sleep(1000);
+
+            return CompletableFuture.supplyAsync(() ->
+                            new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), List.of())
+            );
+        })
+                .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any(), any());
+
+        // test run then cancel
+        UUID runUuid = runAndCancel(cancelLatch, 0);
+
+        // check result
+        // Must have a cancel message in the stop queue
+        Message<byte[]> message = output.receive(1000, dsStoppedDestination);
+        assertThat(message.getHeaders())
+                .containsEntry("resultUuid", runUuid.toString())
+                .containsEntry("message", getCancelMessage(COMPUTATION_TYPE));
+        // result has been deleted by cancel so not found
+        assertNotFoundResult(runUuid);
+    }
+
+    @Test
+    public void testStopLately() throws Exception {
+        // Emit messages in separate threads, like in production.
+        mockSendRunMessage();
+
+        // mock DynamicSimulationWorkerService to fake a short task
+        CountDownLatch cancelLatch = new CountDownLatch(1);
+        doAnswer(invocation -> {
+            // using latch to trigger stop dynamic simulation
+            cancelLatch.countDown();
+
+            return CompletableFuture.supplyAsync(() ->
+                    new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), List.of())
+            );
+        })
+                .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any(), any());
+
+        // test run then cancel
+        UUID runUuid = runAndCancel(cancelLatch, 1000);
+
+        // check result
+        // Must have a result message in the result queue since the computation finished so quickly in the mock
+        Message<byte[]> message = output.receive(1000, dsResultDestination);
+        assertThat(message.getHeaders())
+                .containsEntry("resultUuid", runUuid.toString());
+
+        // Must have a cancel message in the stop queue
+        message = output.receive(1000, dsStoppedDestination);
+        assertThat(message.getHeaders())
+                .containsEntry("resultUuid", runUuid.toString())
+                .containsEntry("message", getCancelMessage(COMPUTATION_TYPE));
+        // result has been deleted by cancel so not found
+        assertNotFoundResult(runUuid);
+    }
+    // --- END Test cancelling a running computation ---//
+
 }
