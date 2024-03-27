@@ -59,6 +59,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -456,7 +457,8 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         // stop dynamic simulation
         cancelLatch.await();
-        Thread.sleep(cancelDelay);
+        // custom additional wait
+        await().pollDelay(cancelDelay, TimeUnit.MILLISECONDS).until(() -> true);
 
         mockMvc.perform(put("/" + VERSION + "/results/{resultUuid}/stop", runUuid))
                 .andExpect(status().isOk());
@@ -502,11 +504,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
             cancelLatch.countDown();
 
             // fake a long process 1s before run computation
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            await().pollDelay(1000, TimeUnit.MILLISECONDS).until(() -> true);
 
             return CompletableFuture.supplyAsync(() ->
                     new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), List.of())
