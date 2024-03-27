@@ -11,6 +11,7 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
 import com.powsybl.commons.datasource.ResourceSet;
+import com.powsybl.dynamicsimulation.DynamicSimulation;
 import com.powsybl.dynamicsimulation.DynamicSimulationResult;
 import com.powsybl.dynamicsimulation.DynamicSimulationResultImpl;
 import com.powsybl.dynamicsimulation.TimelineEvent;
@@ -29,6 +30,7 @@ import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +46,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -390,18 +393,30 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     // --- BEGIN Test cancelling a running computation ---//
-    private void mockSendRunMessage() {
+    private void mockSendRunMessage(Supplier<CompletableFuture> runAsyncMock) {
         // In test environment, the test binder calls consumers directly in the caller thread, i.e. the controller thread.
         // By consequence, a real asynchronous Producer/Consumer can not be simulated like prod
         // So mocking producer in a separated thread differing to the controller thread
-        doAnswer(invocation -> CompletableFuture.supplyAsync(() -> {
-            try {
-                return invocation.callRealMethod();
-            } catch (Throwable e) {
-                throw new RuntimeException("Error while wrapping sendRunMessage in a separated thread", e);
+        doAnswer(invocation -> CompletableFuture.runAsync(() -> {
+            // static mock must be in the same thread of the consumer
+            // see : https://stackoverflow.com/questions/76406935/mock-static-method-in-spring-boot-integration-test
+            try (MockedStatic<DynamicSimulation> dynamicSimulationMockedStatic = mockStatic(DynamicSimulation.class)) {
+                DynamicSimulation.Runner runner = mock(DynamicSimulation.Runner.class);
+                dynamicSimulationMockedStatic.when(() -> DynamicSimulation.find(any())).thenReturn(runner);
+
+                // mock the computation
+                doAnswer(invocation2 -> runAsyncMock.get())
+                        .when(runner).runAsync(any(), any(), any(), any(), any(), any(), any(), any());
+
+                // call real method sendRunMessage
+                try {
+                    invocation.callRealMethod();
+                } catch (Throwable e) {
+                    throw new RuntimeException("Error while wrapping sendRunMessage in a separated thread", e);
+                }
             }
         }))
-                .when(notificationService).sendRunMessage(any());
+        .when(notificationService).sendRunMessage(any());
     }
 
     private void assertNotFoundResult(UUID runUuid) throws Exception {
@@ -451,21 +466,18 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
     @Test
     public void testStopOnTime() throws Exception {
-        // Emit messages in separate threads, like in production.
-        mockSendRunMessage();
-
-        // mock DynamicSimulationWorkerService to fake a long task
         CountDownLatch cancelLatch = new CountDownLatch(1);
-
-        doAnswer(invocation -> {
-            // using latch to trigger stop dynamic simulation
+        // Emit messages in separate threads, like in production.
+        mockSendRunMessage(() -> {
+            // using latch to trigger stop dynamic simulation at the beginning of computation
             cancelLatch.countDown();
+
+            // fake a long computation 1s
             return CompletableFuture.supplyAsync(() ->
                             new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), List.of()),
                     CompletableFuture.delayedExecutor(1000, TimeUnit.MILLISECONDS)
             );
-        })
-                .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any(), any());
+        });
 
         // test run then cancel
         UUID runUuid = runAndCancel(cancelLatch, 0);
@@ -478,26 +490,28 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 .containsEntry("message", getCancelMessage(COMPUTATION_TYPE));
         // result has been deleted by cancel so not found
         assertNotFoundResult(runUuid);
+
     }
 
     @Test
     public void testStopEarly() throws Exception {
-        // Emit messages in separate threads, like in production.
-        mockSendRunMessage();
-
-        // mock DynamicSimulationWorkerService to fake a long process before run task
         CountDownLatch cancelLatch = new CountDownLatch(1);
-        doAnswer(invocation -> {
-            // using latch to trigger stop dynamic simulation
+        // Emit messages in separate threads, like in production.
+        mockSendRunMessage(() -> {
+            // using latch to trigger stop dynamic simulation at the beginning of computation
             cancelLatch.countDown();
 
-            Thread.sleep(1000);
+            // fake a long process 1s before run computation
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
 
             return CompletableFuture.supplyAsync(() ->
-                            new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), List.of())
+                    new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), List.of())
             );
-        })
-                .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any(), any());
+        });
 
         // test run then cancel
         UUID runUuid = runAndCancel(cancelLatch, 0);
@@ -514,20 +528,17 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
     @Test
     public void testStopLately() throws Exception {
-        // Emit messages in separate threads, like in production.
-        mockSendRunMessage();
-
-        // mock DynamicSimulationWorkerService to fake a short task
         CountDownLatch cancelLatch = new CountDownLatch(1);
-        doAnswer(invocation -> {
-            // using latch to trigger stop dynamic simulation
+        // Emit messages in separate threads, like in production.
+        mockSendRunMessage(() -> {
+            // using latch to trigger stop dynamic simulation at the beginning of computation
             cancelLatch.countDown();
 
+            // fake a short computation
             return CompletableFuture.supplyAsync(() ->
                     new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), List.of())
             );
-        })
-                .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any(), any());
+        });
 
         // test run then cancel
         UUID runUuid = runAndCancel(cancelLatch, 1000);
