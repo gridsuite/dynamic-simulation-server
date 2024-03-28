@@ -394,7 +394,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     // --- BEGIN Test cancelling a running computation ---//
-    private void mockSendRunMessage(Supplier<CompletableFuture> runAsyncMock) {
+    private void mockSendRunMessage(Supplier<CompletableFuture<?>> runAsyncMock) {
         // In test environment, the test binder calls consumers directly in the caller thread, i.e. the controller thread.
         // By consequence, a real asynchronous Producer/Consumer can not be simulated like prod
         // So mocking producer in a separated thread differing to the controller thread
@@ -499,17 +499,20 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     public void testStopEarly() throws Exception {
         CountDownLatch cancelLatch = new CountDownLatch(1);
         // Emit messages in separate threads, like in production.
-        mockSendRunMessage(() -> {
+        mockSendRunMessage(() -> CompletableFuture.supplyAsync(() ->
+                new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), List.of())
+            )
+        );
+
+        doAnswer(invocation -> {
             // using latch to trigger stop dynamic simulation at the beginning of computation
             cancelLatch.countDown();
 
             // fake a long process 1s before run computation
             await().pollDelay(1000, TimeUnit.MILLISECONDS).until(() -> true);
-
-            return CompletableFuture.supplyAsync(() ->
-                    new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), List.of())
-            );
-        });
+            return invocation.callRealMethod();
+        })
+        .when(dynamicSimulationWorkerService).preRun(any(), any());
 
         // test run then cancel
         UUID runUuid = runAndCancel(cancelLatch, 0);

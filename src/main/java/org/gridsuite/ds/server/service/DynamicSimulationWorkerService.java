@@ -107,6 +107,12 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         return COMPUTATION_TYPE;
     }
 
+    // open the visibility from protected to public to mock in a test where the stop arrives early
+    @Override
+    public void preRun(DynamicSimulationRunContext ignoredRunContext, Reporter ignoredReporter) {
+        super.preRun(ignoredRunContext, ignoredReporter);
+    }
+
     @Override
     public CompletableFuture<DynamicSimulationResult> getCompletableFuture(Network network, DynamicSimulationRunContext runContext, String provider, Reporter reporter) {
 
@@ -125,5 +131,11 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         DynamicSimulation.Runner runner = DynamicSimulation.find(provider);
         return runner.runAsync(network, dynamicModelsSupplier, eventModelsSupplier, curvesSupplier, runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
                 getComputationManager(), parameters, reporter);
+    }
+
+    @Override
+    protected void postRun(DynamicSimulationRunContext ignoredRunContext, Reporter ignoredReporter) {
+        super.postRun(ignoredRunContext, ignoredReporter);
+        LOGGER.info("Always run");
     }
 }
