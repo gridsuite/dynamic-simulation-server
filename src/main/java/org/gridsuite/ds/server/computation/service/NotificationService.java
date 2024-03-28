@@ -6,7 +6,7 @@
  */
 package org.gridsuite.ds.server.computation.service;
 
-import org.gridsuite.ds.server.computation.utils.ContextUtils;
+import org.gridsuite.ds.server.computation.utils.MessageUtils;
 import org.gridsuite.ds.server.computation.utils.annotations.PostCompletion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,7 +88,7 @@ public class NotificationService {
                 .withPayload("")
                 .setHeader(HEADER_RESULT_UUID, resultUuid.toString())
                 .setHeader(HEADER_RECEIVER, receiver)
-                .setHeader(HEADER_MESSAGE, ContextUtils.shortenMessage(
+                .setHeader(HEADER_MESSAGE, MessageUtils.shortenMessage(
                         getFailedMessage(computationLabel) + " : " + causeMessage))
                 .setHeader(HEADER_USER_ID, userId)
                 .build();

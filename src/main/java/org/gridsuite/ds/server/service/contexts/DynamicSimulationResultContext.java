@@ -20,7 +20,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static org.gridsuite.ds.server.computation.service.NotificationService.*;
-import static org.gridsuite.ds.server.computation.utils.ContextUtils.getNonNullHeader;
+import static org.gridsuite.ds.server.computation.utils.MessageUtils.getNonNullHeader;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>

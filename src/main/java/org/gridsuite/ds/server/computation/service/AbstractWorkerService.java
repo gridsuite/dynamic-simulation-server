@@ -70,7 +70,7 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
         this.objectMapper = objectMapper;
     }
 
-    public PreloadingStrategy getNetworkPreloadingStrategy() {
+    protected PreloadingStrategy getNetworkPreloadingStrategy() {
         return PreloadingStrategy.COLLECTION;
     }
 
@@ -124,7 +124,6 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
 
                 Network network = getNetwork(resultContext.getRunContext().getNetworkUuid(),
                         resultContext.getRunContext().getVariantId());
-
                 S result = run(network, resultContext.getRunContext(), resultContext.getResultUuid());
 
                 long nanoTime = System.nanoTime();
@@ -164,19 +163,13 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
     protected abstract void saveResult(Network network, AbstractResultContext<R> resultContext, S result);
 
     /**
-     * Do some extra task before run the computation, e.g. print log or init extra data for the run context
+     * Do some extra task before running the computation, e.g. print log or init extra data for the run context
      */
-    protected void onBeforeRunAsync(R runContext, Reporter reporter) {
+    protected void preRun(R runContext, Reporter reporter) {
         LOGGER.info("Run {} computation ...", getComputationType());
     }
 
-    /**
-     * Do some extra task after run the computation, e.g. do some operations on report
-     */
-    protected void onAfterRunAsync(R runContext, Reporter reporter) { }
-
     protected S run(Network network, R runContext, UUID resultUuid) throws Exception {
-
         String provider = runContext.getProvider();
         AtomicReference<Reporter> rootReporter = new AtomicReference<>(Reporter.NO_OP);
         Reporter reporter = Reporter.NO_OP;
@@ -191,17 +184,18 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
                     runContext, () -> reportService.deleteReport(runContext.getReportContext().getReportId(), reportType));
         }
 
-        onBeforeRunAsync(runContext, reporter);
+        preRun(runContext, reporter);
         CompletableFuture<S> future = runAsync(network, runContext, provider, reporter, resultUuid);
-
         S result = future == null ? null : observer.observeRun("run", runContext, future::get);
-        onAfterRunAsync(runContext, reporter);
+        postRun(runContext, reporter);
 
         if (runContext.getReportContext().getReportId() != null) {
             observer.observe("report.send", runContext, () -> reportService.sendReport(runContext.getReportContext().getReportId(), rootReporter.get()));
         }
         return result;
     }
+
+    protected void postRun(R runContext, Reporter reporter) { }
 
     protected CompletableFuture<S> runAsync(
             Network network,

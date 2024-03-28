@@ -7,7 +7,7 @@
 package org.gridsuite.ds.server.computation.service;
 
 import lombok.Getter;
-import org.gridsuite.ds.server.computation.utils.ContextUtils;
+import org.gridsuite.ds.server.computation.utils.MessageUtils;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
@@ -15,8 +15,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import java.util.Objects;
 import java.util.UUID;
 
-import static org.gridsuite.ds.server.computation.service.NotificationService.HEADER_RECEIVER;
-import static org.gridsuite.ds.server.computation.service.NotificationService.HEADER_RESULT_UUID;
+import static org.gridsuite.ds.server.computation.service.NotificationService.*;
 
 /**
  * @author Anis Touri <anis.touri at rte-france.com>
@@ -36,7 +35,7 @@ public class CancelContext {
     public static CancelContext fromMessage(Message<String> message) {
         Objects.requireNonNull(message);
         MessageHeaders headers = message.getHeaders();
-        UUID resultUuid = UUID.fromString(ContextUtils.getNonNullHeader(headers, HEADER_RESULT_UUID));
+        UUID resultUuid = UUID.fromString(MessageUtils.getNonNullHeader(headers, HEADER_RESULT_UUID));
         String receiver = (String) headers.get(HEADER_RECEIVER);
         return new CancelContext(resultUuid, receiver);
     }
