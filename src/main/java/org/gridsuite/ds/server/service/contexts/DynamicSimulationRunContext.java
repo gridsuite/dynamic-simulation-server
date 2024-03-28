@@ -7,45 +7,32 @@
 package org.gridsuite.ds.server.service.contexts;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
+import org.gridsuite.ds.server.computation.service.AbstractComputationRunContext;
+import org.gridsuite.ds.server.computation.utils.ReportContext;
 
-import java.util.Objects;
 import java.util.UUID;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 @Getter
-public class DynamicSimulationRunContext {
+public class DynamicSimulationRunContext extends AbstractComputationRunContext<DynamicSimulationParameters> {
 
-    private final String provider;
+    private final String mapping;
 
-    private final String receiver;
+    @Setter private String dynamicModelContent;
 
-    private final UUID networkUuid;
+    @Setter private String eventModelContent;
 
-    private final String variantId;
+    @Setter private String curveContent;
 
-    private final byte[] dynamicModelContent;
-
-    private final byte[] eventModelContent;
-
-    private final byte[] curveContent;
-
-    private final DynamicSimulationParameters parameters;
-    private final String userId;
-
-    public DynamicSimulationRunContext(String provider, String receiver, UUID networkUuid, String variantId, byte[] dynamicModelContent,
-                                       byte[] eventModelContent, byte[] curveContent, DynamicSimulationParameters parameters, String userId) {
-        this.provider = provider;
-        this.receiver = receiver;
-        this.networkUuid = Objects.requireNonNull(networkUuid);
-        this.variantId = variantId;
-        this.dynamicModelContent = dynamicModelContent;
-        this.eventModelContent = eventModelContent;
-        this.curveContent = curveContent;
-        this.parameters = parameters;
-        this.userId = userId;
+    @Builder
+    public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping, ReportContext reportContext, String userId, DynamicSimulationParameters parameters) {
+        super(networkUuid, variantId, receiver, reportContext, userId, provider, parameters);
+        this.mapping = mapping;
     }
 }
 

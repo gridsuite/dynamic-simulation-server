@@ -6,17 +6,59 @@
  */
 package org.gridsuite.ds.server.config;
 
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.powsybl.dynamicsimulation.json.DynamicSimulationParametersJsonModule;
+import com.powsybl.timeseries.json.TimeSeriesJsonModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
 /**
+ * This class is taken from org/gridsuite/study/server/RestTemplateConfig.java
+ * to configure only dynamic-simulation related serialization modules
+ *
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @Configuration
 public class RestTemplateConfig {
     @Bean
     public RestTemplate restTemplate() {
-        return new RestTemplate();
+        final RestTemplate restTemplate = new RestTemplate();
+
+        //find and replace Jackson message converter with our own
+        for (int i = 0; i < restTemplate.getMessageConverters().size(); i++) {
+            final HttpMessageConverter<?> httpMessageConverter = restTemplate.getMessageConverters().get(i);
+            if (httpMessageConverter instanceof MappingJackson2HttpMessageConverter) {
+                restTemplate.getMessageConverters().set(i, mappingJackson2HttpMessageConverter());
+            }
+        }
+
+        return restTemplate;
+    }
+
+    private MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+        converter.setObjectMapper(objectMapper());
+        return converter;
+    }
+
+    private ObjectMapper createObjectMapper() {
+        var objectMapper = Jackson2ObjectMapperBuilder.json()
+                .featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .featuresToEnable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+                .build();
+        objectMapper.registerModule(new DynamicSimulationParametersJsonModule());
+        objectMapper.registerModule(new TimeSeriesJsonModule());
+        return objectMapper;
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return createObjectMapper();
     }
 }

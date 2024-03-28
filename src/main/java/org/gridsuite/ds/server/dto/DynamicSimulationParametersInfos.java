@@ -29,10 +29,12 @@ import java.util.List;
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DynamicSimulationParametersInfos {
+    private String provider;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Double startTime;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Double stopTime;
+    private String mapping;
     private String solverId;
     private List<SolverInfos> solvers;
     private NetworkInfos network;

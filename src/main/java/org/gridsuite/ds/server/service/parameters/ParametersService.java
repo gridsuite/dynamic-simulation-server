@@ -18,9 +18,9 @@ import java.util.List;
  */
 public interface ParametersService {
 
-    byte[] getEventModel(List<EventInfos> events);
+    String getEventModel(List<EventInfos> events);
 
-    byte[] getCurveModel(List<CurveInfos> curves);
+    String getCurveModel(List<CurveInfos> curves);
 
     DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams, String provider, DynamicSimulationParametersInfos inputParameters);
 }
