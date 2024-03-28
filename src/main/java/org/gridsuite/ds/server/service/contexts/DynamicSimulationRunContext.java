@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.gridsuite.ds.server.computation.service.AbstractComputationRunContext;
 import org.gridsuite.ds.server.computation.utils.ReportContext;
+import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 
 import java.util.UUID;
 
@@ -19,18 +20,22 @@ import java.util.UUID;
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 @Getter
-public class DynamicSimulationRunContext extends AbstractComputationRunContext<DynamicSimulationParameters> {
+public class DynamicSimulationRunContext extends AbstractComputationRunContext<DynamicSimulationParametersInfos> {
 
-    private final String mapping;
+    @Setter private String mapping;
 
+    // fields which are enriched in worker service
     @Setter private String dynamicModelContent;
 
     @Setter private String eventModelContent;
 
     @Setter private String curveContent;
 
+    @Setter private DynamicSimulationParameters dynamicSimulationParameters;
+
     @Builder
-    public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping, ReportContext reportContext, String userId, DynamicSimulationParameters parameters) {
+    public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
+                                       ReportContext reportContext, String userId, DynamicSimulationParametersInfos parameters) {
         super(networkUuid, variantId, receiver, reportContext, userId, provider, parameters);
         this.mapping = mapping;
     }

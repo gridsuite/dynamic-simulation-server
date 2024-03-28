@@ -18,6 +18,7 @@ import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.DynamicSimulationResultService;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
+import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,10 +41,14 @@ public class DynamicSimulationController {
 
     private final DynamicSimulationService dynamicSimulationService;
     private final DynamicSimulationResultService dynamicSimulationResultService;
+    private final ParametersService parametersService;
 
-    public DynamicSimulationController(DynamicSimulationService dynamicSimulationService, DynamicSimulationResultService dynamicSimulationResultService) {
+    public DynamicSimulationController(DynamicSimulationService dynamicSimulationService,
+                                       DynamicSimulationResultService dynamicSimulationResultService,
+                                       ParametersService parametersService) {
         this.dynamicSimulationService = dynamicSimulationService;
         this.dynamicSimulationResultService = dynamicSimulationResultService;
+        this.parametersService = parametersService;
     }
 
     @PostMapping(value = "/networks/{networkUuid}/run", produces = "application/json")
@@ -60,16 +65,17 @@ public class DynamicSimulationController {
                                           @RequestBody DynamicSimulationParametersInfos parameters,
                                           @RequestHeader(HEADER_USER_ID) String userId) {
 
-        DynamicSimulationRunContext dynamicSimulationRunContext = DynamicSimulationRunContext.builder()
-            .networkUuid(networkUuid)
-            .variantId(variantId)
-            .receiver(receiver)
-            .reportContext(ReportContext.builder().reportId(reportId).reportName(reportName).reportType(reportType).build())
-            .userId(userId)
-            .provider(provider)
-            .mapping(mappingName)
-            .build();
-        UUID resultUuid = dynamicSimulationService.runAndSaveResult(dynamicSimulationRunContext, parameters);
+        DynamicSimulationRunContext dynamicSimulationRunContext = parametersService.createRunContext(
+            networkUuid,
+            variantId,
+            receiver,
+            provider,
+            mappingName,
+            ReportContext.builder().reportId(reportId).reportName(reportName).reportType(reportType).build(),
+            userId,
+            parameters);
+
+        UUID resultUuid = dynamicSimulationService.runAndSaveResult(dynamicSimulationRunContext);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 

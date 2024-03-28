@@ -8,9 +8,9 @@ package org.gridsuite.ds.server.service.contexts;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import org.gridsuite.ds.server.computation.service.AbstractResultContext;
 import org.gridsuite.ds.server.computation.utils.ReportContext;
+import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 
@@ -27,9 +27,7 @@ import static org.gridsuite.ds.server.computation.utils.MessageUtils.getNonNullH
  */
 public class DynamicSimulationResultContext extends AbstractResultContext<DynamicSimulationRunContext> {
 
-    public static final String HEADER_DYNAMIC_MODEL_CONTENT = "dynamicModelContent";
-    public static final String HEADER_EVENT_MODEL_CONTENT = "eventModelContent";
-    public static final String HEADER_CURVE_CONTENT = "curveContent";
+    public static final String HEADER_MAPPING = "mapping";
 
     public DynamicSimulationResultContext(UUID resultUuid, DynamicSimulationRunContext runContext) {
         super(resultUuid, runContext);
@@ -39,9 +37,9 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
         Objects.requireNonNull(message);
 
         // decode the parameters values
-        DynamicSimulationParameters parameters;
+        DynamicSimulationParametersInfos parametersInfos;
         try {
-            parameters = objectMapper.readValue(message.getPayload(), DynamicSimulationParameters.class);
+            parametersInfos = objectMapper.readValue(message.getPayload(), DynamicSimulationParametersInfos.class);
         } catch (JsonProcessingException e) {
             throw new UncheckedIOException(e);
         }
@@ -65,26 +63,17 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
             .provider(provider)
             .reportContext(ReportContext.builder().reportId(reportUuid).reportName(reporterId).reportType(reportType).build())
             .userId(userId)
-            .parameters(parameters)
+            .parameters(parametersInfos)
             .build();
 
         // specific headers for dynamic simulation
-        // rabbit amqp by default convert a string with size more than 1024 to LongString
-        // so need to call toString() in every cases
-        Object dynamicModelContent = headers.get(HEADER_DYNAMIC_MODEL_CONTENT);
-        runContext.setDynamicModelContent(dynamicModelContent != null ? dynamicModelContent.toString() : "");
-        Object eventModelContent = headers.get(HEADER_EVENT_MODEL_CONTENT);
-        runContext.setEventModelContent(eventModelContent != null ? eventModelContent.toString() : "");
-        Object curveContent = headers.get(HEADER_CURVE_CONTENT);
-        runContext.setCurveContent(curveContent != null ? curveContent.toString() : "");
+        runContext.setMapping(getNonNullHeader(headers, HEADER_MAPPING));
 
         return new DynamicSimulationResultContext(resultUuid, runContext);
     }
 
     @Override
     public Map<String, String> getSpecificMsgHeaders() {
-        return Map.of(HEADER_DYNAMIC_MODEL_CONTENT, runContext.getDynamicModelContent(),
-            HEADER_EVENT_MODEL_CONTENT, runContext.getEventModelContent(),
-            HEADER_CURVE_CONTENT, runContext.getCurveContent());
+        return Map.of(HEADER_MAPPING, runContext.getMapping());
     }
 }

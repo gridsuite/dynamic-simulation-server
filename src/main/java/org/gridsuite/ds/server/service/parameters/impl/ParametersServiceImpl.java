@@ -8,23 +8,28 @@ package org.gridsuite.ds.server.service.parameters.impl;
 
 import com.powsybl.commons.exceptions.UncheckedXmlStreamException;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
+import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
 import com.powsybl.dynawaltz.DynaWaltzParameters;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
 import com.powsybl.dynawaltz.parameters.ParametersSet;
 import com.powsybl.dynawaltz.xml.ParametersXml;
 import org.apache.commons.lang3.ArrayUtils;
+import org.gridsuite.ds.server.DynamicSimulationException;
+import org.gridsuite.ds.server.computation.utils.ReportContext;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.XmlSerializableParameter;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
+import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.parameters.CurveGroovyGeneratorService;
 import org.gridsuite.ds.server.service.parameters.EventGroovyGeneratorService;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.xml.stream.XMLStreamException;
@@ -32,6 +37,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.PROVIDER_NOT_FOUND;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -45,10 +54,15 @@ public class ParametersServiceImpl implements ParametersService {
 
     private final EventGroovyGeneratorService eventGroovyGeneratorService;
 
+    private final String defaultProvider;
+
     @Autowired
-    public ParametersServiceImpl(CurveGroovyGeneratorService curveGroovyGeneratorService, EventGroovyGeneratorService eventGroovyGeneratorService) {
+    public ParametersServiceImpl(CurveGroovyGeneratorService curveGroovyGeneratorService,
+                                 EventGroovyGeneratorService eventGroovyGeneratorService,
+                                 @Value("${dynamic-simulation.default-provider}") String defaultProvider) {
         this.curveGroovyGeneratorService = curveGroovyGeneratorService;
         this.eventGroovyGeneratorService = eventGroovyGeneratorService;
+        this.defaultProvider = defaultProvider;
     }
 
     @Override
@@ -111,5 +125,38 @@ public class ParametersServiceImpl implements ParametersService {
         } catch (XMLStreamException e) {
             throw new UncheckedXmlStreamException(e);
         }
+    }
+
+    @Override
+    public DynamicSimulationRunContext createRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
+                                                 ReportContext reportContext, String userId, DynamicSimulationParametersInfos parameters) {
+        DynamicSimulationRunContext runContext = DynamicSimulationRunContext.builder()
+                .networkUuid(networkUuid)
+                .variantId(variantId)
+                .receiver(receiver)
+                .reportContext(reportContext)
+                .userId(userId)
+                .provider(provider)
+                .mapping(mapping)
+                .parameters(parameters)
+                .build();
+
+        // set provider for run context
+        String providerToUse = runContext.getProvider();
+        if (providerToUse == null) {
+            providerToUse = runContext.getParameters().getProvider();
+        }
+        if (providerToUse == null) {
+            providerToUse = defaultProvider;
+        }
+        runContext.setProvider(providerToUse);
+
+        // check provider
+        if (DynamicSimulationProvider.findAll().stream()
+                .noneMatch(elem -> Objects.equals(elem.getName(), runContext.getProvider()))) {
+            throw new DynamicSimulationException(PROVIDER_NOT_FOUND, "Dynamic simulation provider not found: " + runContext.getProvider());
+        }
+
+        return runContext;
     }
 }

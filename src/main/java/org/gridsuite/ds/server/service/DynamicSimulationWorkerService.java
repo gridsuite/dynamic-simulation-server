@@ -21,9 +21,13 @@ import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.TimeSeries;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.ds.server.computation.service.*;
+import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
+import org.gridsuite.ds.server.dto.dynamicmapping.Script;
+import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
+import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.ComponentScan;
@@ -31,6 +35,7 @@ import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -44,9 +49,12 @@ import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATI
  */
 @ComponentScan(basePackageClasses = {NetworkStoreService.class})
 @Service
-public class DynamicSimulationWorkerService extends AbstractWorkerService<DynamicSimulationResult, DynamicSimulationRunContext, DynamicSimulationParameters, DynamicSimulationResultService> {
+public class DynamicSimulationWorkerService extends AbstractWorkerService<DynamicSimulationResult, DynamicSimulationRunContext, DynamicSimulationParametersInfos, DynamicSimulationResultService> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamicSimulationWorkerService.class);
+
+    private final DynamicMappingClient dynamicMappingClient;
+    private final ParametersService parametersService;
 
     public DynamicSimulationWorkerService(NetworkStoreService networkStoreService,
                                           NotificationService notificationService,
@@ -54,12 +62,17 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                                           ExecutionService executionService,
                                           DynamicSimulationObserver observer,
                                           ObjectMapper objectMapper,
-                                          DynamicSimulationResultService dynamicSimulationResultService) {
+                                          DynamicSimulationResultService dynamicSimulationResultService,
+                                          DynamicMappingClient dynamicMappingClient,
+                                          ParametersService parametersService) {
         super(networkStoreService, notificationService, reportService, dynamicSimulationResultService, executionService, observer, objectMapper);
+        this.dynamicMappingClient = Objects.requireNonNull(dynamicMappingClient);
+        this.parametersService = Objects.requireNonNull(parametersService);
     }
 
     /**
      * Use this method to mock with DockerLocalComputationManager in case of integration tests with test container
+     *
      * @return a computation manager
      */
     public ComputationManager getComputationManager() {
@@ -67,7 +80,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     }
 
     @Override
-    protected AbstractResultContext<DynamicSimulationRunContext> fromMessage(Message<String> message) {
+    protected DynamicSimulationResultContext fromMessage(Message<String> message) {
         return DynamicSimulationResultContext.fromMessage(message, objectMapper);
     }
 
@@ -109,28 +122,65 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
 
     // open the visibility from protected to public to mock in a test where the stop arrives early
     @Override
-    public void preRun(DynamicSimulationRunContext ignoredRunContext, Reporter ignoredReporter) {
-        super.preRun(ignoredRunContext, ignoredReporter);
+    public void preRun(DynamicSimulationRunContext runContext, Reporter reporter) {
+        super.preRun(runContext, reporter);
+        DynamicSimulationParametersInfos parametersInfos = runContext.getParameters();
+
+        // get script and parameters file from dynamic mapping server
+        Script scriptObj = dynamicMappingClient.createFromMapping(runContext.getMapping());
+
+        // get all dynamic simulation parameters
+        String parametersFile = scriptObj.getParametersFile();
+        DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(
+                parametersFile.getBytes(StandardCharsets.UTF_8), runContext.getProvider(), parametersInfos);
+
+        // set start and stop times
+        parameters.setStartTime(parametersInfos.getStartTime().intValue()); // TODO remove intValue() when correct startTime to double in powsybl
+        parameters.setStopTime(parametersInfos.getStopTime().intValue()); // TODO remove intValue() when correct stopTime to double in powsybl
+
+        // groovy scripts
+        String dynamicModel = scriptObj.getScript();
+        String eventModel = parametersService.getEventModel(parametersInfos.getEvents());
+        String curveModel = parametersService.getCurveModel(parametersInfos.getCurves());
+
+        // enrich runContext
+        runContext.setDynamicSimulationParameters(parameters);
+        runContext.setDynamicModelContent(dynamicModel);
+        runContext.setEventModelContent(eventModel);
+        runContext.setCurveContent(curveModel);
     }
 
     @Override
     public CompletableFuture<DynamicSimulationResult> getCompletableFuture(Network network, DynamicSimulationRunContext runContext, String provider, Reporter reporter) {
 
         List<DynamicModelGroovyExtension> dynamicModelExtensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynaWaltzProvider.NAME);
-        DynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(new ByteArrayInputStream(runContext.getDynamicModelContent().getBytes()), dynamicModelExtensions);
+        DynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(
+                new ByteArrayInputStream(runContext.getDynamicModelContent().getBytes()), dynamicModelExtensions
+        );
 
         List<EventModelGroovyExtension> eventModelExtensions = GroovyExtension.find(EventModelGroovyExtension.class, DynaWaltzProvider.NAME);
-        EventModelsSupplier eventModelsSupplier = new GroovyEventModelsSupplier(new ByteArrayInputStream(runContext.getEventModelContent().getBytes()), eventModelExtensions);
+        EventModelsSupplier eventModelsSupplier = new GroovyEventModelsSupplier(
+                new ByteArrayInputStream(runContext.getEventModelContent().getBytes()), eventModelExtensions
+        );
 
         List<CurveGroovyExtension> curveExtensions = GroovyExtension.find(CurveGroovyExtension.class, DynaWaltzProvider.NAME);
-        CurvesSupplier curvesSupplier = new GroovyCurvesSupplier(new ByteArrayInputStream(runContext.getCurveContent().getBytes()), curveExtensions);
+        CurvesSupplier curvesSupplier = new GroovyCurvesSupplier(
+                new ByteArrayInputStream(runContext.getCurveContent().getBytes()), curveExtensions
+        );
 
-        DynamicSimulationParameters parameters = runContext.getParameters();
-        LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {},", runContext.getNetworkUuid(), parameters.getStartTime(), parameters.getStopTime());
+        DynamicSimulationParameters parameters = runContext.getDynamicSimulationParameters();
+        LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {},",
+                runContext.getNetworkUuid(), parameters.getStartTime(), parameters.getStopTime());
 
         DynamicSimulation.Runner runner = DynamicSimulation.find(provider);
-        return runner.runAsync(network, dynamicModelsSupplier, eventModelsSupplier, curvesSupplier, runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
-                getComputationManager(), parameters, reporter);
+        return runner.runAsync(network,
+                dynamicModelsSupplier,
+                eventModelsSupplier,
+                curvesSupplier,
+                runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
+                getComputationManager(),
+                parameters,
+                reporter);
     }
 
 }

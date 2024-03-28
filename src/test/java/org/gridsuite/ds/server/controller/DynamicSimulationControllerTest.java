@@ -227,8 +227,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         DynamicSimulationStatus status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
 
         //depending on the execution speed it can be both
-        assertThat(DynamicSimulationStatus.CONVERGED == status
-                   || DynamicSimulationStatus.RUNNING == status).isTrue();
+        assertThat(status).isIn(DynamicSimulationStatus.CONVERGED, DynamicSimulationStatus.RUNNING);
 
         //get the status of a non-existing simulation and expect a not found
         mockMvc.perform(
@@ -397,7 +396,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     private void mockSendRunMessage(Supplier<CompletableFuture<?>> runAsyncMock) {
         // In test environment, the test binder calls consumers directly in the caller thread, i.e. the controller thread.
         // By consequence, a real asynchronous Producer/Consumer can not be simulated like prod
-        // So mocking producer in a separated thread differing to the controller thread
+        // So mocking producer in a separated thread differing from the controller thread
         doAnswer(invocation -> CompletableFuture.runAsync(() -> {
             // static mock must be in the same thread of the consumer
             // see : https://stackoverflow.com/questions/76406935/mock-static-method-in-spring-boot-integration-test
@@ -488,8 +487,8 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         // Must have a cancel message in the stop queue
         Message<byte[]> message = output.receive(1000, dsStoppedDestination);
         assertThat(message.getHeaders())
-                .containsEntry("resultUuid", runUuid.toString())
-                .containsEntry("message", getCancelMessage(COMPUTATION_TYPE));
+                .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
+                .containsEntry(HEADER_MESSAGE, getCancelMessage(COMPUTATION_TYPE));
         // result has been deleted by cancel so not found
         assertNotFoundResult(runUuid);
 
@@ -521,8 +520,8 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         // Must have a cancel message in the stop queue
         Message<byte[]> message = output.receive(1000, dsStoppedDestination);
         assertThat(message.getHeaders())
-                .containsEntry("resultUuid", runUuid.toString())
-                .containsEntry("message", getCancelMessage(COMPUTATION_TYPE));
+                .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
+                .containsEntry(HEADER_MESSAGE, getCancelMessage(COMPUTATION_TYPE));
         // result has been deleted by cancel so not found
         assertNotFoundResult(runUuid);
     }
@@ -548,13 +547,13 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         // Must have a result message in the result queue since the computation finished so quickly in the mock
         Message<byte[]> message = output.receive(1000, dsResultDestination);
         assertThat(message.getHeaders())
-                .containsEntry("resultUuid", runUuid.toString());
+                .containsEntry(HEADER_RESULT_UUID, runUuid.toString());
 
         // Must have a cancel message in the stop queue
         message = output.receive(1000, dsStoppedDestination);
         assertThat(message.getHeaders())
-                .containsEntry("resultUuid", runUuid.toString())
-                .containsEntry("message", getCancelMessage(COMPUTATION_TYPE));
+                .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
+                .containsEntry(HEADER_MESSAGE, getCancelMessage(COMPUTATION_TYPE));
         // result has been deleted by cancel so not found
         assertNotFoundResult(runUuid);
     }

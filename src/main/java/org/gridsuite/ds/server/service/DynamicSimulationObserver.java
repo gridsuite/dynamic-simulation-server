@@ -6,19 +6,19 @@
  */
 package org.gridsuite.ds.server.service;
 
-import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.DynamicSimulationResult;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.NonNull;
 import org.gridsuite.ds.server.computation.service.AbstractComputationObserver;
+import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.springframework.stereotype.Service;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
-public class DynamicSimulationObserver extends AbstractComputationObserver<DynamicSimulationResult, DynamicSimulationParameters> {
+public class DynamicSimulationObserver extends AbstractComputationObserver<DynamicSimulationResult, DynamicSimulationParametersInfos> {
 
     private static final String COMPUTATION_TYPE = "ds";
 
