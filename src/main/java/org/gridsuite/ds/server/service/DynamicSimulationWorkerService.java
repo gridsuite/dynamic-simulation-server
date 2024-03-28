@@ -133,9 +133,4 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 getComputationManager(), parameters, reporter);
     }
 
-    @Override
-    protected void postRun(DynamicSimulationRunContext ignoredRunContext, Reporter ignoredReporter) {
-        super.postRun(ignoredRunContext, ignoredReporter);
-        LOGGER.info("Always run");
-    }
 }
