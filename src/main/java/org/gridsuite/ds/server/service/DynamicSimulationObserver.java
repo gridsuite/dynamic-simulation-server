@@ -14,13 +14,13 @@ import lombok.NonNull;
 import org.gridsuite.ds.server.computation.service.AbstractComputationObserver;
 import org.springframework.stereotype.Service;
 
-import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATION_TYPE;
-
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
 public class DynamicSimulationObserver extends AbstractComputationObserver<DynamicSimulationResult, DynamicSimulationParameters> {
+
+    private static final String COMPUTATION_TYPE = "ds";
 
     public DynamicSimulationObserver(@NonNull ObservationRegistry observationRegistry, @NonNull MeterRegistry meterRegistry) {
         super(observationRegistry, meterRegistry);
