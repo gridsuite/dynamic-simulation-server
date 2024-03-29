@@ -18,7 +18,6 @@ import org.gridsuite.ds.server.repository.ResultRepository;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -42,7 +41,6 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest
-@Ignore
 public class DynamicSimulationResultServiceTest {
 
     static Logger LOGGER = LoggerFactory.getLogger(DynamicSimulationResultServiceTest.class);
