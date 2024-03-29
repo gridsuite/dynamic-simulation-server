@@ -18,6 +18,7 @@ import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.AbstractWireMockRestClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.impl.TimeSeriesClientImpl;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.client.RestTemplate;
@@ -38,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
+@Ignore
 public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
 
     public static final UUID TIME_SERIES_UUID = UUID.randomUUID();

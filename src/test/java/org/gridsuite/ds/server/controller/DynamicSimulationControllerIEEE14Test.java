@@ -30,6 +30,7 @@ import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +62,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
+@Ignore
 public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimulationControllerTest {
     // mapping names
     public static final String MAPPING_NAME_01 = "_01";

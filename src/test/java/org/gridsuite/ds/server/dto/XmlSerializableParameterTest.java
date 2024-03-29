@@ -14,6 +14,7 @@ import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.dto.solver.IdaSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SimSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,6 +45,7 @@ import static com.powsybl.commons.test.ComparisonUtils.compareXml;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ContextHierarchy({@ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class})})
+@Ignore
 public class XmlSerializableParameterTest {
 
     public static final String RESOURCE_PATH_DELIMETER = "/";

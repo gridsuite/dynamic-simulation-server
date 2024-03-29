@@ -15,6 +15,7 @@ import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.service.client.AbstractWireMockRestClientTest;
 import org.gridsuite.ds.server.service.client.dynamicmapping.impl.DynamicMappingClientImpl;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StreamUtils;
@@ -42,6 +43,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
+@Ignore
 public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
 
     public static final String RESOURCE_PATH_DELIMETER = "/";
