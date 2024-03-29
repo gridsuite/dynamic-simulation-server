@@ -142,7 +142,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     @Test
-    @Ignore
     public void testGivenNotExistingNetworkUuid() throws Exception {
 
         // mock NetworkStoreService throws exception for a none-existing network uuid
