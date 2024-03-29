@@ -29,7 +29,6 @@ import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -363,7 +362,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     @Test
-    @Ignore
     public void testGivenRunWithException() throws Exception {
         // setup spy bean
         doAnswer((InvocationOnMock invocation) -> CompletableFuture.supplyAsync(() -> {
@@ -468,7 +466,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     @Test
-    @Ignore
     public void testStopOnTime() throws Exception {
         CountDownLatch cancelLatch = new CountDownLatch(1);
         // Emit messages in separate threads, like in production.
@@ -498,7 +495,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     @Test
-    @Ignore
     public void testStopEarly() throws Exception {
         CountDownLatch cancelLatch = new CountDownLatch(1);
         // Emit messages in separate threads, like in production.
@@ -531,7 +527,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     @Test
-    @Ignore
     public void testStopLately() throws Exception {
         CountDownLatch cancelLatch = new CountDownLatch(1);
         // Emit messages in separate threads, like in production.
