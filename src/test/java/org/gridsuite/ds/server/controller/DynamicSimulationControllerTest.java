@@ -169,7 +169,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     @Test
-    @Ignore
     public void testGivenTimeSeriesAndTimeLine() throws Exception {
 
         // mock DynamicSimulationWorkerService with time-series and timeline

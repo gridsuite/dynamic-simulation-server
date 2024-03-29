@@ -133,6 +133,8 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         // get script and parameters file from dynamic mapping server
         Script scriptObj = dynamicMappingClient.createFromMapping(runContext.getMapping());
 
+        LOGGER.info("scriptObj" + (scriptObj != null ? scriptObj.getParametersFile() : ""));
+
         // get all dynamic simulation parameters
         String parametersFile = scriptObj.getParametersFile();
         DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(
