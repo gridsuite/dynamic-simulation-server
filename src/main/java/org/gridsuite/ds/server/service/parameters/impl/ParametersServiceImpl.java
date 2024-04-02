@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.MAPPING_NOT_PROVIDED;
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.PROVIDER_NOT_FOUND;
 
 /**
@@ -164,7 +165,7 @@ public class ParametersServiceImpl implements ParametersService {
 
         // check mapping
         if (runContext.getMapping() == null) {
-            throw new DynamicSimulationException(PROVIDER_NOT_FOUND, "Dynamic simulation provider not found: " + runContext.getProvider());
+            throw new DynamicSimulationException(MAPPING_NOT_PROVIDED, "Dynamic simulation mapping not provided");
         }
 
         return runContext;
