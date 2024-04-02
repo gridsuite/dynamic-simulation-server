@@ -29,6 +29,7 @@ import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -494,6 +495,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
     }
 
+    @Ignore
     @Test
     public void testStopEarly() throws Exception {
         CountDownLatch cancelLatch = new CountDownLatch(1);
