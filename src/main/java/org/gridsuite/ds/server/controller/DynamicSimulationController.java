@@ -57,7 +57,7 @@ public class DynamicSimulationController {
     public ResponseEntity<UUID> run(@PathVariable("networkUuid") UUID networkUuid,
                                           @RequestParam(name = "variantId", required = false) String variantId,
                                           @RequestParam(name = "receiver", required = false) String receiver,
-                                          @RequestParam("mappingName") String mappingName,
+                                          @RequestParam(name = "mappingName", required = false) String mappingName,
                                           @RequestParam(name = "reportUuid", required = false) UUID reportId,
                                           @RequestParam(name = "reporterId", required = false) String reportName,
                                           @RequestParam(name = "reportType", required = false, defaultValue = "DynamicSimulation") String reportType,

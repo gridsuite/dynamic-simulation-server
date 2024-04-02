@@ -136,13 +136,11 @@ public class ParametersServiceImpl implements ParametersService {
                 .receiver(receiver)
                 .reportContext(reportContext)
                 .userId(userId)
-                .provider(provider)
-                .mapping(mapping)
                 .parameters(parameters)
                 .build();
 
         // set provider for run context
-        String providerToUse = runContext.getProvider();
+        String providerToUse = provider;
         if (providerToUse == null) {
             providerToUse = runContext.getParameters().getProvider();
         }
@@ -154,6 +152,18 @@ public class ParametersServiceImpl implements ParametersService {
         // check provider
         if (DynamicSimulationProvider.findAll().stream()
                 .noneMatch(elem -> Objects.equals(elem.getName(), runContext.getProvider()))) {
+            throw new DynamicSimulationException(PROVIDER_NOT_FOUND, "Dynamic simulation provider not found: " + runContext.getProvider());
+        }
+
+        // set mapping for run context
+        String mappingToUse = mapping;
+        if (mappingToUse == null) {
+            mappingToUse = runContext.getParameters().getMapping();
+        }
+        runContext.setMapping(mappingToUse);
+
+        // check mapping
+        if (runContext.getMapping() == null) {
             throw new DynamicSimulationException(PROVIDER_NOT_FOUND, "Dynamic simulation provider not found: " + runContext.getProvider());
         }
 

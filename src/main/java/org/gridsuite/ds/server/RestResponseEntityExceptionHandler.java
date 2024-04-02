@@ -38,6 +38,8 @@ public class RestResponseEntityExceptionHandler {
                     CREATE_TIME_SERIES_ERROR,
                     DELETE_TIME_SERIES_ERROR
                     -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exception.getMessage());
+            case MAPPING_NOT_PROVIDED
+                -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
         };
     }
 
