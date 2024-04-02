@@ -504,12 +504,15 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         );
 
         doAnswer(invocation -> {
+            Object object = invocation.callRealMethod();
+
             // using latch to trigger stop dynamic simulation at the beginning of computation
             cancelLatch.countDown();
 
             // fake a long process 1s before run computation
             await().pollDelay(1000, TimeUnit.MILLISECONDS).until(() -> true);
-            return invocation.callRealMethod();
+
+            return object;
         })
         .when(dynamicSimulationWorkerService).preRun(any(), any());
 
@@ -524,10 +527,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 .containsEntry(HEADER_MESSAGE, getCancelMessage(COMPUTATION_TYPE));
         // result has been deleted by cancel so not found
         assertNotFoundResult(runUuid);
-
-        // wait at least one second to avoid the thread which creates mock bean DynamicMappingClient
-        // terminates so quickly before the real preRun executed
-        await().pollDelay(1000, TimeUnit.MILLISECONDS).until(() -> true);
     }
 
     @Test
