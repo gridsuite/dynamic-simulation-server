@@ -126,14 +126,8 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         super.preRun(runContext, reporter);
         DynamicSimulationParametersInfos parametersInfos = runContext.getParameters();
 
-        LOGGER.info("Thread = ", Thread.currentThread().getName());
-
-        LOGGER.info("mapping = " + runContext.getMapping());
-        LOGGER.info("provider = " + runContext.getProvider());
         // get script and parameters file from dynamic mapping server
         Script scriptObj = dynamicMappingClient.createFromMapping(runContext.getMapping());
-
-        LOGGER.info("scriptObj" + (scriptObj != null ? scriptObj.getParametersFile() : ""));
 
         // get all dynamic simulation parameters
         String parametersFile = scriptObj.getParametersFile();
