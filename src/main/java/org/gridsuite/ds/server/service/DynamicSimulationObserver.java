@@ -7,60 +7,32 @@
 package org.gridsuite.ds.server.service;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationResult;
-import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.NonNull;
-import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
+import org.gridsuite.ds.server.computation.service.AbstractComputationObserver;
+import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.springframework.stereotype.Service;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
-public class DynamicSimulationObserver {
-    private static final String OBSERVATION_PREFIX = "app.computation.";
+public class DynamicSimulationObserver extends AbstractComputationObserver<DynamicSimulationResult, DynamicSimulationParametersInfos> {
 
-    private static final String PROVIDER_TAG_NAME = "provider";
-    private static final String TYPE_TAG_NAME = "type";
-    private static final String STATUS_TAG_NAME = "status";
-
-    private static final String COMPUTATION_TYPE = "dynamicSimulation";
-
-    private static final String COMPUTATION_COUNTER_NAME = OBSERVATION_PREFIX + "count";
-
-    private final ObservationRegistry observationRegistry;
-
-    private final MeterRegistry meterRegistry;
+    private static final String COMPUTATION_TYPE = "ds";
 
     public DynamicSimulationObserver(@NonNull ObservationRegistry observationRegistry, @NonNull MeterRegistry meterRegistry) {
-        this.observationRegistry = observationRegistry;
-        this.meterRegistry = meterRegistry;
+        super(observationRegistry, meterRegistry);
     }
 
-    public <E extends Throwable> void observe(String name, DynamicSimulationRunContext runContext, Observation.CheckedRunnable<E> runnable) throws E {
-        createObservation(name, runContext).observeChecked(runnable);
+    @Override
+    protected String getComputationType() {
+        return COMPUTATION_TYPE;
     }
 
-    public <T extends DynamicSimulationResult, E extends Throwable> T observeRun(String name, DynamicSimulationRunContext runContext, Observation.CheckedCallable<T, E> callable) throws E {
-        T result = createObservation(name, runContext).observeChecked(callable);
-        incrementCount(runContext, result);
-        return result;
-    }
-
-    private Observation createObservation(String name, DynamicSimulationRunContext runContext) {
-        return Observation.createNotStarted(OBSERVATION_PREFIX + name, observationRegistry)
-                .lowCardinalityKeyValue(PROVIDER_TAG_NAME, runContext.getProvider())
-                .lowCardinalityKeyValue(TYPE_TAG_NAME, COMPUTATION_TYPE);
-    }
-
-    private void incrementCount(DynamicSimulationRunContext runContext, DynamicSimulationResult result) {
-        Counter.builder(COMPUTATION_COUNTER_NAME)
-                .tag(PROVIDER_TAG_NAME, runContext.getProvider())
-                .tag(TYPE_TAG_NAME, COMPUTATION_TYPE)
-                .tag(STATUS_TAG_NAME, result != null && result.getStatus() == DynamicSimulationResult.Status.SUCCESS ? "OK" : "NOK")
-                .register(meterRegistry)
-                .increment();
+    @Override
+    protected String getResultStatus(DynamicSimulationResult res) {
+        return res != null && res.getStatus() == DynamicSimulationResult.Status.SUCCESS ? "OK" : "NOK";
     }
 }

@@ -1,12 +1,13 @@
-/*
+/**
  * Copyright (c) 2023, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+package org.gridsuite.ds.server.computation.service;
 
-package org.gridsuite.ds.server.service.contexts;
-
+import lombok.Getter;
+import org.gridsuite.ds.server.computation.utils.MessageUtils;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
@@ -14,38 +15,29 @@ import org.springframework.messaging.support.MessageBuilder;
 import java.util.Objects;
 import java.util.UUID;
 
-import static org.gridsuite.ds.server.service.contexts.ContextUtils.getNonNullHeader;
+import static org.gridsuite.ds.server.computation.service.NotificationService.*;
 
 /**
- * @author Thang PHAM <quyet-thang.pham at rte-france.com>
+ * @author Anis Touri <anis.touri at rte-france.com>
  */
-public class DynamicSimulationCancelContext {
-    public static final String HEADER_RESULT_UUID = "resultUuid";
-    public static final String HEADER_RECEIVER = "receiver";
+@Getter
+public class CancelContext {
 
     private final UUID resultUuid;
 
     private final String receiver;
 
-    public DynamicSimulationCancelContext(String receiver, UUID resultUuid) {
-        this.receiver = Objects.requireNonNull(receiver);
+    public CancelContext(UUID resultUuid, String receiver) {
         this.resultUuid = Objects.requireNonNull(resultUuid);
+        this.receiver = Objects.requireNonNull(receiver);
     }
 
-    public UUID getResultUuid() {
-        return resultUuid;
-    }
-
-    public String getReceiver() {
-        return receiver;
-    }
-
-    public static DynamicSimulationCancelContext fromMessage(Message<String> message) {
+    public static CancelContext fromMessage(Message<String> message) {
         Objects.requireNonNull(message);
         MessageHeaders headers = message.getHeaders();
-        UUID resultUuid = UUID.fromString(getNonNullHeader(headers, HEADER_RESULT_UUID));
+        UUID resultUuid = UUID.fromString(MessageUtils.getNonNullHeader(headers, HEADER_RESULT_UUID));
         String receiver = (String) headers.get(HEADER_RECEIVER);
-        return new DynamicSimulationCancelContext(receiver, resultUuid);
+        return new CancelContext(resultUuid, receiver);
     }
 
     public Message<String> toMessage() {

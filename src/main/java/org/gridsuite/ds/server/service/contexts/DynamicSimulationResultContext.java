@@ -6,90 +6,74 @@
  */
 package org.gridsuite.ds.server.service.contexts;
 
-import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
-import com.powsybl.dynamicsimulation.json.JsonDynamicSimulationParameters;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.gridsuite.ds.server.computation.service.AbstractResultContext;
+import org.gridsuite.ds.server.computation.utils.ReportContext;
+import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.support.MessageBuilder;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.UncheckedIOException;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-import static org.gridsuite.ds.server.service.contexts.ContextUtils.getNonNullHeader;
-import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.HEADER_USER_ID;
+import static org.gridsuite.ds.server.computation.service.NotificationService.*;
+import static org.gridsuite.ds.server.computation.utils.MessageUtils.getNonNullHeader;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
-public class DynamicSimulationResultContext {
+public class DynamicSimulationResultContext extends AbstractResultContext<DynamicSimulationRunContext> {
 
-    public static final String HEADER_RESULT_UUID = "resultUuid";
-    public static final String HEADER_PROVIDER = "provider";
-    public static final String HEADER_RECEIVER = "receiver";
-    public static final String HEADER_NETWORK_UUID = "networkUuid";
-    public static final String HEADER_VARIANT_ID = "variantId";
-    public static final String HEADER_DYNAMIC_MODEL_CONTENT = "dynamicModelContent";
-    public static final String HEADER_EVENT_MODEL_CONTENT = "eventModelContent";
-    public static final String HEADER_CURVE_CONTENT = "curveContent";
-
-    private final UUID resultUuid;
-
-    private final DynamicSimulationRunContext runContext;
+    public static final String HEADER_MAPPING = "mapping";
 
     public DynamicSimulationResultContext(UUID resultUuid, DynamicSimulationRunContext runContext) {
-        this.resultUuid = Objects.requireNonNull(resultUuid);
-        this.runContext = Objects.requireNonNull(runContext);
+        super(resultUuid, runContext);
     }
 
-    public UUID getResultUuid() {
-        return resultUuid;
-    }
-
-    public DynamicSimulationRunContext getRunContext() {
-        return runContext;
-    }
-
-    public static DynamicSimulationResultContext fromMessage(Message<byte[]> message) {
+    public static DynamicSimulationResultContext fromMessage(Message<String> message, ObjectMapper objectMapper) {
         Objects.requireNonNull(message);
 
-        byte[] parametersPayload = message.getPayload();
-        ByteArrayInputStream bytesIS = new ByteArrayInputStream(parametersPayload);
-        DynamicSimulationParameters parameters = JsonDynamicSimulationParameters.read(bytesIS);
+        // decode the parameters values
+        DynamicSimulationParametersInfos parametersInfos;
+        try {
+            parametersInfos = objectMapper.readValue(message.getPayload(), DynamicSimulationParametersInfos.class);
+        } catch (JsonProcessingException e) {
+            throw new UncheckedIOException(e);
+        }
 
         MessageHeaders headers = message.getHeaders();
-        UUID resultUuid = UUID.fromString(getNonNullHeader(headers, HEADER_RESULT_UUID));
+        UUID resultUuid = UUID.fromString(getNonNullHeader(headers, RESULT_UUID_HEADER));
         String provider = getNonNullHeader(headers, HEADER_PROVIDER);
         String receiver = (String) headers.get(HEADER_RECEIVER);
-        UUID networkUuid = UUID.fromString(getNonNullHeader(headers, HEADER_NETWORK_UUID));
-        String variantId = (String) headers.get(HEADER_VARIANT_ID);
+        UUID networkUuid = UUID.fromString(getNonNullHeader(headers, NETWORK_UUID_HEADER));
+        String variantId = (String) headers.get(VARIANT_ID_HEADER);
+        String reportUuidStr = (String) headers.get(REPORT_UUID_HEADER);
+        UUID reportUuid = reportUuidStr != null ? UUID.fromString(reportUuidStr) : null;
+        String reporterId = (String) headers.get(REPORTER_ID_HEADER);
+        String reportType = (String) headers.get(REPORT_TYPE_HEADER);
         String userId = (String) headers.get(HEADER_USER_ID);
-        byte[] dynamicModelContent = (byte[]) headers.get(HEADER_DYNAMIC_MODEL_CONTENT);
-        byte[] eventModelContent = (byte[]) headers.get(HEADER_EVENT_MODEL_CONTENT);
-        byte[] curveContent = (byte[]) headers.get(HEADER_CURVE_CONTENT);
-        // decode the parameters
 
-        DynamicSimulationRunContext runContext = new DynamicSimulationRunContext(provider, receiver, networkUuid, variantId, dynamicModelContent, eventModelContent, curveContent, parameters, userId);
+        DynamicSimulationRunContext runContext = DynamicSimulationRunContext.builder()
+            .networkUuid(networkUuid)
+            .variantId(variantId)
+            .receiver(receiver)
+            .provider(provider)
+            .reportContext(ReportContext.builder().reportId(reportUuid).reportName(reporterId).reportType(reportType).build())
+            .userId(userId)
+            .parameters(parametersInfos)
+            .build();
+
+        // specific headers for dynamic simulation
+        runContext.setMapping(getNonNullHeader(headers, HEADER_MAPPING));
+
         return new DynamicSimulationResultContext(resultUuid, runContext);
     }
 
-    public Message<byte[]> toMessage() {
-        DynamicSimulationParameters parameters = runContext.getParameters();
-        ByteArrayOutputStream bytesOS = new ByteArrayOutputStream();
-        JsonDynamicSimulationParameters.write(parameters, bytesOS);
-
-        return MessageBuilder.withPayload(bytesOS.toByteArray())
-                .setHeader(HEADER_RESULT_UUID, resultUuid.toString())
-                .setHeader(HEADER_PROVIDER, runContext.getProvider())
-                .setHeader(HEADER_RECEIVER, runContext.getReceiver())
-                .setHeader(HEADER_NETWORK_UUID, runContext.getNetworkUuid().toString())
-                .setHeader(HEADER_VARIANT_ID, runContext.getVariantId())
-                .setHeader(HEADER_DYNAMIC_MODEL_CONTENT, runContext.getDynamicModelContent())
-                .setHeader(HEADER_EVENT_MODEL_CONTENT, runContext.getEventModelContent())
-                .setHeader(HEADER_CURVE_CONTENT, runContext.getCurveContent())
-                .setHeader(HEADER_USER_ID, runContext.getUserId())
-                .build();
+    @Override
+    public Map<String, String> getSpecificMsgHeaders() {
+        return Map.of(HEADER_MAPPING, runContext.getMapping());
     }
-
 }

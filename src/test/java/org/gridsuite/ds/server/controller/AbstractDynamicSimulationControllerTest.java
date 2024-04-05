@@ -46,6 +46,7 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
 
     protected final String dsResultDestination = "ds.result.destination";
     protected final String dsFailedDestination = "ds.failed.destination";
+    protected final String dsStoppedDestination = "ds.stopped.destination";
 
     public static final String RESOURCE_PATH_DELIMETER = "/";
 
@@ -83,7 +84,7 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
         super.tearDown();
 
         OutputDestination output = getOutputDestination();
-        List<String> destinations = List.of(dsFailedDestination, dsResultDestination);
+        List<String> destinations = List.of(dsFailedDestination, dsResultDestination, dsStoppedDestination);
 
         try {
             TestUtils.assertQueuesEmptyThenClear(destinations, output);

@@ -48,9 +48,6 @@ public class TimeSeriesClientImpl extends AbstractRestClient implements TimeSeri
             return null;
         }
 
-        // convert timeseries to json
-        var timeSeriesListJson = TimeSeries.toJson(timeSeriesList);
-
         String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, TIME_SERIES_END_POINT);
 
         UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl);
@@ -60,7 +57,7 @@ public class TimeSeriesClientImpl extends AbstractRestClient implements TimeSeri
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         // call time-series Rest API
-        HttpEntity<String> httpEntity = new HttpEntity<>(timeSeriesListJson, headers);
+        HttpEntity<List<TimeSeries<?, ?>>> httpEntity = new HttpEntity<>(timeSeriesList, headers);
 
         try {
             return getRestTemplate().postForObject(uriComponents.toUriString(), httpEntity, TimeSeriesGroupInfos.class);

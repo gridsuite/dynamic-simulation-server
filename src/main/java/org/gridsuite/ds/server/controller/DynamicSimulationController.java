@@ -12,9 +12,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.collections4.CollectionUtils;
+import org.gridsuite.ds.server.computation.utils.ReportContext;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
+import org.gridsuite.ds.server.service.DynamicSimulationResultService;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
+import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
+import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.gridsuite.ds.server.DynamicSimulationApi.API_VERSION;
-import static org.gridsuite.ds.server.service.contexts.DynamicSimulationFailedContext.HEADER_USER_ID;
+import static org.gridsuite.ds.server.computation.service.NotificationService.HEADER_USER_ID;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
@@ -36,9 +40,15 @@ import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 public class DynamicSimulationController {
 
     private final DynamicSimulationService dynamicSimulationService;
+    private final DynamicSimulationResultService dynamicSimulationResultService;
+    private final ParametersService parametersService;
 
-    public DynamicSimulationController(DynamicSimulationService dynamicSimulationService) {
+    public DynamicSimulationController(DynamicSimulationService dynamicSimulationService,
+                                       DynamicSimulationResultService dynamicSimulationResultService,
+                                       ParametersService parametersService) {
         this.dynamicSimulationService = dynamicSimulationService;
+        this.dynamicSimulationResultService = dynamicSimulationResultService;
+        this.parametersService = parametersService;
     }
 
     @PostMapping(value = "/networks/{networkUuid}/run", produces = "application/json")
@@ -47,11 +57,25 @@ public class DynamicSimulationController {
     public ResponseEntity<UUID> run(@PathVariable("networkUuid") UUID networkUuid,
                                           @RequestParam(name = "variantId", required = false) String variantId,
                                           @RequestParam(name = "receiver", required = false) String receiver,
-                                          @RequestParam("mappingName") String mappingName,
+                                          @RequestParam(name = "mappingName", required = false) String mappingName,
+                                          @RequestParam(name = "reportUuid", required = false) UUID reportId,
+                                          @RequestParam(name = "reporterId", required = false) String reportName,
+                                          @RequestParam(name = "reportType", required = false, defaultValue = "DynamicSimulation") String reportType,
                                           @RequestParam(name = "provider", required = false) String provider,
                                           @RequestBody DynamicSimulationParametersInfos parameters,
                                           @RequestHeader(HEADER_USER_ID) String userId) {
-        UUID resultUuid = dynamicSimulationService.runAndSaveResult(receiver, networkUuid, variantId, mappingName, provider, parameters, userId);
+
+        DynamicSimulationRunContext dynamicSimulationRunContext = parametersService.createRunContext(
+            networkUuid,
+            variantId,
+            receiver,
+            provider,
+            mappingName,
+            ReportContext.builder().reportId(reportId).reportName(reportName).reportType(reportType).build(),
+            userId,
+            parameters);
+
+        UUID resultUuid = dynamicSimulationService.runAndSaveResult(dynamicSimulationRunContext);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
@@ -61,7 +85,7 @@ public class DynamicSimulationController {
         @ApiResponse(responseCode = "204", description = "Dynamic simulation series uuid is empty"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
     public ResponseEntity<UUID> getTimeSeriesResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        UUID result = dynamicSimulationService.getTimeSeriesId(resultUuid);
+        UUID result = dynamicSimulationResultService.getTimeSeriesId(resultUuid);
         return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result) :
                 ResponseEntity.noContent().build();
     }
@@ -72,7 +96,7 @@ public class DynamicSimulationController {
         @ApiResponse(responseCode = "204", description = "Dynamic simulation timeline uuid is empty"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
     public ResponseEntity<UUID> getTimeLineResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        UUID result = dynamicSimulationService.getTimeLineId(resultUuid);
+        UUID result = dynamicSimulationResultService.getTimeLineId(resultUuid);
         return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result) :
                 ResponseEntity.noContent().build();
     }
@@ -83,7 +107,7 @@ public class DynamicSimulationController {
         @ApiResponse(responseCode = "204", description = "Dynamic simulation status is empty"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
     public ResponseEntity<DynamicSimulationStatus> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        DynamicSimulationStatus result = dynamicSimulationService.getStatus(resultUuid);
+        DynamicSimulationStatus result = dynamicSimulationResultService.findStatus(resultUuid);
         return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result) :
                 ResponseEntity.noContent().build();
     }
@@ -93,7 +117,7 @@ public class DynamicSimulationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result uuids have been invalidated"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result has not been found")})
     public ResponseEntity<List<UUID>> invalidateStatus(@Parameter(description = "Result UUIDs") @RequestParam("resultUuid") List<UUID> resultUuids) {
-        List<UUID> result = dynamicSimulationService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE.name());
+        List<UUID> result = dynamicSimulationResultService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE);
         return CollectionUtils.isEmpty(result) ? ResponseEntity.notFound().build() :
                 ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result);
     }
@@ -102,7 +126,7 @@ public class DynamicSimulationController {
     @Operation(summary = "Delete a dynamic simulation result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result has been deleted")})
     public ResponseEntity<Void> deleteResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        dynamicSimulationService.deleteResult(resultUuid);
+        dynamicSimulationResultService.delete(resultUuid);
         return ResponseEntity.ok().build();
     }
 
@@ -110,7 +134,7 @@ public class DynamicSimulationController {
     @Operation(summary = "Delete all dynamic simulation results from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All dynamic simulation results have been deleted")})
     public ResponseEntity<Void> deleteResults() {
-        dynamicSimulationService.deleteResults();
+        dynamicSimulationResultService.deleteAll();
         return ResponseEntity.ok().build();
     }
 
@@ -118,8 +142,8 @@ public class DynamicSimulationController {
     @Operation(summary = "Stop a dynamic simulation computation")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation has been stopped")})
     public ResponseEntity<Void> stop(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
-                                           @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver) {
-        dynamicSimulationService.stop(receiver, resultUuid);
+                                           @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false, defaultValue = "") String receiver) {
+        dynamicSimulationService.stop(resultUuid, receiver);
         return ResponseEntity.ok().build();
     }
 

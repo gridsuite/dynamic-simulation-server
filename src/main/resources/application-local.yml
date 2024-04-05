@@ -21,6 +21,8 @@ gridsuite:
       base-uri: http://localhost:5037
     dynamic-mapping-server:
       base-uri: http://localhost:5036
+    report-server:
+      base-uri: http://localhost:5028
 
 management:
   metrics:
