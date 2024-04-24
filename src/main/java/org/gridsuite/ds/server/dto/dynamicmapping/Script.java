@@ -27,8 +27,6 @@ public class Script {
     // name of the original mapping
     private String parentName;
 
-    private String script;
-
     private Date createdDate;
 
     private String parametersFile;

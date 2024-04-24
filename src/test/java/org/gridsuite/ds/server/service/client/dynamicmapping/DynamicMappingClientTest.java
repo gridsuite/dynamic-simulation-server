@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Optional;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -37,7 +36,6 @@ import static org.gridsuite.ds.server.service.client.RestClient.DELIMITER;
 import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.API_VERSION;
 import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT;
 import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -91,11 +89,6 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         String inputDir = DATA_IEEE14_BASE_DIR +
                           RESOURCE_PATH_DELIMETER + mappingName +
                           RESOURCE_PATH_DELIMETER + INPUT;
-        String scriptPath = inputDir + RESOURCE_PATH_DELIMETER + MODELS_GROOVY;
-        InputStream scriptIS = getClass().getResourceAsStream(scriptPath);
-        byte[] scriptBytes;
-        scriptBytes = StreamUtils.copyToByteArray(scriptIS);
-        String script = new String(scriptBytes, StandardCharsets.UTF_8);
 
         // load models.par
         String parametersFilePath = inputDir + RESOURCE_PATH_DELIMETER + MODELS_PAR;
@@ -107,7 +100,6 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         Script scriptObj = new Script(
                 mappingName + "-script",
                 mappingName,
-                script,
                 dateFormat.parse(FIXED_DATE),
                 parametersFile);
 
@@ -127,10 +119,8 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         Script createdScript = dynamicMappingClient.createFromMapping(MAPPING_NAME_01);
 
         // check result
-        // models.groovy
-        assertEquals(script, Optional.of(createdScript).orElseThrow().getScript());
         // load models.par
-        assertEquals(parametersFile, createdScript.getParametersFile());
+        assertThat(createdScript.getParametersFile()).isEqualTo(parametersFile);
     }
 
     @Test

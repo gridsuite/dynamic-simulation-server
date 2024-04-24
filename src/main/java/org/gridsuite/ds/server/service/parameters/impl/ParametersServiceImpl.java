@@ -12,13 +12,22 @@ import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
 import com.powsybl.dynawaltz.DynaWaltzParameters;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
 import com.powsybl.dynawaltz.parameters.ParametersSet;
+import com.powsybl.dynawaltz.rte.mapping.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawaltz.rte.mapping.dynamicmodels.PropertyBuilder;
+import com.powsybl.dynawaltz.rte.mapping.dynamicmodels.PropertyType;
 import com.powsybl.dynawaltz.xml.ParametersXml;
+import com.powsybl.iidm.network.Identifiable;
+import com.powsybl.iidm.network.Network;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.computation.utils.ReportContext;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.XmlSerializableParameter;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
+import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
+import org.gridsuite.ds.server.dto.dynamicmapping.Rule;
+import org.gridsuite.ds.server.dto.dynamicmapping.automata.Automaton;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
@@ -26,6 +35,8 @@ import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.parameters.CurveGroovyGeneratorService;
 import org.gridsuite.ds.server.service.parameters.EventGroovyGeneratorService;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
+import org.gridsuite.filter.utils.EquipmentType;
+import org.gridsuite.filter.utils.FiltersUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,10 +46,8 @@ import org.springframework.stereotype.Service;
 import javax.xml.stream.XMLStreamException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.MAPPING_NOT_PROVIDED;
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.PROVIDER_NOT_FOUND;
@@ -169,5 +178,61 @@ public class ParametersServiceImpl implements ParametersService {
         }
 
         return runContext;
+    }
+
+    @Override
+    public List<DynamicModelConfig> getDynamicModel(InputMapping inputMapping, Network network) {
+        if (inputMapping == null) {
+            return Collections.emptyList();
+        }
+
+        List<DynamicModelConfig> dynamicModel = new ArrayList<>();
+
+        // --- transform equipment rules to DynamicModelConfigs --- //
+        List<Rule> allRules = inputMapping.rules();
+        // grouping rules by equipment type
+        Map<EquipmentType, List<Rule>> rulesByEquipmentTypeMap = allRules.stream().collect(Collectors.groupingBy(Rule::equipmentType));
+        // performing transformation
+        rulesByEquipmentTypeMap.forEach((equipmentType, rules) -> {
+            // accumulate matched equipment ids to compute otherwise case (last rule without filters)
+            Set<String> matchedEquipmentIds = new TreeSet<>();
+
+            dynamicModel.addAll(rules.stream().flatMap(rule -> {
+                List<Identifiable<?>> matchedEquipments = FiltersUtils.getIdentifiables(rule.filter(), network, uuids -> null);
+
+                if (CollectionUtils.isEmpty(rule.filter().getRules().getRules()) && !matchedEquipmentIds.isEmpty()) {
+                    matchedEquipments = matchedEquipments.stream().filter(elem -> !matchedEquipmentIds.contains(elem.getId())).toList();
+                }
+
+                matchedEquipmentIds.addAll(matchedEquipments.stream().map(Identifiable::getId).toList());
+
+                return matchedEquipments.stream().map(equipment -> new DynamicModelConfig(
+                    rule.mappedModel(),
+                    rule.setGroup(),
+                    rule.groupType(),
+                    List.of(new PropertyBuilder()
+                        .name("staticId")
+                        .value(equipment.getId())
+                        .type(PropertyType.STRING)
+                        .build())));
+            }).toList());
+        });
+
+        // transform automatons to DynamicModelConfigs
+        List<Automaton> automata = inputMapping.automata();
+        dynamicModel.addAll(automata.stream().map(automaton ->
+            new DynamicModelConfig(
+                automaton.model(),
+                automaton.setGroup(),
+                automaton.properties().stream().map(property ->
+                    new PropertyBuilder()
+                        .name(property.name())
+                        .value(property.value())
+                        .type(property.type())
+                        .build()
+                ).toList())
+        ).toList());
+
+        return dynamicModel;
     }
 }

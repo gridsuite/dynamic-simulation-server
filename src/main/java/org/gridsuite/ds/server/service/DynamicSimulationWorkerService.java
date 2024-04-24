@@ -14,6 +14,8 @@ import com.powsybl.computation.ComputationManager;
 import com.powsybl.dynamicsimulation.*;
 import com.powsybl.dynamicsimulation.groovy.*;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
+import com.powsybl.dynawaltz.rte.mapping.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawaltz.rte.mapping.dynamicmodels.DynawoDynamicModelSupplier;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -23,6 +25,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.ds.server.computation.service.*;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
+import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
@@ -120,13 +123,21 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         return COMPUTATION_TYPE;
     }
 
+    @Override
+    protected DynamicSimulationResult run(Network network, DynamicSimulationRunContext runContext, UUID resultUuid) throws Exception {
+        // cache network in run context to use in other methods of the worker
+        runContext.setNetwork(network);
+
+        return super.run(network, runContext, resultUuid);
+    }
+
     // open the visibility from protected to public to mock in a test where the stop arrives early
     @Override
     public void preRun(DynamicSimulationRunContext runContext, Reporter reporter) {
         super.preRun(runContext, reporter);
         DynamicSimulationParametersInfos parametersInfos = runContext.getParameters();
 
-        // get script and parameters file from dynamic mapping server
+        // get parameters file from dynamic mapping server
         Script scriptObj = dynamicMappingClient.createFromMapping(runContext.getMapping());
 
         // get all dynamic simulation parameters
@@ -134,12 +145,15 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(
                 parametersFile.getBytes(StandardCharsets.UTF_8), runContext.getProvider(), parametersInfos);
 
+        // get mapping then generate dynamic model configs
+        InputMapping inputMapping = dynamicMappingClient.getMapping(runContext.getMapping());
+        List<DynamicModelConfig> dynamicModel = parametersService.getDynamicModel(inputMapping, runContext.getNetwork());
+
         // set start and stop times
         parameters.setStartTime(parametersInfos.getStartTime().intValue()); // TODO remove intValue() when correct startTime to double in powsybl
         parameters.setStopTime(parametersInfos.getStopTime().intValue()); // TODO remove intValue() when correct stopTime to double in powsybl
 
         // groovy scripts
-        String dynamicModel = scriptObj.getScript();
         String eventModel = parametersService.getEventModel(parametersInfos.getEvents());
         String curveModel = parametersService.getCurveModel(parametersInfos.getCurves());
 
@@ -153,10 +167,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     @Override
     public CompletableFuture<DynamicSimulationResult> getCompletableFuture(Network network, DynamicSimulationRunContext runContext, String provider, Reporter reporter) {
 
-        List<DynamicModelGroovyExtension> dynamicModelExtensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynaWaltzProvider.NAME);
-        DynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(
-                new ByteArrayInputStream(runContext.getDynamicModelContent().getBytes()), dynamicModelExtensions
-        );
+        DynamicModelsSupplier dynawoDynamicModelsSupplier = new DynawoDynamicModelSupplier(runContext.getDynamicModelContent());
 
         List<EventModelGroovyExtension> eventModelExtensions = GroovyExtension.find(EventModelGroovyExtension.class, DynaWaltzProvider.NAME);
         EventModelsSupplier eventModelsSupplier = new GroovyEventModelsSupplier(
@@ -174,7 +185,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
 
         DynamicSimulation.Runner runner = DynamicSimulation.find(provider);
         return runner.runAsync(network,
-                dynamicModelsSupplier,
+                dynawoDynamicModelsSupplier,
                 eventModelsSupplier,
                 curvesSupplier,
                 runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,

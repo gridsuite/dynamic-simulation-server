@@ -1,0 +1,157 @@
+{
+  "name": "mapping_01",
+  "rules": [
+    {
+      "equipmentType": "LOAD",
+      "mappedModel": "LoadAlphaBeta",
+      "setGroup": "LAB",
+      "groupType": "FIXED",
+      "filter": {
+        "equipmentType": "LOAD",
+        "type": "EXPERT",
+        "rules": {
+          "combinator" : "AND",
+          "dataType": "COMBINATOR",
+          "rules" : []
+        }
+      }
+    },
+    {
+      "equipmentType": "GENERATOR",
+      "mappedModel": "GeneratorSynchronousThreeWindingsProportionalRegulations",
+      "setGroup": "IEEE14",
+      "groupType": "PREFIX",
+      "filter": {
+        "equipmentType": "GENERATOR",
+        "type": "EXPERT",
+        "rules" : {
+          "combinator": "AND",
+          "dataType": "COMBINATOR",
+          "rules" : [
+            {
+              "dataType": "NUMBER",
+              "field": "NOMINAL_VOLTAGE",
+              "operator": "EQUALS",
+              "value": 13.8
+            }
+          ]
+        }
+      }
+    },
+    {
+      "equipmentType": "GENERATOR",
+      "mappedModel": "GeneratorSynchronousFourWindingsProportionalRegulations",
+      "setGroup": "IEEE14",
+      "groupType": "PREFIX",
+      "filter": {
+        "equipmentType": "GENERATOR",
+        "type": "EXPERT",
+        "rules" : {
+          "combinator": "AND",
+          "dataType": "COMBINATOR",
+          "rules" : [
+            {
+              "dataType": "NUMBER",
+              "field": "NOMINAL_VOLTAGE",
+              "operator": "EQUALS",
+              "value": 69.0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "equipmentType": "GENERATOR",
+      "mappedModel": "GeneratorPQ",
+      "setGroup": "GPQ",
+      "groupType": "FIXED",
+      "filter": {
+        "equipmentType": "GENERATOR",
+        "type": "EXPERT",
+        "rules": {
+          "combinator" : "AND",
+          "dataType": "COMBINATOR",
+          "rules" : []
+        }
+      }
+    },
+    {
+      "equipmentType": "STATIC_VAR_COMPENSATOR",
+      "mappedModel": "StaticVarCompensator",
+      "setGroup": "SVarCT",
+      "groupType": "FIXED",
+      "filter": {
+        "equipmentType": "STATIC_VAR_COMPENSATOR",
+        "type": "EXPERT",
+        "rules" : {
+          "combinator": "AND",
+          "dataType": "COMBINATOR",
+          "rules" : [{
+              "dataType": "NUMBER",
+              "field": "NOMINAL_VOLTAGE",
+              "operator": "EQUALS",
+              "value": 69.0
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "automata": [
+    {
+      "family": "CURRENT_LIMIT",
+      "model": "CurrentLimitAutomaton",
+      "setGroup": "CLA_2_4",
+      "properties": [
+        {
+          "name": "dynamicModelId",
+          "value": "CLA_1",
+          "type": "STRING"
+        },
+        {
+          "name": "iMeasurement",
+          "value": "_BUS____2-BUS____4-1_AC",
+          "type": "STRING"
+        },
+        {
+          "name": "iMeasurementSide",
+          "value": "TWO",
+          "type": "TWO_SIDES"
+        },
+        {
+          "name": "controlledQuadripole",
+          "value": "_BUS____2-BUS____4-1_AC",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "family": "CURRENT_LIMIT",
+      "model": "CurrentLimitAutomaton",
+      "setGroup": "CLA_2_5",
+      "properties": [
+        {
+          "name": "dynamicModelId",
+          "value": "CLA_2",
+          "type": "STRING"
+        },
+        {
+          "name": "iMeasurement",
+          "value": "_BUS____2-BUS____5-1_AC",
+          "type": "STRING"
+        },
+        {
+          "name": "iMeasurementSide",
+          "value": "TWO",
+          "type": "TWO_SIDES"
+        },
+        {
+          "name": "controlledQuadripole",
+          "value": "_BUS____2-BUS____5-1_AC",
+          "type": "STRING"
+        }
+      ]
+    }
+  ],
+  "controlledParameters": false
+}

@@ -18,6 +18,7 @@ public class DynamicSimulationException extends RuntimeException {
         RESULT_UUID_NOT_FOUND,
         DYNAMIC_MAPPING_NOT_FOUND,
         CREATE_MAPPING_SCRIPT_ERROR,
+        GET_DYNAMIC_MAPPING_ERROR,
         CREATE_TIME_SERIES_ERROR,
         DELETE_TIME_SERIES_ERROR
     }

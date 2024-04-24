@@ -25,6 +25,7 @@ import org.gridsuite.ds.server.controller.utils.FileUtils;
 import org.gridsuite.ds.server.controller.utils.ParameterUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
+import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
@@ -70,6 +71,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     public static final String INPUT = "input";
     public static final String OUTPUT = "output";
     public static final String MODELS_GROOVY = "models.groovy";
+    public static final String MAPPING_FILE = "mapping.json";
     public static final String MODELS_PAR = "models.par";
     public static final String RESULT_IDA_JSON = "result_IDA.json";
     public static final String RESULT_SIM_JSON = "result_SIM.json";
@@ -118,13 +120,6 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
                     RESOURCE_PATH_DELIMETER + MAPPING_NAME_01 +
                     RESOURCE_PATH_DELIMETER + INPUT;
 
-            // load models.groovy
-            String scriptPath = inputDir + RESOURCE_PATH_DELIMETER + MODELS_GROOVY;
-            InputStream scriptIS = getClass().getResourceAsStream(scriptPath);
-            byte[] scriptBytes;
-            scriptBytes = StreamUtils.copyToByteArray(scriptIS);
-            String script = new String(scriptBytes, StandardCharsets.UTF_8);
-
             // load models.par
             String parametersFilePath = inputDir + RESOURCE_PATH_DELIMETER + MODELS_PAR;
             InputStream parametersFileIS = getClass().getResourceAsStream(parametersFilePath);
@@ -135,10 +130,14 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
             Script scriptObj = new Script(
                     MAPPING_NAME_01 + "-script",
                     MAPPING_NAME_01,
-                    script,
                     dateFormat.parse(FIXED_DATE),
                     parametersFile);
             given(dynamicMappingClient.createFromMapping(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(scriptObj);
+
+            // load mapping.json
+            String mappingPath = inputDir + RESOURCE_PATH_DELIMETER + MAPPING_FILE;
+            InputMapping inputMapping = objectMapper.readValue(getClass().getResourceAsStream(mappingPath), InputMapping.class);
+            given(dynamicMappingClient.getMapping(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(inputMapping);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (ParseException e) {

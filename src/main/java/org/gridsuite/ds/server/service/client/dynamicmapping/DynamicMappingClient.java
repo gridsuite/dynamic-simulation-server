@@ -6,6 +6,7 @@
  */
 package org.gridsuite.ds.server.service.client.dynamicmapping;
 
+import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
 
 import static org.gridsuite.ds.server.service.client.RestClient.DELIMITER;
@@ -16,7 +17,10 @@ import static org.gridsuite.ds.server.service.client.RestClient.DELIMITER;
 public interface DynamicMappingClient {
     String API_VERSION = "";
     String DYNAMIC_MAPPING_SCRIPT_BASE_END_POINT = "scripts";
+    String DYNAMIC_MAPPING_MAPPING_BASE_END_POINT = "mappings";
     String DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT = DYNAMIC_MAPPING_SCRIPT_BASE_END_POINT + DELIMITER + "from";
 
     Script createFromMapping(String mappingName);
+
+    InputMapping getMapping(String mappingName);
 }

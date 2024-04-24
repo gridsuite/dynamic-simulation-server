@@ -7,6 +7,8 @@
 package org.gridsuite.ds.server.service.contexts;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
+import com.powsybl.dynawaltz.rte.mapping.dynamicmodels.DynamicModelConfig;
+import com.powsybl.iidm.network.Network;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,6 +16,7 @@ import org.gridsuite.ds.server.computation.service.AbstractComputationRunContext
 import org.gridsuite.ds.server.computation.utils.ReportContext;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -24,8 +27,11 @@ public class DynamicSimulationRunContext extends AbstractComputationRunContext<D
 
     @Setter private String mapping;
 
+    // network is cached in context to avoid re-loading in different methods of the worker service
+    @Setter private Network network;
+
     // fields which are enriched in worker service
-    @Setter private String dynamicModelContent;
+    @Setter private List<DynamicModelConfig> dynamicModelContent;
 
     @Setter private String eventModelContent;
 
