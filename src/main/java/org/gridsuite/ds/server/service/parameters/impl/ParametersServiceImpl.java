@@ -18,7 +18,6 @@ import com.powsybl.dynawaltz.rte.mapping.dynamicmodels.PropertyType;
 import com.powsybl.dynawaltz.xml.ParametersXml;
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.computation.utils.ReportContext;
@@ -35,8 +34,11 @@ import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.parameters.CurveGroovyGeneratorService;
 import org.gridsuite.ds.server.service.parameters.EventGroovyGeneratorService;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
+import org.gridsuite.filter.expertfilter.ExpertFilter;
+import org.gridsuite.filter.expertfilter.expertrule.CombinatorExpertRule;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.filter.utils.FiltersUtils;
+import org.gridsuite.filter.utils.expertfilter.CombinatorType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -198,9 +200,20 @@ public class ParametersServiceImpl implements ParametersService {
             Set<String> matchedEquipmentIds = new TreeSet<>();
 
             dynamicModel.addAll(rules.stream().flatMap(rule -> {
-                List<Identifiable<?>> matchedEquipments = FiltersUtils.getIdentifiables(rule.filter(), network, uuids -> null);
+                ExpertFilter filter = rule.filter();
 
-                if (CollectionUtils.isEmpty(rule.filter().getRules().getRules()) && !matchedEquipmentIds.isEmpty()) {
+                // otherwise case, create an expert filter with AND operator and empty rules to get all equipments of the same type
+                if (filter == null) {
+                    filter = ExpertFilter.builder()
+                            .equipmentType(equipmentType)
+                            .rules(CombinatorExpertRule.builder().combinator(CombinatorType.AND).rules(List.of()).build())
+                            .build();
+                }
+
+                List<Identifiable<?>> matchedEquipments = FiltersUtils.getIdentifiables(filter, network, uuids -> null);
+
+                // eliminate already matched equipments to avoid duplication
+                if (!matchedEquipmentIds.isEmpty()) {
                     matchedEquipments = matchedEquipments.stream().filter(elem -> !matchedEquipmentIds.contains(elem.getId())).toList();
                 }
 

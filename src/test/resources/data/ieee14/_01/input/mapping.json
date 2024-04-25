@@ -5,16 +5,7 @@
       "equipmentType": "LOAD",
       "mappedModel": "LoadAlphaBeta",
       "setGroup": "LAB",
-      "groupType": "FIXED",
-      "filter": {
-        "equipmentType": "LOAD",
-        "type": "EXPERT",
-        "rules": {
-          "combinator" : "AND",
-          "dataType": "COMBINATOR",
-          "rules" : []
-        }
-      }
+      "groupType": "FIXED"
     },
     {
       "equipmentType": "GENERATOR",
@@ -64,16 +55,7 @@
       "equipmentType": "GENERATOR",
       "mappedModel": "GeneratorPQ",
       "setGroup": "GPQ",
-      "groupType": "FIXED",
-      "filter": {
-        "equipmentType": "GENERATOR",
-        "type": "EXPERT",
-        "rules": {
-          "combinator" : "AND",
-          "dataType": "COMBINATOR",
-          "rules" : []
-        }
-      }
+      "groupType": "FIXED"
     },
     {
       "equipmentType": "STATIC_VAR_COMPENSATOR",
