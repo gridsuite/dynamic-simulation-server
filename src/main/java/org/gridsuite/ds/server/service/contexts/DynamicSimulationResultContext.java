@@ -8,8 +8,8 @@ package org.gridsuite.ds.server.service.contexts;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.gridsuite.ds.server.computation.dto.ReportInfos;
 import org.gridsuite.ds.server.computation.service.AbstractResultContext;
-import org.gridsuite.ds.server.computation.utils.ReportContext;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
@@ -61,7 +61,7 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
             .variantId(variantId)
             .receiver(receiver)
             .provider(provider)
-            .reportContext(ReportContext.builder().reportId(reportUuid).reportName(reporterId).reportType(reportType).build())
+            .reportInfos(ReportInfos.builder().reportUuid(reportUuid).reporterId(reporterId).computationType(reportType).build())
             .userId(userId)
             .parameters(parametersInfos)
             .build();
