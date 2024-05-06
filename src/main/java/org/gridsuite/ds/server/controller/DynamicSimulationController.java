@@ -12,7 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.collections4.CollectionUtils;
-import org.gridsuite.ds.server.computation.utils.ReportContext;
+import org.gridsuite.ds.server.computation.dto.ReportInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.DynamicSimulationResultService;
@@ -71,7 +71,7 @@ public class DynamicSimulationController {
             receiver,
             provider,
             mappingName,
-            ReportContext.builder().reportId(reportId).reportName(reportName).reportType(reportType).build(),
+            ReportInfos.builder().reportUuid(reportId).reporterId(reportName).computationType(reportType).build(),
             userId,
             parameters);
 

@@ -20,7 +20,7 @@ import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gridsuite.ds.server.DynamicSimulationException;
-import org.gridsuite.ds.server.computation.utils.ReportContext;
+import org.gridsuite.ds.server.computation.dto.ReportInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.XmlSerializableParameter;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
@@ -141,12 +141,12 @@ public class ParametersServiceImpl implements ParametersService {
 
     @Override
     public DynamicSimulationRunContext createRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
-                                                 ReportContext reportContext, String userId, DynamicSimulationParametersInfos parameters) {
+                                                        ReportInfos reportInfos, String userId, DynamicSimulationParametersInfos parameters) {
         DynamicSimulationRunContext runContext = DynamicSimulationRunContext.builder()
                 .networkUuid(networkUuid)
                 .variantId(variantId)
                 .receiver(receiver)
-                .reportContext(reportContext)
+                .reportInfos(reportInfos)
                 .userId(userId)
                 .parameters(parameters)
                 .build();

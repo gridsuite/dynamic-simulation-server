@@ -12,8 +12,8 @@ import com.powsybl.iidm.network.Network;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import org.gridsuite.ds.server.computation.dto.ReportInfos;
 import org.gridsuite.ds.server.computation.service.AbstractComputationRunContext;
-import org.gridsuite.ds.server.computation.utils.ReportContext;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 
 import java.util.List;
@@ -41,8 +41,8 @@ public class DynamicSimulationRunContext extends AbstractComputationRunContext<D
 
     @Builder
     public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
-                                       ReportContext reportContext, String userId, DynamicSimulationParametersInfos parameters) {
-        super(networkUuid, variantId, receiver, reportContext, userId, provider, parameters);
+                                       ReportInfos reportInfos, String userId, DynamicSimulationParametersInfos parameters) {
+        super(networkUuid, variantId, receiver, reportInfos, userId, provider, parameters, null);
         this.mapping = mapping;
     }
 }

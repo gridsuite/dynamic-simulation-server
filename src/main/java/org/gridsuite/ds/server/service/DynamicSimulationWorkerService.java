@@ -9,7 +9,6 @@ package org.gridsuite.ds.server.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.dynamicsimulation.*;
 import com.powsybl.dynamicsimulation.groovy.*;
@@ -33,6 +32,7 @@ import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATION_TYPE;
 
@@ -133,8 +134,8 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
 
     // open the visibility from protected to public to mock in a test where the stop arrives early
     @Override
-    public void preRun(DynamicSimulationRunContext runContext, Reporter reporter) {
-        super.preRun(runContext, reporter);
+    public void preRun(DynamicSimulationRunContext runContext) {
+        super.preRun(runContext);
         DynamicSimulationParametersInfos parametersInfos = runContext.getParameters();
 
         // get parameters file from dynamic mapping server
@@ -165,7 +166,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     }
 
     @Override
-    public CompletableFuture<DynamicSimulationResult> getCompletableFuture(Network network, DynamicSimulationRunContext runContext, String provider, Reporter reporter) {
+    public CompletableFuture<DynamicSimulationResult> getCompletableFuture(Network network, DynamicSimulationRunContext runContext, String provider, UUID resultUuid) {
 
         DynamicModelsSupplier dynawoDynamicModelsSupplier = new DynawoDynamicModelSupplier(runContext.getDynamicModelContent());
 
@@ -191,7 +192,18 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
                 getComputationManager(),
                 parameters,
-                reporter);
+                runContext.getReporter());
     }
 
+    @Bean
+    @Override
+    public Consumer<Message<String>> consumeRun() {
+        return super.consumeRun();
+    }
+
+    @Bean
+    @Override
+    public Consumer<Message<String>> consumeCancel() {
+        return super.consumeCancel();
+    }
 }

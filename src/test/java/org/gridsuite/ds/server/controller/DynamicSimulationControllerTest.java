@@ -516,7 +516,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
             return object;
         })
-        .when(dynamicSimulationWorkerService).preRun(any(), any());
+        .when(dynamicSimulationWorkerService).preRun(any());
 
         // test run then cancel
         UUID runUuid = runAndCancel(cancelLatch, 0);

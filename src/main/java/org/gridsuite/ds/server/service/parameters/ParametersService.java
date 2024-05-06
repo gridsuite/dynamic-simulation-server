@@ -7,9 +7,9 @@
 package org.gridsuite.ds.server.service.parameters;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
+import org.gridsuite.ds.server.computation.dto.ReportInfos;
 import com.powsybl.dynawaltz.rte.mapping.dynamicmodels.DynamicModelConfig;
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.ds.server.computation.utils.ReportContext;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
@@ -31,7 +31,7 @@ public interface ParametersService {
     DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams, String provider, DynamicSimulationParametersInfos inputParameters);
 
     DynamicSimulationRunContext createRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
-                                                 ReportContext reportContext, String userId, DynamicSimulationParametersInfos parameters);
+                                                 ReportInfos reportContext, String userId, DynamicSimulationParametersInfos parameters);
 
     List<DynamicModelConfig> getDynamicModel(InputMapping inputMapping, Network network);
 }
