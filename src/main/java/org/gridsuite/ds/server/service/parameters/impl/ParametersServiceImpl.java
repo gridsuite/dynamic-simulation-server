@@ -210,7 +210,7 @@ public class ParametersServiceImpl implements ParametersService {
                             .build();
                 }
 
-                List<Identifiable<?>> matchedEquipments = FiltersUtils.getIdentifiables(filter, network, uuids -> null);
+                List<Identifiable<?>> matchedEquipments = FiltersUtils.getIdentifiables(filter, network, null);
 
                 // eliminate already matched equipments to avoid duplication
                 if (!matchedEquipmentIds.isEmpty()) {
