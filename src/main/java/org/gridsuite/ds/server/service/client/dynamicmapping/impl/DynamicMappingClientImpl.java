@@ -9,7 +9,7 @@ package org.gridsuite.ds.server.service.client.dynamicmapping.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
-import org.gridsuite.ds.server.dto.dynamicmapping.Script;
+import org.gridsuite.ds.server.dto.dynamicmapping.Parameter;
 import org.gridsuite.ds.server.service.client.AbstractRestClient;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,25 +39,22 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
     }
 
     @Override
-    public Script createFromMapping(String mappingName) {
+    public Parameter createFromMapping(String mappingName) {
         Objects.requireNonNull(mappingName);
 
-        String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT);
+        String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_PARAMETER_CREATE_END_POINT);
 
         UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl + DELIMITER + "{mappingName}");
-
-        // to export script and not persist
-        uriComponentsBuilder.queryParam("persistent", false);
         var uriComponents = uriComponentsBuilder.buildAndExpand(mappingName);
 
         // call dynamic mapping Rest API
         try {
-            return getRestTemplate().getForObject(uriComponents.toUriString(), Script.class);
+            return getRestTemplate().getForObject(uriComponents.toUriString(), Parameter.class);
         } catch (HttpStatusCodeException e) {
             if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
                 throw new DynamicSimulationException(DYNAMIC_MAPPING_NOT_FOUND, "Mapping not found: " + mappingName);
             } else {
-                throw handleHttpError(e, CREATE_MAPPING_SCRIPT_ERROR, getObjectMapper());
+                throw handleHttpError(e, CREATE_MAPPING_PARAMETER_ERROR, getObjectMapper());
             }
         }
     }

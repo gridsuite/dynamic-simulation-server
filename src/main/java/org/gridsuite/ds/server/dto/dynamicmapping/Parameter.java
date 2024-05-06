@@ -6,29 +6,18 @@
  */
 package org.gridsuite.ds.server.dto.dynamicmapping;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-import java.util.Date;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter
-@Setter
-public class Script {
+@Schema(description = "Parameter set in par format")
+public record Parameter(
+    @Schema(description = "Name of the original mapping")
+    String parentName,
 
-    private String name;
-
-    // name of the original mapping
-    private String parentName;
-
-    private Date createdDate;
-
-    private String parametersFile;
+    @Schema(description = "Parameter file content in par format")
+    String parametersFile
+) {
 
 }

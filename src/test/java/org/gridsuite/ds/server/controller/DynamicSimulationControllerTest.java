@@ -25,7 +25,7 @@ import org.gridsuite.ds.server.computation.service.NotificationService;
 import org.gridsuite.ds.server.controller.utils.ParameterUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
-import org.gridsuite.ds.server.dto.dynamicmapping.Script;
+import org.gridsuite.ds.server.dto.dynamicmapping.Parameter;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
@@ -104,12 +104,10 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
     @Override
     protected void initDynamicMappingServiceMock() {
-        Script scriptObj = new Script(
-                MAPPING_NAME + "-script",
+        Parameter parameterObj = new Parameter(
                 MAPPING_NAME,
-                new Date(),
                 "");
-        given(dynamicMappingClient.createFromMapping(MAPPING_NAME)).willReturn(scriptObj);
+        given(dynamicMappingClient.createFromMapping(MAPPING_NAME)).willReturn(parameterObj);
 
         given(dynamicMappingClient.getMapping(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(null);
     }
