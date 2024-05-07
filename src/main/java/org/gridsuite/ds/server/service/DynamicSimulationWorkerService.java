@@ -181,7 +181,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
                 getComputationManager(),
                 parameters,
-                runContext.getReporter());
+                runContext.getReportNode());
     }
 
     @Bean
