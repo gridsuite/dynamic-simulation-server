@@ -62,3 +62,17 @@ OverloadManagementSystem {
     iMeasurementSide TwoSides.TWO
     controlledBranch "_BUS____2-BUS____5-1_AC"
 }
+
+TapChangerBlockingAutomaton {
+    parameterSetId "TCB_2_4"
+    dynamicModelId "TCB_1"
+    uMeasurements "_BUS___11_TN", "_BUS___12_TN"
+    transformers "_LOAD__11_EC", "_LOAD__12_EC"
+}
+
+TapChangerBlockingAutomaton {
+    parameterSetId "TCB_2_5"
+    dynamicModelId "TCB_2"
+    uMeasurements "_BUS____4_TN"
+    transformers "_BUS____4-BUS____9-1_PT"
+}
