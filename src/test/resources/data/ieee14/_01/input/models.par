@@ -308,4 +308,16 @@
         <par type="DOUBLE" name="currentLimitAutomaton_IMax" value="600"/>
         <par type="DOUBLE" name="currentLimitAutomaton_tLagBeforeActing" value="5"/>
     </set>
+    <set id="TCB_2_4">
+        <par type="DOUBLE" name="tapChangerBlocking_UMin" value="14"/>
+        <par type="DOUBLE" name="tapChangerBlocking_tLagBeforeBlocked" value="104"/>
+        <par type="DOUBLE" name="tapChangerBlocking_tLagTransBlockedD" value="1004"/>
+        <par type="DOUBLE" name="tapChangerBlocking_tLagTransBlockedT" value="14"/>
+    </set>
+    <set id="TCB_2_5">
+        <par type="DOUBLE" name="tapChangerBlocking_UMin" value="15"/>
+        <par type="DOUBLE" name="tapChangerBlocking_tLagBeforeBlocked" value="105"/>
+        <par type="DOUBLE" name="tapChangerBlocking_tLagTransBlockedD" value="1005"/>
+        <par type="DOUBLE" name="tapChangerBlocking_tLagTransBlockedT" value="15"/>
+    </set>
 </parametersSet>
