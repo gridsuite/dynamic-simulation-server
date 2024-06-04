@@ -8,9 +8,9 @@ package org.gridsuite.ds.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
-import org.gridsuite.ds.server.computation.service.AbstractComputationService;
-import org.gridsuite.ds.server.computation.service.NotificationService;
-import org.gridsuite.ds.server.computation.service.UuidGeneratorService;
+import com.powsybl.ws.commons.computation.service.AbstractComputationService;
+import com.powsybl.ws.commons.computation.service.NotificationService;
+import com.powsybl.ws.commons.computation.service.UuidGeneratorService;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
@@ -53,10 +53,5 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
         return DynamicSimulationProvider.findAll().stream()
                 .map(DynamicSimulationProvider::getName)
                 .toList();
-    }
-
-    @Override
-    public String getDefaultProvider() {
-        return defaultProvider;
     }
 }
