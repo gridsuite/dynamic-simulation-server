@@ -13,8 +13,8 @@ import com.powsybl.computation.ComputationManager;
 import com.powsybl.dynamicsimulation.*;
 import com.powsybl.dynamicsimulation.groovy.*;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
-import com.powsybl.dynawaltz.rte.mapping.dynamicmodels.DynamicModelConfig;
-import com.powsybl.dynawaltz.rte.mapping.dynamicmodels.DynawoDynamicModelSupplier;
+import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynawoDynamicModelsSupplier;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -168,7 +168,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     @Override
     public CompletableFuture<DynamicSimulationResult> getCompletableFuture(Network network, DynamicSimulationRunContext runContext, String provider, UUID resultUuid) {
 
-        DynamicModelsSupplier dynawoDynamicModelsSupplier = new DynawoDynamicModelSupplier(runContext.getDynamicModelContent());
+        DynamicModelsSupplier dynawoDynamicModelsSupplier = new DynawoDynamicModelsSupplier(runContext.getDynamicModelContent());
 
         List<EventModelGroovyExtension> eventModelExtensions = GroovyExtension.find(EventModelGroovyExtension.class, DynaWaltzProvider.NAME);
         EventModelsSupplier eventModelsSupplier = new GroovyEventModelsSupplier(

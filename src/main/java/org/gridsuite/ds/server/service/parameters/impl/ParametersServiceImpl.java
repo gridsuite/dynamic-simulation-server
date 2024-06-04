@@ -12,9 +12,9 @@ import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
 import com.powsybl.dynawaltz.DynaWaltzParameters;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
 import com.powsybl.dynawaltz.parameters.ParametersSet;
-import com.powsybl.dynawaltz.rte.mapping.dynamicmodels.DynamicModelConfig;
-import com.powsybl.dynawaltz.rte.mapping.dynamicmodels.PropertyBuilder;
-import com.powsybl.dynawaltz.rte.mapping.dynamicmodels.PropertyType;
+import com.powsybl.dynawaltz.suppliers.PropertyBuilder;
+import com.powsybl.dynawaltz.suppliers.PropertyType;
+import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.dynawaltz.xml.ParametersXml;
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
@@ -34,6 +34,7 @@ import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.parameters.CurveGroovyGeneratorService;
 import org.gridsuite.ds.server.service.parameters.EventGroovyGeneratorService;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
+import org.gridsuite.ds.server.utils.Utils;
 import org.gridsuite.filter.expertfilter.ExpertFilter;
 import org.gridsuite.filter.expertfilter.expertrule.CombinatorExpertRule;
 import org.gridsuite.filter.utils.EquipmentType;
@@ -237,13 +238,7 @@ public class ParametersServiceImpl implements ParametersService {
             new DynamicModelConfig(
                 automaton.model(),
                 automaton.setGroup(),
-                automaton.properties().stream().map(property ->
-                    new PropertyBuilder()
-                        .name(property.name())
-                        .value(property.value())
-                        .type(property.type())
-                        .build()
-                ).toList())
+                automaton.properties().stream().map(Utils::convertToProperty).toList())
         ).toList());
 
         return dynamicModel;

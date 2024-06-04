@@ -7,7 +7,7 @@
 
 package org.gridsuite.ds.server.dto.dynamicmapping.automata;
 
-import com.powsybl.dynawaltz.rte.mapping.dynamicmodels.PropertyType;
+import com.powsybl.dynawaltz.suppliers.PropertyType;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>

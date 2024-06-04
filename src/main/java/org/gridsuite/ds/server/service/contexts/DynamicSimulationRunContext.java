@@ -7,7 +7,7 @@
 package org.gridsuite.ds.server.service.contexts;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
-import com.powsybl.dynawaltz.rte.mapping.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.iidm.network.Network;
 import lombok.Builder;
 import lombok.Getter;
