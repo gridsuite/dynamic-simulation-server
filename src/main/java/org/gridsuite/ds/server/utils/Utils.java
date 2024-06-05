@@ -10,6 +10,8 @@ package org.gridsuite.ds.server.utils;
 import com.powsybl.dynawaltz.suppliers.Property;
 import com.powsybl.dynawaltz.suppliers.PropertyBuilder;
 import com.powsybl.dynawaltz.suppliers.PropertyType;
+import com.powsybl.iidm.network.TwoSides;
+import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.ds.server.dto.dynamicmapping.automata.BasicProperty;
 
 import java.util.ArrayList;
@@ -30,22 +32,43 @@ public final class Utils {
         return converted;
     }
 
-    public static Property convertToProperty(BasicProperty property) {
+    public static Property convertProperty(BasicProperty property) {
         String value = property.value();
-        PropertyType type = property.type();
         PropertyBuilder propertyBuilder = new PropertyBuilder()
-                .name(property.name())
-                .type(type)
-                .value(value);
-        if (type == PropertyType.STRING) {
+                .name(property.name());
+
+        if (property.type() == org.gridsuite.ds.server.utils.PropertyType.ENUM) {
+            // using value to infer the enum
+            if (StringUtils.isEmpty(value) || value.split(".").length != 2) {
+                return null;
+            }
+
+            String[] splitValue = value.split(".");
+            String enumType = splitValue[0];
+            String enumValue = splitValue[1];
+
+            // at moment process only TwoSides
+            if (TwoSides.class.getName().equals(enumType)) {
+                propertyBuilder.value(enumValue)
+                    .type(PropertyType.TWO_SIDES);
+            } else {
+                return null;
+            }
+        } else if (property.type() == org.gridsuite.ds.server.utils.PropertyType.STRING) {
             List<String> values = convertStringToList(value);
             // check whether having multiple values
             if (values.size() > 1) {
-                // override single string by multi strings
-                propertyBuilder.type(PropertyType.STRINGS);
-                propertyBuilder.values(values);
+                propertyBuilder.values(values)
+                    .type(PropertyType.STRINGS);
+            } else {
+                propertyBuilder.value(value)
+                    .type(PropertyType.valueOf(property.type().name()));
             }
+        } else {
+            propertyBuilder.value(value)
+                .type(PropertyType.valueOf(property.type().name()));
         }
+
         return propertyBuilder.build();
     }
 }

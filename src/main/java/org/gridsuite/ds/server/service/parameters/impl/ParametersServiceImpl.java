@@ -14,6 +14,7 @@ import com.powsybl.dynawaltz.DynaWaltzProvider;
 import com.powsybl.dynawaltz.parameters.ParametersSet;
 import com.powsybl.dynawaltz.suppliers.PropertyBuilder;
 import com.powsybl.dynawaltz.suppliers.PropertyType;
+import com.powsybl.dynawaltz.suppliers.SetGroupType;
 import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.dynawaltz.xml.ParametersXml;
 import com.powsybl.iidm.network.Identifiable;
@@ -62,6 +63,7 @@ import static org.gridsuite.ds.server.DynamicSimulationException.Type.PROVIDER_N
 public class ParametersServiceImpl implements ParametersService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ParametersServiceImpl.class);
+    public static final String FIELD_STATIC_ID = "staticId";
 
     private final CurveGroovyGeneratorService curveGroovyGeneratorService;
 
@@ -223,9 +225,9 @@ public class ParametersServiceImpl implements ParametersService {
                 return matchedEquipments.stream().map(equipment -> new DynamicModelConfig(
                     rule.mappedModel(),
                     rule.setGroup(),
-                    rule.groupType(),
+                    SetGroupType.valueOf(rule.groupType().name()),
                     List.of(new PropertyBuilder()
-                        .name("staticId")
+                        .name(FIELD_STATIC_ID)
                         .value(equipment.getId())
                         .type(PropertyType.STRING)
                         .build())));
@@ -238,7 +240,7 @@ public class ParametersServiceImpl implements ParametersService {
             new DynamicModelConfig(
                 automaton.model(),
                 automaton.setGroup(),
-                automaton.properties().stream().map(Utils::convertToProperty).toList())
+                automaton.properties().stream().map(Utils::convertProperty).filter(Objects::nonNull).toList())
         ).toList());
 
         return dynamicModel;

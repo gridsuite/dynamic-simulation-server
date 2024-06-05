@@ -4,14 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
-package org.gridsuite.ds.server.dto.dynamicmapping.automata;
-
-import org.gridsuite.ds.server.utils.PropertyType;
+package org.gridsuite.ds.server.utils;
 
 /**
- * @author Thang PHAM <quyet-thang.pham at rte-france.com>
+ * @author Mathieu Scalbert <mathieu.scalbert at rte-france.com>
  */
-public record BasicProperty(String name, String value, PropertyType type) {
-
+public enum SetGroupType {
+    FIXED,
+    PREFIX,
+    SUFFIX
 }

@@ -6,8 +6,8 @@
  */
 package org.gridsuite.ds.server.dto.dynamicmapping;
 
-import com.powsybl.dynawaltz.suppliers.SetGroupType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.gridsuite.ds.server.utils.SetGroupType;
 import org.gridsuite.filter.expertfilter.ExpertFilter;
 import org.gridsuite.filter.utils.EquipmentType;
 
