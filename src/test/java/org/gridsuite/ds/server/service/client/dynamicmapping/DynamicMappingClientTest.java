@@ -58,7 +58,7 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private static String getEndpointUrl() {
+    private String getEndpointUrl() {
         return buildEndPointUrl("", API_VERSION,
                 DYNAMIC_MAPPING_PARAMETER_CREATE_END_POINT);
     }

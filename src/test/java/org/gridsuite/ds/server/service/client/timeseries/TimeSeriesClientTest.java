@@ -50,7 +50,7 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private static List<TimeSeries<?, ?>> createTimeSeriesList() {
+    private List<TimeSeries<?, ?>> createTimeSeriesList() {
         Map<String, TimeSeries<?, ?>> curves = new HashMap<>();
         TimeSeriesIndex index = new IrregularTimeSeriesIndex(new long[]{32, 64, 128, 256});
         curves.put("NETWORK__BUS____2-BUS____5-1_AC_iSide2", TimeSeries.createDouble("NETWORK__BUS____2-BUS____5-1_AC_iSide2", index, 333.847331, 333.847321, 333.847300, 333.847259));
@@ -59,7 +59,7 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
         return timeSeries;
     }
 
-    private static String getEndpointUrl() {
+    private String getEndpointUrl() {
         return buildEndPointUrl("", API_VERSION,
                 TIME_SERIES_END_POINT);
     }
