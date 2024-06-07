@@ -18,9 +18,11 @@ import com.powsybl.dynawaltz.suppliers.PropertyBuilder;
 import com.powsybl.dynawaltz.suppliers.PropertyType;
 import com.powsybl.dynawaltz.suppliers.SetGroupType;
 import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawaltz.suppliers.events.EventModelConfig;
 import com.powsybl.dynawaltz.xml.ParametersXml;
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.computation.dto.ReportInfos;
@@ -35,7 +37,6 @@ import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.parameters.CurveGroovyGeneratorService;
-import org.gridsuite.ds.server.service.parameters.EventGroovyGeneratorService;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.gridsuite.ds.server.utils.Utils;
 import org.gridsuite.filter.expertfilter.ExpertFilter;
@@ -72,26 +73,36 @@ public class ParametersServiceImpl implements ParametersService {
 
     private final CurveGroovyGeneratorService curveGroovyGeneratorService;
 
-    private final EventGroovyGeneratorService eventGroovyGeneratorService;
-
     private final String defaultProvider;
 
     @Autowired
     public ParametersServiceImpl(ObjectMapper objectMapper,
                                  CurveGroovyGeneratorService curveGroovyGeneratorService,
-                                 EventGroovyGeneratorService eventGroovyGeneratorService,
                                  @Value("${dynamic-simulation.default-provider}") String defaultProvider) {
         this.objectMapper = objectMapper;
         this.curveGroovyGeneratorService = curveGroovyGeneratorService;
-        this.eventGroovyGeneratorService = eventGroovyGeneratorService;
         this.defaultProvider = defaultProvider;
     }
 
     @Override
-    public String getEventModel(List<EventInfos> events) {
-        String generatedGroovyEvents = eventGroovyGeneratorService.generate(events != null ? events : Collections.emptyList());
-        LOGGER.info(generatedGroovyEvents);
-        return generatedGroovyEvents;
+    public List<EventModelConfig> getEventModel(List<EventInfos> events) {
+        if (CollectionUtils.isEmpty(events)) {
+            return Collections.emptyList();
+        }
+
+        List<EventModelConfig> eventModel = events.stream().map(event ->
+            new EventModelConfig(
+                event.getEventType(),
+                event.getProperties().stream().map(Utils::convertProperty).filter(Objects::nonNull).toList()))
+            .toList();
+
+        try {
+            LOGGER.info(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventModel));
+        } catch (JsonProcessingException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        return eventModel;
     }
 
     @Override

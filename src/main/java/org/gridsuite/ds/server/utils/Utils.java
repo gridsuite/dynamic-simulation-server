@@ -13,6 +13,7 @@ import com.powsybl.dynawaltz.suppliers.PropertyType;
 import com.powsybl.iidm.network.TwoSides;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.ds.server.dto.dynamicmapping.automata.BasicProperty;
+import org.gridsuite.ds.server.dto.event.EventPropertyInfos;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,12 +33,22 @@ public final class Utils {
         return converted;
     }
 
+    public static Property convertProperty(EventPropertyInfos property) {
+        return convertProperty(new BasicProperty(
+            property.getName(),
+            property.getValue(),
+            property.getType()));
+    }
+
     public static Property convertProperty(BasicProperty property) {
         String value = property.value();
         PropertyBuilder propertyBuilder = new PropertyBuilder()
                 .name(property.name());
-
-        if (property.type() == org.gridsuite.ds.server.utils.PropertyType.ENUM) {
+        if (property.type() == org.gridsuite.ds.server.utils.PropertyType.FLOAT) {
+            // powsybl-dynawo does not support FLOAT => use DOUBLE
+            propertyBuilder.value(value)
+                .type(PropertyType.DOUBLE);
+        } else if (property.type() == org.gridsuite.ds.server.utils.PropertyType.ENUM) {
             // using value to infer enum type
             if (StringUtils.isEmpty(value) || value.split("\\.").length != 2) {
                 return null;

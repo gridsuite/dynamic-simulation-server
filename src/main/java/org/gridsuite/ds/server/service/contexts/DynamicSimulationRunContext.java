@@ -8,6 +8,7 @@ package org.gridsuite.ds.server.service.contexts;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawaltz.suppliers.events.EventModelConfig;
 import com.powsybl.iidm.network.Network;
 import lombok.Builder;
 import lombok.Getter;
@@ -33,7 +34,7 @@ public class DynamicSimulationRunContext extends AbstractComputationRunContext<D
     // fields which are enriched in worker service
     @Setter private List<DynamicModelConfig> dynamicModelContent;
 
-    @Setter private String eventModelContent;
+    @Setter private List<EventModelConfig> eventModelContent;
 
     @Setter private String curveContent;
 

@@ -8,6 +8,7 @@ package org.gridsuite.ds.server.service.parameters;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawaltz.suppliers.events.EventModelConfig;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.ds.server.computation.dto.ReportInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
@@ -24,7 +25,7 @@ import java.util.UUID;
  */
 public interface ParametersService {
 
-    String getEventModel(List<EventInfos> events);
+    List<EventModelConfig> getEventModel(List<EventInfos> events);
 
     String getCurveModel(List<CurveInfos> curves);
 
