@@ -1,3 +1,0 @@
-<eventType> {
-    <properties; separator="\n">
-}
