@@ -39,16 +39,16 @@ public final class Utils {
 
         if (property.type() == org.gridsuite.ds.server.utils.PropertyType.ENUM) {
             // using value to infer enum type
-            if (StringUtils.isEmpty(value) || value.split(".").length != 2) {
+            if (StringUtils.isEmpty(value) || value.split("\\.").length != 2) {
                 return null;
             }
 
-            String[] splitValue = value.split(".");
+            String[] splitValue = value.split("\\.");
             String enumType = splitValue[0];
             String enumValue = splitValue[1];
 
             // at moment process only TwoSides, e.g. TwoSides.TWO or TwoSides.ONE
-            if (TwoSides.class.getName().equals(enumType)) {
+            if (TwoSides.class.getSimpleName().equals(enumType)) {
                 propertyBuilder.value(enumValue)
                     .type(PropertyType.TWO_SIDES);
             } else {
@@ -57,7 +57,7 @@ public final class Utils {
         } else if (property.type() == org.gridsuite.ds.server.utils.PropertyType.STRING) {
             propertyBuilder.value(value)
                 .type(PropertyType.valueOf(property.type().name()));
-            List<String> values = convertStringToList(value);
+            List<String> values = convertStringToList(value).stream().map(StringUtils::trim).toList();
             // check whether having multiple values
             if (values.size() > 1) {
                 // override by set multiple values

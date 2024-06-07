@@ -146,12 +146,12 @@
         },
         {
           "name": "uMeasurements",
-          "value": "_BUS___11_TN, _BUS___12_TN",
+          "value": "_BUS___11_TN,_BUS___12_TN",
           "type": "STRING"
         },
         {
           "name": "transformers",
-          "value": "_LOAD__11_EC, _LOAD__12_EC",
+          "value": "_LOAD__11_EC,_LOAD__12_EC",
           "type": "STRING"
         }
       ]
