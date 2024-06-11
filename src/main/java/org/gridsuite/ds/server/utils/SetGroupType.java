@@ -7,7 +7,7 @@
 package org.gridsuite.ds.server.utils;
 
 /**
- * @author Mathieu Scalbert <mathieu.scalbert at rte-france.com>
+ * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public enum SetGroupType {
     FIXED,
