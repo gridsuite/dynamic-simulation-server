@@ -117,10 +117,6 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-stream</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
@@ -144,10 +140,6 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawaltz-dsl</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-network-store-client</artifactId>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
@@ -184,12 +176,6 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-registry-prometheus</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-
         <!-- Test dependencies -->
         <dependency>
             <groupId>com.h2database</groupId>
@@ -210,6 +196,7 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-computation-local-test</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
