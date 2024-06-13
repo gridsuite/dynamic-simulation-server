@@ -140,23 +140,13 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawaltz</artifactId>
-            <version>2.5.0-SNAPSHOT</version>
+            <version>2.5.0-alpha-1</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawaltz-dsl</artifactId>
-            <version>2.5.0-SNAPSHOT</version>
+            <version>2.5.0-alpha-1</version>
         </dependency>
-<!--        <dependency>
-            <groupId>com.rte-france.powsybl</groupId>
-            <artifactId>powsybl-dynawaltz-rte</artifactId>
-            <version>4.5.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>com.rte-france.powsybl</groupId>
-            <artifactId>powsybl-dynawaltz-dsl-rte</artifactId>
-            <version>4.5.0-SNAPSHOT</version>
-        </dependency>-->
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-filter</artifactId>
