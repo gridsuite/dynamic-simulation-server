@@ -9,6 +9,7 @@ package org.gridsuite.ds.server.config;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.powsybl.commons.report.ReportNodeJsonModule;
 import com.powsybl.dynamicsimulation.json.DynamicSimulationParametersJsonModule;
 import com.powsybl.timeseries.json.TimeSeriesJsonModule;
 import org.springframework.context.annotation.Bean;
@@ -53,6 +54,7 @@ public class RestTemplateConfig {
                 .featuresToEnable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
                 .build();
         objectMapper.registerModule(new DynamicSimulationParametersJsonModule());
+        objectMapper.registerModule(new ReportNodeJsonModule());
         objectMapper.registerModule(new TimeSeriesJsonModule());
         return objectMapper;
     }
