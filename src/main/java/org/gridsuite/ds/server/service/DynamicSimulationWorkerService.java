@@ -19,7 +19,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.TimeSeries;
 import org.apache.commons.collections4.CollectionUtils;
-import org.gridsuite.ds.server.computation.service.*;
+import com.powsybl.ws.commons.computation.service.*;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.Script;
@@ -48,7 +48,7 @@ import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATI
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
-@ComponentScan(basePackageClasses = {NetworkStoreService.class})
+@ComponentScan(basePackageClasses = {NetworkStoreService.class, NotificationService.class})
 @Service
 public class DynamicSimulationWorkerService extends AbstractWorkerService<DynamicSimulationResult, DynamicSimulationRunContext, DynamicSimulationParametersInfos, DynamicSimulationResultService> {
 
@@ -152,7 +152,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     }
 
     @Override
-    public CompletableFuture<DynamicSimulationResult> getCompletableFuture(Network network, DynamicSimulationRunContext runContext, String provider, UUID resultUuid) {
+    public CompletableFuture<DynamicSimulationResult> getCompletableFuture(DynamicSimulationRunContext runContext, String provider, UUID resultUuid) {
 
         List<DynamicModelGroovyExtension> dynamicModelExtensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynaWaltzProvider.NAME);
         DynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(
@@ -174,7 +174,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 runContext.getNetworkUuid(), parameters.getStartTime(), parameters.getStopTime());
 
         DynamicSimulation.Runner runner = DynamicSimulation.find(provider);
-        return runner.runAsync(network,
+        return runner.runAsync(runContext.getNetwork(),
                 dynamicModelsSupplier,
                 eventModelsSupplier,
                 curvesSupplier,
