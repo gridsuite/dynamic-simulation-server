@@ -73,7 +73,7 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
     }
 
     @Override
-    public Map<String, Object> getSpecificMsgHeaders() {
+    public Map<String, String> getSpecificMsgHeaders(ObjectMapper ignoredObjectMapper) {
         return Map.of(HEADER_MAPPING, getRunContext().getMapping());
     }
 }
