@@ -95,7 +95,7 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         ObjectWriter ow = objectMapper.writer().withDefaultPrettyPrinter();
         String parameterJson = ow.writeValueAsString(parameterObj);
 
-        // mock response for test case GET with url - /parameters/from/{mappingName}
+        // mock response for GET parameters/from/<mappingName>
         String baseUrl = getEndpointUrl();
 
         wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl + DELIMITER + "{mappingName}"))
@@ -116,7 +116,7 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
     public void testCreateFromMappingGivenNotFound() {
         String mappingName = MAPPING_NAME_01;
 
-        // mock response for test case GET with url - /parameters/from/{mappingName}
+        // mock response for GET parameters/from/<mappingName>
         String baseUrl = getEndpointUrl();
 
         wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl + "{mappingName}"))

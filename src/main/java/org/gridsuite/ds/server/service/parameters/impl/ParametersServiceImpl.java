@@ -6,8 +6,6 @@
  */
 package org.gridsuite.ds.server.service.parameters.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.exceptions.UncheckedXmlStreamException;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
@@ -22,10 +20,10 @@ import com.powsybl.dynawaltz.suppliers.events.EventModelConfig;
 import com.powsybl.dynawaltz.xml.ParametersXml;
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gridsuite.ds.server.DynamicSimulationException;
-import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.XmlSerializableParameter;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
@@ -53,7 +51,6 @@ import org.springframework.stereotype.Service;
 import javax.xml.stream.XMLStreamException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.UncheckedIOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -69,17 +66,13 @@ public class ParametersServiceImpl implements ParametersService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ParametersServiceImpl.class);
     public static final String FIELD_STATIC_ID = "staticId";
 
-    private final ObjectMapper objectMapper;
-
     private final CurveGroovyGeneratorService curveGroovyGeneratorService;
 
     private final String defaultProvider;
 
     @Autowired
-    public ParametersServiceImpl(ObjectMapper objectMapper,
-                                 CurveGroovyGeneratorService curveGroovyGeneratorService,
+    public ParametersServiceImpl(CurveGroovyGeneratorService curveGroovyGeneratorService,
                                  @Value("${dynamic-simulation.default-provider}") String defaultProvider) {
-        this.objectMapper = objectMapper;
         this.curveGroovyGeneratorService = curveGroovyGeneratorService;
         this.defaultProvider = defaultProvider;
     }
@@ -90,19 +83,11 @@ public class ParametersServiceImpl implements ParametersService {
             return Collections.emptyList();
         }
 
-        List<EventModelConfig> eventModel = events.stream().map(event ->
+        return events.stream().map(event ->
             new EventModelConfig(
                 event.getEventType(),
                 event.getProperties().stream().map(Utils::convertProperty).filter(Objects::nonNull).toList()))
             .toList();
-
-        try {
-            LOGGER.info(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(eventModel));
-        } catch (JsonProcessingException e) {
-            throw new UncheckedIOException(e);
-        }
-
-        return eventModel;
     }
 
     @Override
@@ -260,12 +245,6 @@ public class ParametersServiceImpl implements ParametersService {
                 automaton.setGroup(),
                 automaton.properties().stream().map(Utils::convertProperty).filter(Objects::nonNull).toList())
         ).toList());
-
-        try {
-            LOGGER.info(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(dynamicModel));
-        } catch (JsonProcessingException e) {
-            throw new UncheckedIOException(e);
-        }
 
         return dynamicModel;
     }
