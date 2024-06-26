@@ -9,12 +9,11 @@ package org.gridsuite.ds.server.service.contexts;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.dynawaltz.suppliers.events.EventModelConfig;
-import com.powsybl.iidm.network.Network;
+import com.powsybl.ws.commons.computation.dto.ReportInfos;
+import com.powsybl.ws.commons.computation.service.AbstractComputationRunContext;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.gridsuite.ds.server.computation.dto.ReportInfos;
-import org.gridsuite.ds.server.computation.service.AbstractComputationRunContext;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 
 import java.util.List;
@@ -28,9 +27,6 @@ public class DynamicSimulationRunContext extends AbstractComputationRunContext<D
 
     @Setter private String mapping;
 
-    // network is cached in context to avoid re-loading in different methods of the worker service
-    @Setter private Network network;
-
     // fields which are enriched in worker service
     @Setter private List<DynamicModelConfig> dynamicModelContent;
 
@@ -43,7 +39,7 @@ public class DynamicSimulationRunContext extends AbstractComputationRunContext<D
     @Builder
     public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
                                        ReportInfos reportInfos, String userId, DynamicSimulationParametersInfos parameters) {
-        super(networkUuid, variantId, receiver, reportInfos, userId, provider, parameters, null);
+        super(networkUuid, variantId, receiver, reportInfos, userId, provider, parameters);
         this.mapping = mapping;
     }
 }

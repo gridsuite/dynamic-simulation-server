@@ -24,8 +24,8 @@ import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.TimeSeries;
+import com.powsybl.ws.commons.computation.service.*;
 import org.apache.commons.collections4.CollectionUtils;
-import org.gridsuite.ds.server.computation.service.*;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
@@ -55,7 +55,7 @@ import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATI
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
-@ComponentScan(basePackageClasses = {NetworkStoreService.class})
+@ComponentScan(basePackageClasses = {NetworkStoreService.class, NotificationService.class})
 @Service
 public class DynamicSimulationWorkerService extends AbstractWorkerService<DynamicSimulationResult, DynamicSimulationRunContext, DynamicSimulationParametersInfos, DynamicSimulationResultService> {
 
@@ -128,14 +128,6 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         return COMPUTATION_TYPE;
     }
 
-    @Override
-    protected DynamicSimulationResult run(Network network, DynamicSimulationRunContext runContext, UUID resultUuid) throws Exception {
-        // cache network in run context to use in other methods of the worker
-        runContext.setNetwork(network);
-
-        return super.run(network, runContext, resultUuid);
-    }
-
     // open the visibility from protected to public to mock in a test where the stop arrives early
     @Override
     public void preRun(DynamicSimulationRunContext runContext) {
@@ -170,7 +162,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     }
 
     @Override
-    public CompletableFuture<DynamicSimulationResult> getCompletableFuture(Network network, DynamicSimulationRunContext runContext, String provider, UUID resultUuid) {
+    public CompletableFuture<DynamicSimulationResult> getCompletableFuture(DynamicSimulationRunContext runContext, String provider, UUID resultUuid) {
 
         DynamicModelsSupplier dynamicModelsSupplier = new DynawoModelsSupplier(runContext.getDynamicModelContent());
 
@@ -186,7 +178,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 runContext.getNetworkUuid(), parameters.getStartTime(), parameters.getStopTime());
 
         DynamicSimulation.Runner runner = DynamicSimulation.find(provider);
-        return runner.runAsync(network,
+        return runner.runAsync(runContext.getNetwork(),
                 dynamicModelsSupplier,
                 eventModelsSupplier,
                 curvesSupplier,

@@ -25,7 +25,7 @@ import com.powsybl.iidm.network.Network;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gridsuite.ds.server.DynamicSimulationException;
-import org.gridsuite.ds.server.computation.dto.ReportInfos;
+import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.XmlSerializableParameter;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;

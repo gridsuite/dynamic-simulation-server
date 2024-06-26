@@ -7,10 +7,10 @@
 package org.gridsuite.ds.server.service.parameters;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
+import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.dynawaltz.suppliers.events.EventModelConfig;
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.ds.server.computation.dto.ReportInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
