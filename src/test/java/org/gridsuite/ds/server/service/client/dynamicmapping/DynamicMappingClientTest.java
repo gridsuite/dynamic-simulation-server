@@ -34,13 +34,12 @@ import static org.gridsuite.ds.server.service.client.RestClient.DELIMITER;
 import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.API_VERSION;
 import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.DYNAMIC_MAPPING_PARAMETER_CREATE_END_POINT;
 import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
+import static org.gridsuite.ds.server.utils.Utils.RESOURCE_PATH_DELIMITER;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
-
-    public static final String RESOURCE_PATH_DELIMITER = "/";
 
     // mapping names
     public static final String MAPPING_NAME_01 = "_01";

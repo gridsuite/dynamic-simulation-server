@@ -7,11 +7,19 @@
 
 package org.gridsuite.ds.server.dto.dynamicmapping.automata;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.gridsuite.ds.server.utils.PropertyType;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public record BasicProperty(String name, String value, PropertyType type) {
+public record BasicProperty(
+    @Schema(description = "Property name")
+    String name,
+    @Schema(description = "Property value in string representation")
+    String value,
+    @Schema(description = "Property type")
+    PropertyType type
+) {
 
 }

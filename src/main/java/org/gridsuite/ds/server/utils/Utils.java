@@ -23,6 +23,9 @@ import java.util.List;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public final class Utils {
+
+    public static final String RESOURCE_PATH_DELIMITER = "/";
+
     private Utils() {
         // never called
     }

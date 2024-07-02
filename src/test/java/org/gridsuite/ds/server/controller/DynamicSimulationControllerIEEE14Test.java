@@ -47,9 +47,10 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_RESULT_UUID;
 import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_USER_ID;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.gridsuite.ds.server.utils.Utils.RESOURCE_PATH_DELIMITER;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.http.MediaType.APPLICATION_JSON;

@@ -48,8 +48,6 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
     protected final String dsFailedDestination = "ds.failed.destination";
     protected final String dsStoppedDestination = "ds.stopped.destination";
 
-    public static final String RESOURCE_PATH_DELIMITER = "/";
-
     @MockBean
     protected DynamicMappingClient dynamicMappingClient;
 
