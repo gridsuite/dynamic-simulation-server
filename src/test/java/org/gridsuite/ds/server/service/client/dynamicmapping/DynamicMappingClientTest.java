@@ -136,7 +136,7 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
     public void testCreateFromMappingGivenException() {
         String mappingName = MAPPING_NAME_01;
 
-        // mock response for test case GET with url - /parameters/from/{mappingName}
+        // mock response for test case GET parameters/from/{mappingName}
         String baseUrl = getEndpointUrl();
 
         wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl + DELIMITER + "{mappingName}"))

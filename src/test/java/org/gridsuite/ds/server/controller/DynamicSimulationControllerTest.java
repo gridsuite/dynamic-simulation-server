@@ -20,8 +20,8 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.timeseries.*;
-import org.apache.commons.collections4.CollectionUtils;
 import com.powsybl.ws.commons.computation.service.NotificationService;
+import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.ds.server.controller.utils.ParameterUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
@@ -50,8 +50,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
-import static org.assertj.core.api.Assertions.assertThat;
 import static com.powsybl.ws.commons.computation.service.NotificationService.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.ds.server.controller.utils.TestUtils.assertType;
 import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATION_TYPE;
 import static org.mockito.ArgumentMatchers.any;
@@ -136,6 +136,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     @Before
+    @Override
     public void setUp() throws IOException {
         super.setUp();
     }

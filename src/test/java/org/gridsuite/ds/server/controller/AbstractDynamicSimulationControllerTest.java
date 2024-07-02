@@ -61,6 +61,7 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
     protected DynamicSimulationWorkerService dynamicSimulationWorkerService;
 
     @Before
+    @Override
     public void setUp() throws IOException {
         super.setUp();
 
@@ -78,6 +79,7 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
     }
 
     @After
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
 
