@@ -15,7 +15,6 @@ import java.util.List;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public interface CurveGroovyGeneratorService {
-    String RESOURCE_PATH_DELIMETER = "/";
     String CURVES_TEMPLATE_DIR = "templates/curve";
 
     /**

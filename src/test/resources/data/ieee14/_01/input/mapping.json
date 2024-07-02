@@ -1,0 +1,183 @@
+{
+  "name": "mapping_01",
+  "rules": [
+    {
+      "equipmentType": "LOAD",
+      "mappedModel": "LoadAlphaBeta",
+      "setGroup": "LAB",
+      "groupType": "FIXED"
+    },
+    {
+      "equipmentType": "GENERATOR",
+      "mappedModel": "GeneratorSynchronousThreeWindingsProportionalRegulations",
+      "setGroup": "IEEE14",
+      "groupType": "PREFIX",
+      "filter": {
+        "equipmentType": "GENERATOR",
+        "type": "EXPERT",
+        "rules" : {
+          "combinator": "AND",
+          "dataType": "COMBINATOR",
+          "rules" : [
+            {
+              "dataType": "NUMBER",
+              "field": "NOMINAL_VOLTAGE",
+              "operator": "EQUALS",
+              "value": 13.8
+            }
+          ]
+        }
+      }
+    },
+    {
+      "equipmentType": "GENERATOR",
+      "mappedModel": "GeneratorSynchronousFourWindingsProportionalRegulations",
+      "setGroup": "IEEE14",
+      "groupType": "PREFIX",
+      "filter": {
+        "equipmentType": "GENERATOR",
+        "type": "EXPERT",
+        "rules" : {
+          "combinator": "AND",
+          "dataType": "COMBINATOR",
+          "rules" : [
+            {
+              "dataType": "NUMBER",
+              "field": "NOMINAL_VOLTAGE",
+              "operator": "EQUALS",
+              "value": 69.0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "equipmentType": "GENERATOR",
+      "mappedModel": "GeneratorPQ",
+      "setGroup": "GPQ",
+      "groupType": "FIXED"
+    },
+    {
+      "equipmentType": "STATIC_VAR_COMPENSATOR",
+      "mappedModel": "StaticVarCompensator",
+      "setGroup": "SVarCT",
+      "groupType": "FIXED",
+      "filter": {
+        "equipmentType": "STATIC_VAR_COMPENSATOR",
+        "type": "EXPERT",
+        "rules" : {
+          "combinator": "AND",
+          "dataType": "COMBINATOR",
+          "rules" : [{
+            "dataType": "NUMBER",
+            "field": "NOMINAL_VOLTAGE",
+            "operator": "EQUALS",
+            "value": 69.0
+          }
+          ]
+        }
+      }
+    }
+  ],
+  "automata": [
+    {
+      "family": "CURRENT",
+      "model": "OverloadManagementSystem",
+      "setGroup": "CLA_2_4",
+      "properties": [
+        {
+          "name": "dynamicModelId",
+          "value": "CLA_1",
+          "type": "STRING"
+        },
+        {
+          "name": "iMeasurement",
+          "value": "_BUS____2-BUS____4-1_AC",
+          "type": "STRING"
+        },
+        {
+          "name": "iMeasurementSide",
+          "value": "TwoSides.TWO",
+          "type": "ENUM"
+        },
+        {
+          "name": "controlledBranch",
+          "value": "_BUS____2-BUS____4-1_AC",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "family": "CURRENT",
+      "model": "OverloadManagementSystem",
+      "setGroup": "CLA_2_5",
+      "properties": [
+        {
+          "name": "dynamicModelId",
+          "value": "CLA_2",
+          "type": "STRING"
+        },
+        {
+          "name": "iMeasurement",
+          "value": "_BUS____2-BUS____5-1_AC",
+          "type": "STRING"
+        },
+        {
+          "name": "iMeasurementSide",
+          "value": "TwoSides.TWO",
+          "type": "ENUM"
+        },
+        {
+          "name": "controlledBranch",
+          "value": "_BUS____2-BUS____5-1_AC",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "family": "VOLTAGE",
+      "model": "TapChangerBlockingAutomaton",
+      "setGroup": "TCB_2_4",
+      "properties": [
+        {
+          "name": "dynamicModelId",
+          "value": "TCB_1",
+          "type": "STRING"
+        },
+        {
+          "name": "uMeasurements",
+          "value": "_BUS___11_TN,_BUS___12_TN",
+          "type": "STRING"
+        },
+        {
+          "name": "transformers",
+          "value": "_LOAD__11_EC,_LOAD__12_EC",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "family": "VOLTAGE",
+      "model": "TapChangerBlockingAutomaton",
+      "setGroup": "TCB_2_5",
+      "properties": [
+        {
+          "name": "dynamicModelId",
+          "value": "TCB_2",
+          "type": "STRING"
+        },
+        {
+          "name": "uMeasurements",
+          "value": "_BUS____4_TN",
+          "type": "STRING"
+        },
+        {
+          "name": "transformers",
+          "value": "_BUS____4-BUS____9-1_PT",
+          "type": "STRING"
+        }
+      ]
+    }
+  ],
+  "controlledParameters": false
+}
