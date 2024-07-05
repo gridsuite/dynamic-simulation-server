@@ -125,7 +125,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
             Parameter parameterObj = new Parameter(
                     MAPPING_NAME_01,
                     parametersFile);
-            given(dynamicMappingClient.createFromMapping(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(parameterObj);
+            given(dynamicMappingClient.getParameters(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(parameterObj);
 
             // load mapping.json
             String mappingPath = inputDir + RESOURCE_PATH_DELIMITER + MAPPING_FILE;

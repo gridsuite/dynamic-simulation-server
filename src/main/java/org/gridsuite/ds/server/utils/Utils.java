@@ -27,7 +27,7 @@ public final class Utils {
     public static final String RESOURCE_PATH_DELIMITER = "/";
 
     private Utils() {
-        // never called
+        throw new AssertionError("Utility class should not be instantiated");
     }
 
     public static List<String> convertStringToList(String stringArray) {

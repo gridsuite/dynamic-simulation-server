@@ -9,18 +9,16 @@ package org.gridsuite.ds.server.service.client.dynamicmapping;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 import org.gridsuite.ds.server.dto.dynamicmapping.Parameter;
 
-import static org.gridsuite.ds.server.service.client.RestClient.DELIMITER;
-
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public interface DynamicMappingClient {
     String API_VERSION = "";
-    String DYNAMIC_MAPPING_PARAMETER_BASE_END_POINT = "parameters";
-    String DYNAMIC_MAPPING_MAPPING_BASE_END_POINT = "mappings";
-    String DYNAMIC_MAPPING_PARAMETER_CREATE_END_POINT = DYNAMIC_MAPPING_PARAMETER_BASE_END_POINT + DELIMITER + "from";
+    String DYNAMIC_MAPPING_PARAMETER_BASE_ENDPOINT = "parameters";
+    String DYNAMIC_MAPPING_MAPPING_BASE_ENDPOINT = "mappings";
+    String DYNAMIC_MAPPING_PARAMETER_GET_ENDPOINT = DYNAMIC_MAPPING_PARAMETER_BASE_ENDPOINT;
 
-    Parameter createFromMapping(String mappingName);
+    Parameter getParameters(String mappingName);
 
     InputMapping getMapping(String mappingName);
 }

@@ -35,7 +35,7 @@ public class RestResponseEntityExceptionHandler {
                     -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
             case URI_SYNTAX,
                     GET_DYNAMIC_MAPPING_ERROR,
-                    CREATE_MAPPING_PARAMETER_ERROR,
+                    GET_PARAMETER_ERROR,
                     CREATE_TIME_SERIES_ERROR,
                     DELETE_TIME_SERIES_ERROR
                     -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exception.getMessage());

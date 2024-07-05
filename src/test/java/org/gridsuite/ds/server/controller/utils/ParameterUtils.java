@@ -26,7 +26,7 @@ import java.util.List;
  */
 public final class ParameterUtils {
     private ParameterUtils() {
-
+        throw new AssertionError("Utility class should not be instantiated");
     }
 
     /**

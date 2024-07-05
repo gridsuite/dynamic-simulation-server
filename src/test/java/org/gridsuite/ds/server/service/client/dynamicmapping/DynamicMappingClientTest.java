@@ -28,11 +28,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.CREATE_MAPPING_PARAMETER_ERROR;
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.DYNAMIC_MAPPING_NOT_FOUND;
-import static org.gridsuite.ds.server.service.client.RestClient.DELIMITER;
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.GET_PARAMETER_ERROR;
 import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.API_VERSION;
-import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.DYNAMIC_MAPPING_PARAMETER_CREATE_END_POINT;
+import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.DYNAMIC_MAPPING_PARAMETER_GET_ENDPOINT;
 import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
 import static org.gridsuite.ds.server.utils.Utils.RESOURCE_PATH_DELIMITER;
 
@@ -59,7 +58,7 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
 
     private String getEndpointUrl() {
         return buildEndPointUrl("", API_VERSION,
-                DYNAMIC_MAPPING_PARAMETER_CREATE_END_POINT);
+                DYNAMIC_MAPPING_PARAMETER_GET_ENDPOINT);
     }
 
     @Override
@@ -73,7 +72,7 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
     }
 
     @Test
-    public void testCreateFromMapping() throws IOException {
+    public void testGetParameters() throws IOException {
         String mappingName = MAPPING_NAME_01;
 
         String inputDir = DATA_IEEE14_BASE_DIR +
@@ -94,17 +93,17 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         ObjectWriter ow = objectMapper.writer().withDefaultPrettyPrinter();
         String parameterJson = ow.writeValueAsString(parameterObj);
 
-        // mock response for GET parameters/from/<mappingName>
+        // mock response for GET parameters?mappingName=<mappingName>
         String baseUrl = getEndpointUrl();
 
-        wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl + DELIMITER + "{mappingName}"))
-                .withPathParam("mappingName", equalTo(mappingName))
+        wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl))
+                        .withQueryParam("mappingName", equalTo(mappingName))
                 .willReturn(WireMock.ok()
                         .withBody(parameterJson)
                         .withHeader("Content-Type", "application/json; charset=utf-8")
                 ));
 
-        Parameter createdParameter = dynamicMappingClient.createFromMapping(MAPPING_NAME_01);
+        Parameter createdParameter = dynamicMappingClient.getParameters(MAPPING_NAME_01);
 
         // check result
         // load models.par
@@ -115,16 +114,16 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
     public void testCreateFromMappingGivenNotFound() {
         String mappingName = MAPPING_NAME_01;
 
-        // mock response for GET parameters/from/<mappingName>
+        // mock response for GET parameters?mappingName=<mappingName>
         String baseUrl = getEndpointUrl();
 
-        wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl + "{mappingName}"))
-                .withPathParam("mappingName", equalTo(mappingName))
+        wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl))
+                .withQueryParam("mappingName", equalTo(mappingName))
                 .willReturn(WireMock.notFound()
                 ));
 
         // test service
-        DynamicSimulationException dynamicSimulationException = catchThrowableOfType(() -> dynamicMappingClient.createFromMapping(MAPPING_NAME_01),
+        DynamicSimulationException dynamicSimulationException = catchThrowableOfType(() -> dynamicMappingClient.getParameters(MAPPING_NAME_01),
                 DynamicSimulationException.class);
 
         // check result
@@ -136,22 +135,22 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
     public void testCreateFromMappingGivenException() {
         String mappingName = MAPPING_NAME_01;
 
-        // mock response for test case GET parameters/from/<mappingName>
+        // mock response for test case GET parameters?mappingName=<mappingName>
         String baseUrl = getEndpointUrl();
 
-        wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl + DELIMITER + "{mappingName}"))
-                .withPathParam("mappingName", equalTo(mappingName))
+        wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl))
+                .withQueryParam("mappingName", equalTo(mappingName))
                 .willReturn(WireMock.serverError()
                         .withBody(ERROR_MESSAGE)
                 ));
 
         // test service
-        DynamicSimulationException dynamicSimulationException = catchThrowableOfType(() -> dynamicMappingClient.createFromMapping(MAPPING_NAME_01),
+        DynamicSimulationException dynamicSimulationException = catchThrowableOfType(() -> dynamicMappingClient.getParameters(MAPPING_NAME_01),
                 DynamicSimulationException.class);
 
         // check result
         assertThat(dynamicSimulationException.getType())
-                .isEqualTo(CREATE_MAPPING_PARAMETER_ERROR);
+                .isEqualTo(GET_PARAMETER_ERROR);
         assertThat(dynamicSimulationException.getMessage())
                 .isEqualTo(ERROR_MESSAGE);
 

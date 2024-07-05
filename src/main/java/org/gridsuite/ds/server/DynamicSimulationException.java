@@ -6,9 +6,12 @@
  */
 package org.gridsuite.ds.server;
 
+import lombok.Getter;
+
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
+@Getter
 public class DynamicSimulationException extends RuntimeException {
 
     public enum Type {
@@ -17,7 +20,7 @@ public class DynamicSimulationException extends RuntimeException {
         MAPPING_NOT_PROVIDED,
         RESULT_UUID_NOT_FOUND,
         DYNAMIC_MAPPING_NOT_FOUND,
-        CREATE_MAPPING_PARAMETER_ERROR,
+        GET_PARAMETER_ERROR,
         GET_DYNAMIC_MAPPING_ERROR,
         CREATE_TIME_SERIES_ERROR,
         DELETE_TIME_SERIES_ERROR
@@ -28,9 +31,5 @@ public class DynamicSimulationException extends RuntimeException {
     public DynamicSimulationException(Type type, String message) {
         super(message);
         this.type = type;
-    }
-
-    public Type getType() {
-        return type;
     }
 }

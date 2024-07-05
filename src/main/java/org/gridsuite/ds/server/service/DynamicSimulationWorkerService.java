@@ -135,7 +135,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         DynamicSimulationParametersInfos parametersInfos = runContext.getParameters();
 
         // get parameters file from dynamic mapping server
-        Parameter parameterObj = dynamicMappingClient.createFromMapping(runContext.getMapping());
+        Parameter parameterObj = dynamicMappingClient.getParameters(runContext.getMapping());
 
         // get all dynamic simulation parameters
         String parametersFile = parameterObj.parametersFile();

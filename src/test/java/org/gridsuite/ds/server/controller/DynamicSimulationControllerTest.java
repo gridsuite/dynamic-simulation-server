@@ -107,7 +107,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         Parameter parameterObj = new Parameter(
                 MAPPING_NAME,
                 "");
-        given(dynamicMappingClient.createFromMapping(MAPPING_NAME)).willReturn(parameterObj);
+        given(dynamicMappingClient.getParameters(MAPPING_NAME)).willReturn(parameterObj);
 
         given(dynamicMappingClient.getMapping(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(null);
     }

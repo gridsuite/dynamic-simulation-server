@@ -39,22 +39,23 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
     }
 
     @Override
-    public Parameter createFromMapping(String mappingName) {
+    public Parameter getParameters(String mappingName) {
         Objects.requireNonNull(mappingName);
 
-        String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_PARAMETER_CREATE_END_POINT);
+        String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_PARAMETER_GET_ENDPOINT);
 
-        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl + DELIMITER + "{mappingName}");
-        var uriComponents = uriComponentsBuilder.buildAndExpand(mappingName);
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl);
+        uriComponentsBuilder.queryParam("mappingName", mappingName);
+        var uriComponents = uriComponentsBuilder.build();
 
         // call dynamic mapping Rest API
         try {
             return getRestTemplate().getForObject(uriComponents.toUriString(), Parameter.class);
         } catch (HttpStatusCodeException e) {
             if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
-                throw new DynamicSimulationException(DYNAMIC_MAPPING_NOT_FOUND, "Mapping not found: " + mappingName);
+                throw new DynamicSimulationException(DYNAMIC_MAPPING_NOT_FOUND, "No mapping has been found with name: " + mappingName);
             } else {
-                throw handleHttpError(e, CREATE_MAPPING_PARAMETER_ERROR, getObjectMapper());
+                throw handleHttpError(e, GET_PARAMETER_ERROR, getObjectMapper());
             }
         }
     }
@@ -63,9 +64,9 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
     public InputMapping getMapping(String mappingName) {
         Objects.requireNonNull(mappingName);
 
-        String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_MAPPING_BASE_END_POINT);
+        String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_MAPPING_BASE_ENDPOINT);
 
-        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl + DELIMITER + "{mappingName}");
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl + URL_DELIMITER + "{mappingName}");
 
         UriComponents uriComponents = uriComponentsBuilder.buildAndExpand(mappingName);
 
@@ -74,7 +75,7 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
             return getRestTemplate().getForObject(uriComponents.toUriString(), InputMapping.class);
         } catch (HttpStatusCodeException e) {
             if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
-                throw new DynamicSimulationException(DYNAMIC_MAPPING_NOT_FOUND, "Mapping not found: " + mappingName);
+                throw new DynamicSimulationException(DYNAMIC_MAPPING_NOT_FOUND, "No mapping has been found with name: " + mappingName);
             } else {
                 throw handleHttpError(e, GET_DYNAMIC_MAPPING_ERROR, getObjectMapper());
             }
