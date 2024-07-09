@@ -23,18 +23,19 @@ import java.util.UUID;
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 @Getter
+@Setter
 public class DynamicSimulationRunContext extends AbstractComputationRunContext<DynamicSimulationParametersInfos> {
 
-    @Setter private String mapping;
+    private String mapping;
 
     // fields which are enriched in worker service
-    @Setter private List<DynamicModelConfig> dynamicModelContent;
+    private List<DynamicModelConfig> dynamicModelContent;
 
-    @Setter private List<EventModelConfig> eventModelContent;
+    private List<EventModelConfig> eventModelContent;
 
-    @Setter private String curveContent;
+    private String curveContent;
 
-    @Setter private DynamicSimulationParameters dynamicSimulationParameters;
+    private DynamicSimulationParameters dynamicSimulationParameters;
 
     @Builder
     public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,

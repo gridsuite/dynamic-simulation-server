@@ -13,6 +13,7 @@ import java.util.List;
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
+@Schema(description = "Automaton")
 public record Automaton(
     @Schema(description = "Mapped Model Instance ID")
     String model,

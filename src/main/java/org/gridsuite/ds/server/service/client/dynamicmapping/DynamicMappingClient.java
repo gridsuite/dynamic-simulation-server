@@ -14,9 +14,8 @@ import org.gridsuite.ds.server.dto.dynamicmapping.Parameter;
  */
 public interface DynamicMappingClient {
     String API_VERSION = "";
-    String DYNAMIC_MAPPING_PARAMETER_BASE_ENDPOINT = "parameters";
-    String DYNAMIC_MAPPING_MAPPING_BASE_ENDPOINT = "mappings";
-    String DYNAMIC_MAPPING_PARAMETER_GET_ENDPOINT = DYNAMIC_MAPPING_PARAMETER_BASE_ENDPOINT;
+    String DYNAMIC_MAPPING_PARAMETERS_BASE_ENDPOINT = "parameters";
+    String DYNAMIC_MAPPING_MAPPINGS_BASE_ENDPOINT = "mappings";
 
     Parameter getParameters(String mappingName);
 

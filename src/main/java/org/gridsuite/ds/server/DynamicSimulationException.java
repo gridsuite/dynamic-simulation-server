@@ -23,7 +23,8 @@ public class DynamicSimulationException extends RuntimeException {
         GET_PARAMETER_ERROR,
         GET_DYNAMIC_MAPPING_ERROR,
         CREATE_TIME_SERIES_ERROR,
-        DELETE_TIME_SERIES_ERROR
+        DELETE_TIME_SERIES_ERROR,
+        MAPPING_NOT_LAST_RULE_WITH_EMPTY_FILTER_ERROR,
     }
 
     private final Type type;

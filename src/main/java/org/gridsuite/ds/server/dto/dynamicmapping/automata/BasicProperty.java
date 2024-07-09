@@ -13,6 +13,7 @@ import org.gridsuite.ds.server.utils.PropertyType;
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
+@Schema(description = "Basic property")
 public record BasicProperty(
     @Schema(description = "Property name")
     String name,

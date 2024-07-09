@@ -54,8 +54,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.MAPPING_NOT_PROVIDED;
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.PROVIDER_NOT_FOUND;
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.*;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -200,10 +199,20 @@ public class ParametersServiceImpl implements ParametersService {
         List<Rule> allRules = inputMapping.rules();
         // grouping rules by equipment type
         Map<EquipmentType, List<Rule>> rulesByEquipmentTypeMap = allRules.stream().collect(Collectors.groupingBy(Rule::equipmentType));
+
+        // Only last rule can have empty filter checking
+        rulesByEquipmentTypeMap.forEach((equipmentType, rules) -> {
+            Rule ruleWithEmptyFilter = rules.stream().filter(rule -> rule.filter() == null).findFirst().orElse(null);
+            if (ruleWithEmptyFilter != null && rules.indexOf(ruleWithEmptyFilter) != (rules.size() - 1)) {
+                throw new DynamicSimulationException(MAPPING_NOT_LAST_RULE_WITH_EMPTY_FILTER_ERROR,
+                        "Only last rule can have empty filter: type " + equipmentType + ", rule index " + rules.indexOf(ruleWithEmptyFilter) + 1);
+            }
+        });
+
         // performing transformation
         rulesByEquipmentTypeMap.forEach((equipmentType, rules) -> {
             // accumulate matched equipment ids to compute otherwise case (last rule without filters)
-            Set<String> matchedEquipmentIds = new TreeSet<>();
+            Set<String> matchedEquipmentIdsOfCurrentType = new TreeSet<>();
 
             dynamicModel.addAll(rules.stream().flatMap(rule -> {
                 ExpertFilter filter = rule.filter();
@@ -216,16 +225,16 @@ public class ParametersServiceImpl implements ParametersService {
                             .build();
                 }
 
-                List<Identifiable<?>> matchedEquipments = FiltersUtils.getIdentifiables(filter, network, null);
+                List<Identifiable<?>> matchedEquipmentsOfCurrentRule = FiltersUtils.getIdentifiables(filter, network, null);
 
                 // eliminate already matched equipments to avoid duplication
-                if (!matchedEquipmentIds.isEmpty()) {
-                    matchedEquipments = matchedEquipments.stream().filter(elem -> !matchedEquipmentIds.contains(elem.getId())).toList();
+                if (!matchedEquipmentIdsOfCurrentType.isEmpty()) {
+                    matchedEquipmentsOfCurrentRule = matchedEquipmentsOfCurrentRule.stream().filter(elem -> !matchedEquipmentIdsOfCurrentType.contains(elem.getId())).toList();
                 }
 
-                matchedEquipmentIds.addAll(matchedEquipments.stream().map(Identifiable::getId).toList());
+                matchedEquipmentIdsOfCurrentType.addAll(matchedEquipmentsOfCurrentRule.stream().map(Identifiable::getId).toList());
 
-                return matchedEquipments.stream().map(equipment -> new DynamicModelConfig(
+                return matchedEquipmentsOfCurrentRule.stream().map(equipment -> new DynamicModelConfig(
                     rule.mappedModel(),
                     rule.setGroup(),
                     SetGroupType.valueOf(rule.groupType().name()),

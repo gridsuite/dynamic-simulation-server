@@ -18,9 +18,9 @@ import java.util.List;
 public record InputMapping(
     @Schema(description = "Name")
     String name,
-    @Schema(description = "Mapping rules")
+    @Schema(description = "Rules")
     List<Rule> rules,
-    @Schema(description = "Mapping automata")
+    @Schema(description = "Automata")
     List<Automaton> automata
 ) {
 

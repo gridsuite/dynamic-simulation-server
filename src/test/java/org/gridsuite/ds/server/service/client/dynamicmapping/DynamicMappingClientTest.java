@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.DYNAMIC_MAPPING_NOT_FOUND;
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.GET_PARAMETER_ERROR;
 import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.API_VERSION;
-import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.DYNAMIC_MAPPING_PARAMETER_GET_ENDPOINT;
+import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.DYNAMIC_MAPPING_PARAMETERS_BASE_ENDPOINT;
 import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
 import static org.gridsuite.ds.server.utils.Utils.RESOURCE_PATH_DELIMITER;
 
@@ -58,7 +58,7 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
 
     private String getEndpointUrl() {
         return buildEndPointUrl("", API_VERSION,
-                DYNAMIC_MAPPING_PARAMETER_GET_ENDPOINT);
+                DYNAMIC_MAPPING_PARAMETERS_BASE_ENDPOINT);
     }
 
     @Override

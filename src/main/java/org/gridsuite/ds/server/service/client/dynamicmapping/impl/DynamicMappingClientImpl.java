@@ -42,7 +42,7 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
     public Parameter getParameters(String mappingName) {
         Objects.requireNonNull(mappingName);
 
-        String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_PARAMETER_GET_ENDPOINT);
+        String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_PARAMETERS_BASE_ENDPOINT);
 
         UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl);
         uriComponentsBuilder.queryParam("mappingName", mappingName);
@@ -64,7 +64,7 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
     public InputMapping getMapping(String mappingName) {
         Objects.requireNonNull(mappingName);
 
-        String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_MAPPING_BASE_ENDPOINT);
+        String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_MAPPINGS_BASE_ENDPOINT);
 
         UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl + URL_DELIMITER + "{mappingName}");
 
