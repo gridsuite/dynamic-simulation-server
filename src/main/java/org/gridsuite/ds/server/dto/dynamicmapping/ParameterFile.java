@@ -12,12 +12,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @Schema(description = "Parameter sets in *.par format")
-public record Parameter(
+public record ParameterFile(
     @Schema(description = "Name of the parent mapping")
-    String parentName,
+    String mappingName,
 
     @Schema(description = "Parameter file content in *.par format")
-    String parametersFile
+    String fileContent
 ) {
 
 }

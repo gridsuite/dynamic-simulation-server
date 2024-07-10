@@ -7,7 +7,9 @@
 package org.gridsuite.ds.server.service.client.dynamicmapping;
 
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
-import org.gridsuite.ds.server.dto.dynamicmapping.Parameter;
+import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
+
+import static org.gridsuite.ds.server.service.client.RestClient.URL_DELIMITER;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -15,9 +17,10 @@ import org.gridsuite.ds.server.dto.dynamicmapping.Parameter;
 public interface DynamicMappingClient {
     String API_VERSION = "";
     String DYNAMIC_MAPPING_PARAMETERS_BASE_ENDPOINT = "parameters";
+    String DYNAMIC_MAPPING_PARAMETERS_EXPORT_ENDPOINT = DYNAMIC_MAPPING_PARAMETERS_BASE_ENDPOINT + URL_DELIMITER + "export";
     String DYNAMIC_MAPPING_MAPPINGS_BASE_ENDPOINT = "mappings";
 
-    Parameter getParameters(String mappingName);
+    ParameterFile exportParameters(String mappingName);
 
     InputMapping getMapping(String mappingName);
 }

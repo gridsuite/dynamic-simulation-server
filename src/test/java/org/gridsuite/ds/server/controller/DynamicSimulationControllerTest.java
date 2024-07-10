@@ -25,7 +25,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.ds.server.controller.utils.ParameterUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
-import org.gridsuite.ds.server.dto.dynamicmapping.Parameter;
+import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
@@ -104,10 +104,10 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
     @Override
     protected void initDynamicMappingServiceMock() {
-        Parameter parameterObj = new Parameter(
+        ParameterFile parameterFile = new ParameterFile(
                 MAPPING_NAME,
                 "");
-        given(dynamicMappingClient.getParameters(MAPPING_NAME)).willReturn(parameterObj);
+        given(dynamicMappingClient.exportParameters(MAPPING_NAME)).willReturn(parameterFile);
 
         given(dynamicMappingClient.getMapping(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(null);
     }

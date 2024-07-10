@@ -26,7 +26,7 @@ import org.gridsuite.ds.server.controller.utils.ParameterUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
-import org.gridsuite.ds.server.dto.dynamicmapping.Parameter;
+import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
@@ -122,10 +122,10 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
             parametersFileBytes = StreamUtils.copyToByteArray(parametersFileIS);
             String parametersFile = new String(parametersFileBytes, StandardCharsets.UTF_8);
 
-            Parameter parameterObj = new Parameter(
+            ParameterFile parameterFile = new ParameterFile(
                     MAPPING_NAME_01,
                     parametersFile);
-            given(dynamicMappingClient.getParameters(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(parameterObj);
+            given(dynamicMappingClient.exportParameters(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(parameterFile);
 
             // load mapping.json
             String mappingPath = inputDir + RESOURCE_PATH_DELIMITER + MAPPING_FILE;

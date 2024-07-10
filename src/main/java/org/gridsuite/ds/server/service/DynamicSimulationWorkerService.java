@@ -29,7 +29,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
-import org.gridsuite.ds.server.dto.dynamicmapping.Parameter;
+import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
@@ -135,12 +135,12 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         DynamicSimulationParametersInfos parametersInfos = runContext.getParameters();
 
         // get parameters file from dynamic mapping server
-        Parameter parameterObj = dynamicMappingClient.getParameters(runContext.getMapping());
+        ParameterFile parameterFile = dynamicMappingClient.exportParameters(runContext.getMapping());
 
         // get all dynamic simulation parameters
-        String parametersFile = parameterObj.parametersFile();
+        String parameterFileContent = parameterFile.fileContent();
         DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(
-                parametersFile.getBytes(StandardCharsets.UTF_8), runContext.getProvider(), parametersInfos);
+                parameterFileContent.getBytes(StandardCharsets.UTF_8), runContext.getProvider(), parametersInfos);
 
         // get mapping then generate dynamic model configs
         InputMapping inputMapping = dynamicMappingClient.getMapping(runContext.getMapping());

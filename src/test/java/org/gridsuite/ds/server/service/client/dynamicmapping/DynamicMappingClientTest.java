@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.gridsuite.ds.server.DynamicSimulationException;
-import org.gridsuite.ds.server.dto.dynamicmapping.Parameter;
+import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.service.client.AbstractWireMockRestClientTest;
 import org.gridsuite.ds.server.service.client.dynamicmapping.impl.DynamicMappingClientImpl;
 import org.junit.Test;
@@ -29,9 +29,9 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.DYNAMIC_MAPPING_NOT_FOUND;
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.GET_PARAMETER_ERROR;
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.EXPORT_PARAMETERS_ERROR;
 import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.API_VERSION;
-import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.DYNAMIC_MAPPING_PARAMETERS_BASE_ENDPOINT;
+import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.DYNAMIC_MAPPING_PARAMETERS_EXPORT_ENDPOINT;
 import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
 import static org.gridsuite.ds.server.utils.Utils.RESOURCE_PATH_DELIMITER;
 
@@ -58,7 +58,7 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
 
     private String getEndpointUrl() {
         return buildEndPointUrl("", API_VERSION,
-                DYNAMIC_MAPPING_PARAMETERS_BASE_ENDPOINT);
+                DYNAMIC_MAPPING_PARAMETERS_EXPORT_ENDPOINT);
     }
 
     @Override
@@ -72,7 +72,7 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
     }
 
     @Test
-    public void testGetParameters() throws IOException {
+    public void testExportParameters() throws IOException {
         String mappingName = MAPPING_NAME_01;
 
         String inputDir = DATA_IEEE14_BASE_DIR +
@@ -86,12 +86,12 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         parametersFileBytes = StreamUtils.copyToByteArray(parametersFileIS);
         String parametersFile = new String(parametersFileBytes, StandardCharsets.UTF_8);
 
-        Parameter parameterObj = new Parameter(
+        ParameterFile parameterFile = new ParameterFile(
                 mappingName,
                 parametersFile);
 
         ObjectWriter ow = objectMapper.writer().withDefaultPrettyPrinter();
-        String parameterJson = ow.writeValueAsString(parameterObj);
+        String parameterFileJson = ow.writeValueAsString(parameterFile);
 
         // mock response for GET parameters?mappingName=<mappingName>
         String baseUrl = getEndpointUrl();
@@ -99,22 +99,22 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl))
                         .withQueryParam("mappingName", equalTo(mappingName))
                 .willReturn(WireMock.ok()
-                        .withBody(parameterJson)
+                        .withBody(parameterFileJson)
                         .withHeader("Content-Type", "application/json; charset=utf-8")
                 ));
 
-        Parameter createdParameter = dynamicMappingClient.getParameters(MAPPING_NAME_01);
+        ParameterFile createdParameterFile = dynamicMappingClient.exportParameters(MAPPING_NAME_01);
 
         // check result
         // load models.par
-        assertThat(createdParameter.parametersFile()).isEqualTo(parametersFile);
+        assertThat(createdParameterFile.fileContent()).isEqualTo(parametersFile);
     }
 
     @Test
     public void testCreateFromMappingGivenNotFound() {
         String mappingName = MAPPING_NAME_01;
 
-        // mock response for GET parameters?mappingName=<mappingName>
+        // mock response for GET parameters/export?mappingName=<mappingName>
         String baseUrl = getEndpointUrl();
 
         wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl))
@@ -123,7 +123,7 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
                 ));
 
         // test service
-        DynamicSimulationException dynamicSimulationException = catchThrowableOfType(() -> dynamicMappingClient.getParameters(MAPPING_NAME_01),
+        DynamicSimulationException dynamicSimulationException = catchThrowableOfType(() -> dynamicMappingClient.exportParameters(MAPPING_NAME_01),
                 DynamicSimulationException.class);
 
         // check result
@@ -135,7 +135,7 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
     public void testCreateFromMappingGivenException() {
         String mappingName = MAPPING_NAME_01;
 
-        // mock response for test case GET parameters?mappingName=<mappingName>
+        // mock response for test case GET parameters/export?mappingName=<mappingName>
         String baseUrl = getEndpointUrl();
 
         wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl))
@@ -145,12 +145,12 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
                 ));
 
         // test service
-        DynamicSimulationException dynamicSimulationException = catchThrowableOfType(() -> dynamicMappingClient.getParameters(MAPPING_NAME_01),
+        DynamicSimulationException dynamicSimulationException = catchThrowableOfType(() -> dynamicMappingClient.exportParameters(MAPPING_NAME_01),
                 DynamicSimulationException.class);
 
         // check result
         assertThat(dynamicSimulationException.getType())
-                .isEqualTo(GET_PARAMETER_ERROR);
+                .isEqualTo(EXPORT_PARAMETERS_ERROR);
         assertThat(dynamicSimulationException.getMessage())
                 .isEqualTo(ERROR_MESSAGE);
 
