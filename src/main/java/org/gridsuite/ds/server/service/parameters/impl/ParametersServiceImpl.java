@@ -12,20 +12,36 @@ import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
 import com.powsybl.dynawaltz.DynaWaltzParameters;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
 import com.powsybl.dynawaltz.parameters.ParametersSet;
+import com.powsybl.dynawaltz.suppliers.PropertyBuilder;
+import com.powsybl.dynawaltz.suppliers.PropertyType;
+import com.powsybl.dynawaltz.suppliers.SetGroupType;
+import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawaltz.suppliers.events.EventModelConfig;
 import com.powsybl.dynawaltz.xml.ParametersXml;
+import com.powsybl.iidm.network.Identifiable;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.ws.commons.computation.dto.ReportInfos;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gridsuite.ds.server.DynamicSimulationException;
-import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.XmlSerializableParameter;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
+import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
+import org.gridsuite.ds.server.dto.dynamicmapping.Rule;
+import org.gridsuite.ds.server.dto.dynamicmapping.automata.Automaton;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.parameters.CurveGroovyGeneratorService;
-import org.gridsuite.ds.server.service.parameters.EventGroovyGeneratorService;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
+import org.gridsuite.ds.server.utils.Utils;
+import org.gridsuite.filter.expertfilter.ExpertFilter;
+import org.gridsuite.filter.expertfilter.expertrule.CombinatorExpertRule;
+import org.gridsuite.filter.utils.EquipmentType;
+import org.gridsuite.filter.utils.FiltersUtils;
+import org.gridsuite.filter.utils.expertfilter.CombinatorType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,13 +51,10 @@ import org.springframework.stereotype.Service;
 import javax.xml.stream.XMLStreamException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.MAPPING_NOT_PROVIDED;
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.PROVIDER_NOT_FOUND;
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.*;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -50,27 +63,30 @@ import static org.gridsuite.ds.server.DynamicSimulationException.Type.PROVIDER_N
 public class ParametersServiceImpl implements ParametersService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ParametersServiceImpl.class);
+    public static final String FIELD_STATIC_ID = "staticId";
 
     private final CurveGroovyGeneratorService curveGroovyGeneratorService;
-
-    private final EventGroovyGeneratorService eventGroovyGeneratorService;
 
     private final String defaultProvider;
 
     @Autowired
     public ParametersServiceImpl(CurveGroovyGeneratorService curveGroovyGeneratorService,
-                                 EventGroovyGeneratorService eventGroovyGeneratorService,
                                  @Value("${dynamic-simulation.default-provider}") String defaultProvider) {
         this.curveGroovyGeneratorService = curveGroovyGeneratorService;
-        this.eventGroovyGeneratorService = eventGroovyGeneratorService;
         this.defaultProvider = defaultProvider;
     }
 
     @Override
-    public String getEventModel(List<EventInfos> events) {
-        String generatedGroovyEvents = eventGroovyGeneratorService.generate(events != null ? events : Collections.emptyList());
-        LOGGER.info(generatedGroovyEvents);
-        return generatedGroovyEvents;
+    public List<EventModelConfig> getEventModel(List<EventInfos> events) {
+        if (CollectionUtils.isEmpty(events)) {
+            return Collections.emptyList();
+        }
+
+        return events.stream().map(event ->
+            new EventModelConfig(
+                event.getEventType(),
+                event.getProperties().stream().map(Utils::convertProperty).filter(Objects::nonNull).toList()))
+            .toList();
     }
 
     @Override
@@ -169,5 +185,76 @@ public class ParametersServiceImpl implements ParametersService {
         }
 
         return runContext;
+    }
+
+    @Override
+    public List<DynamicModelConfig> getDynamicModel(InputMapping inputMapping, Network network) {
+        if (inputMapping == null) {
+            return Collections.emptyList();
+        }
+
+        List<DynamicModelConfig> dynamicModel = new ArrayList<>();
+
+        // --- transform equipment rules to DynamicModelConfigs --- //
+        List<Rule> allRules = inputMapping.rules();
+        // grouping rules by equipment type
+        Map<EquipmentType, List<Rule>> rulesByEquipmentTypeMap = allRules.stream().collect(Collectors.groupingBy(Rule::equipmentType));
+
+        // Only last rule can have empty filter checking
+        rulesByEquipmentTypeMap.forEach((equipmentType, rules) -> {
+            Rule ruleWithEmptyFilter = rules.stream().filter(rule -> rule.filter() == null).findFirst().orElse(null);
+            if (ruleWithEmptyFilter != null && rules.indexOf(ruleWithEmptyFilter) != (rules.size() - 1)) {
+                throw new DynamicSimulationException(MAPPING_NOT_LAST_RULE_WITH_EMPTY_FILTER_ERROR,
+                        "Only last rule can have empty filter: type " + equipmentType + ", rule index " + rules.indexOf(ruleWithEmptyFilter) + 1);
+            }
+        });
+
+        // performing transformation
+        rulesByEquipmentTypeMap.forEach((equipmentType, rules) -> {
+            // accumulate matched equipment ids to compute otherwise case (last rule without filters)
+            Set<String> matchedEquipmentIdsOfCurrentType = new TreeSet<>();
+
+            dynamicModel.addAll(rules.stream().flatMap(rule -> {
+                ExpertFilter filter = rule.filter();
+
+                // otherwise case, create an expert filter with AND operator and empty rules to get all equipments of the same type
+                if (filter == null) {
+                    filter = ExpertFilter.builder()
+                            .equipmentType(equipmentType)
+                            .rules(CombinatorExpertRule.builder().combinator(CombinatorType.AND).rules(List.of()).build())
+                            .build();
+                }
+
+                List<Identifiable<?>> matchedEquipmentsOfCurrentRule = FiltersUtils.getIdentifiables(filter, network, null);
+
+                // eliminate already matched equipments to avoid duplication
+                if (!matchedEquipmentIdsOfCurrentType.isEmpty()) {
+                    matchedEquipmentsOfCurrentRule = matchedEquipmentsOfCurrentRule.stream().filter(elem -> !matchedEquipmentIdsOfCurrentType.contains(elem.getId())).toList();
+                }
+
+                matchedEquipmentIdsOfCurrentType.addAll(matchedEquipmentsOfCurrentRule.stream().map(Identifiable::getId).toList());
+
+                return matchedEquipmentsOfCurrentRule.stream().map(equipment -> new DynamicModelConfig(
+                    rule.mappedModel(),
+                    rule.setGroup(),
+                    SetGroupType.valueOf(rule.groupType().name()),
+                    List.of(new PropertyBuilder()
+                        .name(FIELD_STATIC_ID)
+                        .value(equipment.getId())
+                        .type(PropertyType.STRING)
+                        .build())));
+            }).toList());
+        });
+
+        // transform automatons to DynamicModelConfigs
+        List<Automaton> automata = inputMapping.automata();
+        dynamicModel.addAll(automata.stream().map(automaton ->
+            new DynamicModelConfig(
+                automaton.model(),
+                automaton.setGroup(),
+                automaton.properties().stream().map(Utils::convertProperty).filter(Objects::nonNull).toList())
+        ).toList());
+
+        return dynamicModel;
     }
 }

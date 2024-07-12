@@ -14,14 +14,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.URI_SYNTAX;
-import static org.gridsuite.ds.server.service.client.RestClient.DELIMITER;
+import static org.gridsuite.ds.server.service.client.RestClient.URL_DELIMITER;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public final class UrlUtils {
     private UrlUtils() {
-        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+        throw new AssertionError("Utility class should not be instantiated");
     }
 
     /**
@@ -34,12 +34,11 @@ public final class UrlUtils {
     public static String buildEndPointUrl(String baseUri, String apiVersion, String endPoint) {
         try {
             var sb = new StringBuilder(baseUri);
-            sb.append(DELIMITER);
             if (Strings.isNotBlank(apiVersion)) {
-                sb.append(apiVersion).append(DELIMITER);
+                sb.append(URL_DELIMITER).append(apiVersion);
             }
             if (Strings.isNotBlank(endPoint)) {
-                sb.append(endPoint);
+                sb.append(URL_DELIMITER).append(endPoint);
             }
             var url = sb.toString();
 

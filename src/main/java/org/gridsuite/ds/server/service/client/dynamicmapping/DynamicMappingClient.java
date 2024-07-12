@@ -6,17 +6,21 @@
  */
 package org.gridsuite.ds.server.service.client.dynamicmapping;
 
-import org.gridsuite.ds.server.dto.dynamicmapping.Script;
+import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
+import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 
-import static org.gridsuite.ds.server.service.client.RestClient.DELIMITER;
+import static org.gridsuite.ds.server.service.client.RestClient.URL_DELIMITER;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public interface DynamicMappingClient {
     String API_VERSION = "";
-    String DYNAMIC_MAPPING_SCRIPT_BASE_END_POINT = "scripts";
-    String DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT = DYNAMIC_MAPPING_SCRIPT_BASE_END_POINT + DELIMITER + "from";
+    String DYNAMIC_MAPPING_PARAMETERS_BASE_ENDPOINT = "parameters";
+    String DYNAMIC_MAPPING_PARAMETERS_EXPORT_ENDPOINT = DYNAMIC_MAPPING_PARAMETERS_BASE_ENDPOINT + URL_DELIMITER + "export";
+    String DYNAMIC_MAPPING_MAPPINGS_BASE_ENDPOINT = "mappings";
 
-    Script createFromMapping(String mappingName);
+    ParameterFile exportParameters(String mappingName);
+
+    InputMapping getMapping(String mappingName);
 }

@@ -8,7 +8,8 @@ package org.gridsuite.ds.server.service.client.dynamicmapping.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gridsuite.ds.server.DynamicSimulationException;
-import org.gridsuite.ds.server.dto.dynamicmapping.Script;
+import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
+import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.service.client.AbstractRestClient;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,12 +18,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Objects;
 
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.CREATE_MAPPING_SCRIPT_ERROR;
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.DYNAMIC_MAPPING_NOT_FOUND;
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.*;
 import static org.gridsuite.ds.server.service.client.utils.ExceptionUtils.handleHttpError;
 import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
 
@@ -38,25 +39,45 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
     }
 
     @Override
-    public Script createFromMapping(String mappingName) {
+    public ParameterFile exportParameters(String mappingName) {
         Objects.requireNonNull(mappingName);
 
-        String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_SCRIPT_CREATE_END_POINT);
+        String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_PARAMETERS_EXPORT_ENDPOINT);
 
-        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl + DELIMITER + "{mappingName}");
-
-        // to export script and not persist
-        uriComponentsBuilder.queryParam("persistent", false);
-        var uriComponents = uriComponentsBuilder.buildAndExpand(mappingName);
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl);
+        uriComponentsBuilder.queryParam("mappingName", mappingName);
+        var uriComponents = uriComponentsBuilder.build();
 
         // call dynamic mapping Rest API
         try {
-            return getRestTemplate().getForObject(uriComponents.toUriString(), Script.class);
+            return getRestTemplate().getForObject(uriComponents.toUriString(), ParameterFile.class);
         } catch (HttpStatusCodeException e) {
             if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
-                throw new DynamicSimulationException(DYNAMIC_MAPPING_NOT_FOUND, "Mapping not found: " + mappingName);
+                throw new DynamicSimulationException(DYNAMIC_MAPPING_NOT_FOUND, "No mapping has been found with name: " + mappingName);
             } else {
-                throw handleHttpError(e, CREATE_MAPPING_SCRIPT_ERROR, getObjectMapper());
+                throw handleHttpError(e, EXPORT_PARAMETERS_ERROR, getObjectMapper());
+            }
+        }
+    }
+
+    @Override
+    public InputMapping getMapping(String mappingName) {
+        Objects.requireNonNull(mappingName);
+
+        String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_MAPPINGS_BASE_ENDPOINT);
+
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl + URL_DELIMITER + "{mappingName}");
+
+        UriComponents uriComponents = uriComponentsBuilder.buildAndExpand(mappingName);
+
+        // call dynamic mapping Rest API
+        try {
+            return getRestTemplate().getForObject(uriComponents.toUriString(), InputMapping.class);
+        } catch (HttpStatusCodeException e) {
+            if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
+                throw new DynamicSimulationException(DYNAMIC_MAPPING_NOT_FOUND, "No mapping has been found with name: " + mappingName);
+            } else {
+                throw handleHttpError(e, GET_DYNAMIC_MAPPING_ERROR, getObjectMapper());
             }
         }
     }

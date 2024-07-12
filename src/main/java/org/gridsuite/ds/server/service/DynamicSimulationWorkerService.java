@@ -11,18 +11,25 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.dynamicsimulation.*;
-import com.powsybl.dynamicsimulation.groovy.*;
+import com.powsybl.dynamicsimulation.groovy.CurveGroovyExtension;
+import com.powsybl.dynamicsimulation.groovy.GroovyCurvesSupplier;
+import com.powsybl.dynamicsimulation.groovy.GroovyExtension;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
+import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynawoModelsSupplier;
+import com.powsybl.dynawaltz.suppliers.events.DynawoEventModelsSupplier;
+import com.powsybl.dynawaltz.suppliers.events.EventModelConfig;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.TimeSeries;
-import org.apache.commons.collections4.CollectionUtils;
 import com.powsybl.ws.commons.computation.service.*;
+import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
-import org.gridsuite.ds.server.dto.dynamicmapping.Script;
+import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
+import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
@@ -127,21 +134,24 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         super.preRun(runContext);
         DynamicSimulationParametersInfos parametersInfos = runContext.getParameters();
 
-        // get script and parameters file from dynamic mapping server
-        Script scriptObj = dynamicMappingClient.createFromMapping(runContext.getMapping());
+        // get parameters file from dynamic mapping server
+        ParameterFile parameterFile = dynamicMappingClient.exportParameters(runContext.getMapping());
 
         // get all dynamic simulation parameters
-        String parametersFile = scriptObj.getParametersFile();
+        String parameterFileContent = parameterFile.fileContent();
         DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(
-                parametersFile.getBytes(StandardCharsets.UTF_8), runContext.getProvider(), parametersInfos);
+                parameterFileContent.getBytes(StandardCharsets.UTF_8), runContext.getProvider(), parametersInfos);
+
+        // get mapping then generate dynamic model configs
+        InputMapping inputMapping = dynamicMappingClient.getMapping(runContext.getMapping());
+        List<DynamicModelConfig> dynamicModel = parametersService.getDynamicModel(inputMapping, runContext.getNetwork());
+        List<EventModelConfig > eventModel = parametersService.getEventModel(parametersInfos.getEvents());
 
         // set start and stop times
         parameters.setStartTime(parametersInfos.getStartTime().intValue()); // TODO remove intValue() when correct startTime to double in powsybl
         parameters.setStopTime(parametersInfos.getStopTime().intValue()); // TODO remove intValue() when correct stopTime to double in powsybl
 
         // groovy scripts
-        String dynamicModel = scriptObj.getScript();
-        String eventModel = parametersService.getEventModel(parametersInfos.getEvents());
         String curveModel = parametersService.getCurveModel(parametersInfos.getCurves());
 
         // enrich runContext
@@ -154,15 +164,9 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     @Override
     public CompletableFuture<DynamicSimulationResult> getCompletableFuture(DynamicSimulationRunContext runContext, String provider, UUID resultUuid) {
 
-        List<DynamicModelGroovyExtension> dynamicModelExtensions = GroovyExtension.find(DynamicModelGroovyExtension.class, DynaWaltzProvider.NAME);
-        DynamicModelsSupplier dynamicModelsSupplier = new GroovyDynamicModelsSupplier(
-                new ByteArrayInputStream(runContext.getDynamicModelContent().getBytes()), dynamicModelExtensions
-        );
+        DynamicModelsSupplier dynamicModelsSupplier = new DynawoModelsSupplier(runContext.getDynamicModelContent());
 
-        List<EventModelGroovyExtension> eventModelExtensions = GroovyExtension.find(EventModelGroovyExtension.class, DynaWaltzProvider.NAME);
-        EventModelsSupplier eventModelsSupplier = new GroovyEventModelsSupplier(
-                new ByteArrayInputStream(runContext.getEventModelContent().getBytes()), eventModelExtensions
-        );
+        EventModelsSupplier eventModelsSupplier = new DynawoEventModelsSupplier(runContext.getEventModelContent());
 
         List<CurveGroovyExtension> curveExtensions = GroovyExtension.find(CurveGroovyExtension.class, DynaWaltzProvider.NAME);
         CurvesSupplier curvesSupplier = new GroovyCurvesSupplier(

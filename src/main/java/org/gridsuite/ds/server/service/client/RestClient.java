@@ -14,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public interface RestClient {
-    String DELIMITER = "/";
+    String URL_DELIMITER = "/";
 
     RestTemplate getRestTemplate();
 

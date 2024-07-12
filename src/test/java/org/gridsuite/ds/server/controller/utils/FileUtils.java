@@ -17,6 +17,7 @@ import java.io.OutputStream;
  */
 public final class FileUtils {
     private FileUtils() {
+        throw new AssertionError("Utility class should not be instantiated");
     }
 
     public static void writeStringToFile(Object caller, String filePathName, String content) throws IOException {

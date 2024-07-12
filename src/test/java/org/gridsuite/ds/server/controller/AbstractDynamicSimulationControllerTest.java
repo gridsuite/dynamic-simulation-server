@@ -48,8 +48,6 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
     protected final String dsFailedDestination = "ds.failed.destination";
     protected final String dsStoppedDestination = "ds.stopped.destination";
 
-    public static final String RESOURCE_PATH_DELIMETER = "/";
-
     @MockBean
     protected DynamicMappingClient dynamicMappingClient;
 
@@ -63,6 +61,7 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
     protected DynamicSimulationWorkerService dynamicSimulationWorkerService;
 
     @Before
+    @Override
     public void setUp() throws IOException {
         super.setUp();
 
@@ -80,6 +79,7 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
     }
 
     @After
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
 

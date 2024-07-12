@@ -8,8 +8,12 @@ package org.gridsuite.ds.server.service.parameters;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
+import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawaltz.suppliers.events.EventModelConfig;
+import com.powsybl.iidm.network.Network;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
+import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 
@@ -21,7 +25,7 @@ import java.util.UUID;
  */
 public interface ParametersService {
 
-    String getEventModel(List<EventInfos> events);
+    List<EventModelConfig> getEventModel(List<EventInfos> events);
 
     String getCurveModel(List<CurveInfos> curves);
 
@@ -29,4 +33,6 @@ public interface ParametersService {
 
     DynamicSimulationRunContext createRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
                                                  ReportInfos reportContext, String userId, DynamicSimulationParametersInfos parameters);
+
+    List<DynamicModelConfig> getDynamicModel(InputMapping inputMapping, Network network);
 }

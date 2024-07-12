@@ -7,31 +7,35 @@
 package org.gridsuite.ds.server.service.contexts;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
+import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawaltz.suppliers.events.EventModelConfig;
+import com.powsybl.ws.commons.computation.dto.ReportInfos;
+import com.powsybl.ws.commons.computation.service.AbstractComputationRunContext;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import com.powsybl.ws.commons.computation.dto.ReportInfos;
-import com.powsybl.ws.commons.computation.service.AbstractComputationRunContext;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 @Getter
+@Setter
 public class DynamicSimulationRunContext extends AbstractComputationRunContext<DynamicSimulationParametersInfos> {
 
-    @Setter private String mapping;
+    private String mapping;
 
     // fields which are enriched in worker service
-    @Setter private String dynamicModelContent;
+    private List<DynamicModelConfig> dynamicModelContent;
 
-    @Setter private String eventModelContent;
+    private List<EventModelConfig> eventModelContent;
 
-    @Setter private String curveContent;
+    private String curveContent;
 
-    @Setter private DynamicSimulationParameters dynamicSimulationParameters;
+    private DynamicSimulationParameters dynamicSimulationParameters;
 
     @Builder
     public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
