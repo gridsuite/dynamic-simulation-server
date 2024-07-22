@@ -114,12 +114,6 @@ public class ParametersServiceImpl implements ParametersService {
                     ParametersSet networkParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), network.getId());
                     dynaWaltzParameters.setNetworkParameters(networkParameters);
                 }
-
-                // Quick fix to make working in powsybl-dynawo 2.1.0
-                // Cannot invoke "com.powsybl.dynawaltz.DumpFileParameters.useDumpFile()"
-                // because "dumpFileParameters" is null
-                // TODO This param must be configured by default during the creation at the powsybl level
-                dynaWaltzParameters.setDefaultDumpFileParameters();
             }
 
             return parameters;

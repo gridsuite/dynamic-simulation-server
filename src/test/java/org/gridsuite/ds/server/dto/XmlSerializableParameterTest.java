@@ -36,7 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static com.powsybl.commons.test.ComparisonUtils.compareXml;
+import static com.powsybl.commons.test.ComparisonUtils.assertXmlEquals;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -65,7 +65,7 @@ public class XmlSerializableParameterTest {
             Schema schema = factory.newSchema(xsd);
             Validator validator = schema.newValidator();
             validator.validate(xml);
-            compareXml(getClass().getResourceAsStream(expectedXmlFile), Files.newInputStream(actualXmlFile));
+            assertXmlEquals(getClass().getResourceAsStream(expectedXmlFile), Files.newInputStream(actualXmlFile));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (SAXException e) {
