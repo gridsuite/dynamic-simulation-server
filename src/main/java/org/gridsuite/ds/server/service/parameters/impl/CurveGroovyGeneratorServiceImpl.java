@@ -18,10 +18,14 @@ import org.stringtemplate.v4.ST;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.ds.server.utils.EquipmentType.isStaticType;
+import static org.gridsuite.ds.server.utils.Utils.RESOURCE_PATH_DELIMITER;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -34,8 +38,8 @@ public class CurveGroovyGeneratorServiceImpl implements CurveGroovyGeneratorServ
         String curvesTemplate;
         String curveTemplate;
         try {
-            curvesTemplate = IOUtils.toString(new ClassPathResource(CURVES_TEMPLATE_DIR + RESOURCE_PATH_DELIMETER + "curves.st").getInputStream(), Charset.defaultCharset());
-            curveTemplate = IOUtils.toString(new ClassPathResource(CURVES_TEMPLATE_DIR + RESOURCE_PATH_DELIMETER + "curve.st").getInputStream(), Charset.defaultCharset());
+            curvesTemplate = IOUtils.toString(new ClassPathResource(CURVES_TEMPLATE_DIR + RESOURCE_PATH_DELIMITER + "curves.st").getInputStream(), Charset.defaultCharset());
+            curveTemplate = IOUtils.toString(new ClassPathResource(CURVES_TEMPLATE_DIR + RESOURCE_PATH_DELIMITER + "curve.st").getInputStream(), Charset.defaultCharset());
         } catch (IOException e) {
             throw new PowsyblException("Unable to load templates for groovy script generation : " + e.getMessage());
         }

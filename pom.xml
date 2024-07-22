@@ -140,10 +140,17 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawaltz</artifactId>
+            <version>2.5.0-alpha-1</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawaltz-dsl</artifactId>
+            <version>2.5.0-alpha-1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.gridsuite</groupId>
+            <artifactId>gridsuite-filter</artifactId>
+            <version>1.0.9</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>

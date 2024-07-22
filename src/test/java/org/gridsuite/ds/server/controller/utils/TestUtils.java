@@ -22,7 +22,7 @@ public final class TestUtils {
     private static final long TIMEOUT = 100;
 
     private TestUtils() {
-
+        throw new AssertionError("Utility class should not be instantiated");
     }
 
     public static void assertQueuesEmptyThenClear(List<String> destinations, OutputDestination output) throws InterruptedException {

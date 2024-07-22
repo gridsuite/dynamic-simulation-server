@@ -25,7 +25,8 @@ import org.gridsuite.ds.server.controller.utils.FileUtils;
 import org.gridsuite.ds.server.controller.utils.ParameterUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
-import org.gridsuite.ds.server.dto.dynamicmapping.Script;
+import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
+import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
@@ -44,13 +45,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_RESULT_UUID;
 import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_USER_ID;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.gridsuite.ds.server.utils.Utils.RESOURCE_PATH_DELIMITER;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -66,10 +66,10 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     public static final String MAPPING_NAME_01 = "_01";
 
     // directories
-    public static final String DATA_IEEE14_BASE_DIR = RESOURCE_PATH_DELIMETER + "data" + RESOURCE_PATH_DELIMETER + "ieee14";
+    public static final String DATA_IEEE14_BASE_DIR = RESOURCE_PATH_DELIMITER + "data" + RESOURCE_PATH_DELIMITER + "ieee14";
     public static final String INPUT = "input";
     public static final String OUTPUT = "output";
-    public static final String MODELS_GROOVY = "models.groovy";
+    public static final String MAPPING_FILE = "mapping.json";
     public static final String MODELS_PAR = "models.par";
     public static final String RESULT_IDA_JSON = "result_IDA.json";
     public static final String RESULT_SIM_JSON = "result_SIM.json";
@@ -93,9 +93,6 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     @Autowired
     private ObjectMapper objectMapper;
 
-    private static final String FIXED_DATE = "01/01/2023";
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-
     @Override
     public OutputDestination getOutputDestination() {
         return output;
@@ -115,34 +112,27 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     protected void initDynamicMappingServiceMock() {
         try {
             String inputDir = DATA_IEEE14_BASE_DIR +
-                    RESOURCE_PATH_DELIMETER + MAPPING_NAME_01 +
-                    RESOURCE_PATH_DELIMETER + INPUT;
-
-            // load models.groovy
-            String scriptPath = inputDir + RESOURCE_PATH_DELIMETER + MODELS_GROOVY;
-            InputStream scriptIS = getClass().getResourceAsStream(scriptPath);
-            byte[] scriptBytes;
-            scriptBytes = StreamUtils.copyToByteArray(scriptIS);
-            String script = new String(scriptBytes, StandardCharsets.UTF_8);
+                              RESOURCE_PATH_DELIMITER + MAPPING_NAME_01 +
+                              RESOURCE_PATH_DELIMITER + INPUT;
 
             // load models.par
-            String parametersFilePath = inputDir + RESOURCE_PATH_DELIMETER + MODELS_PAR;
+            String parametersFilePath = inputDir + RESOURCE_PATH_DELIMITER + MODELS_PAR;
             InputStream parametersFileIS = getClass().getResourceAsStream(parametersFilePath);
             byte[] parametersFileBytes;
             parametersFileBytes = StreamUtils.copyToByteArray(parametersFileIS);
             String parametersFile = new String(parametersFileBytes, StandardCharsets.UTF_8);
 
-            Script scriptObj = new Script(
-                    MAPPING_NAME_01 + "-script",
+            ParameterFile parameterFile = new ParameterFile(
                     MAPPING_NAME_01,
-                    script,
-                    dateFormat.parse(FIXED_DATE),
                     parametersFile);
-            given(dynamicMappingClient.createFromMapping(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(scriptObj);
+            given(dynamicMappingClient.exportParameters(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(parameterFile);
+
+            // load mapping.json
+            String mappingPath = inputDir + RESOURCE_PATH_DELIMITER + MAPPING_FILE;
+            InputMapping inputMapping = objectMapper.readValue(getClass().getResourceAsStream(mappingPath), InputMapping.class);
+            given(dynamicMappingClient.getMapping(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(inputMapping);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
-        } catch (ParseException e) {
-            throw new IllegalArgumentException(e);
         }
     }
 
@@ -233,16 +223,16 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         // --- CHECK result at detail level --- //
         // prepare expected result to compare
         String outputDir = DATA_IEEE14_BASE_DIR +
-                           RESOURCE_PATH_DELIMETER + testBaseDir +
-                           RESOURCE_PATH_DELIMETER + OUTPUT;
-        DynamicSimulationResult expectedResult = DynamicSimulationResultDeserializer.read(getClass().getResourceAsStream(outputDir + RESOURCE_PATH_DELIMETER + RESULT_SIM_JSON));
+                           RESOURCE_PATH_DELIMITER + testBaseDir +
+                           RESOURCE_PATH_DELIMITER + OUTPUT;
+        DynamicSimulationResult expectedResult = DynamicSimulationResultDeserializer.read(getClass().getResourceAsStream(outputDir + RESOURCE_PATH_DELIMITER + RESULT_SIM_JSON));
         String jsonExpectedTimeSeries = TimeSeries.toJson(new ArrayList<>(expectedResult.getCurves().values()));
 
         // convert result time series to json
         String jsonResultTimeSeries = TimeSeries.toJson(resultTimeSeries);
 
         // export result to file
-        FileUtils.writeStringToFile(this, outputDir + RESOURCE_PATH_DELIMETER + "exported_" + RESULT_SIM_JSON, jsonResultTimeSeries);
+        FileUtils.writeStringToFile(this, outputDir + RESOURCE_PATH_DELIMITER + "exported_" + RESULT_SIM_JSON, jsonResultTimeSeries);
 
         // compare result only timeseries
         assertThat(objectMapper.readTree(jsonResultTimeSeries)).isEqualTo(objectMapper.readTree(jsonExpectedTimeSeries));

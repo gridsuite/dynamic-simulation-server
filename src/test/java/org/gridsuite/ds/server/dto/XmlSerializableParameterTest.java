@@ -46,8 +46,7 @@ import static com.powsybl.commons.test.ComparisonUtils.assertXmlEquals;
 @ContextHierarchy({@ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class})})
 public class XmlSerializableParameterTest {
 
-    public static final String RESOURCE_PATH_DELIMETER = "/";
-    public static final String DATA_XML = RESOURCE_PATH_DELIMETER + "data" + RESOURCE_PATH_DELIMETER + "xml";
+    public static final String DATA_XML = RESOURCE_PATH_DELIMITER + "data" + RESOURCE_PATH_DELIMITER + "xml";
     public static final String PAR_SCHEMA = "parameters.xsd";
 
     public static final String OUTPUT = "output";
@@ -83,13 +82,13 @@ public class XmlSerializableParameterTest {
         SolverInfos[] solvers = {idaSolver, simSolver};
 
         // export solvers to par file
-        String resultDir = getClass().getResource(DATA_XML + RESOURCE_PATH_DELIMETER + OUTPUT).getPath();
+        String resultDir = getClass().getResource(DATA_XML + RESOURCE_PATH_DELIMITER + OUTPUT).getPath();
         Path exportedSolversFile = Paths.get(resultDir).resolve(EXPORTED_SOLVERS);
         Files.deleteIfExists(exportedSolversFile);
         XmlSerializableParameter.writeParameter(exportedSolversFile, XmlSerializableParameter.PARAMETER_SET, solvers);
 
         // compare two file
-        validate(DATA_XML + RESOURCE_PATH_DELIMETER + PAR_SCHEMA, DATA_XML + RESOURCE_PATH_DELIMETER + OUTPUT + RESOURCE_PATH_DELIMETER + EXPECTED_SOLVERS, exportedSolversFile);
+        validate(DATA_XML + RESOURCE_PATH_DELIMITER + PAR_SCHEMA, DATA_XML + RESOURCE_PATH_DELIMITER + OUTPUT + RESOURCE_PATH_DELIMITER + EXPECTED_SOLVERS, exportedSolversFile);
     }
 
     @Test
@@ -97,12 +96,12 @@ public class XmlSerializableParameterTest {
         NetworkInfos network = ParameterUtils.getDefaultNetwork();
 
         // export network to par file
-        String resultDir = getClass().getResource(DATA_XML + RESOURCE_PATH_DELIMETER + OUTPUT).getPath();
+        String resultDir = getClass().getResource(DATA_XML + RESOURCE_PATH_DELIMITER + OUTPUT).getPath();
         Path exportedNetworkFile = Paths.get(resultDir).resolve(EXPORTED_NETWORK);
         Files.deleteIfExists(exportedNetworkFile);
         XmlSerializableParameter.writeParameter(exportedNetworkFile, XmlSerializableParameter.PARAMETER_SET, network);
 
         // compare two file
-        validate(DATA_XML + RESOURCE_PATH_DELIMETER + PAR_SCHEMA, DATA_XML + RESOURCE_PATH_DELIMETER + OUTPUT + RESOURCE_PATH_DELIMETER + EXPECTED_NETWORK, exportedNetworkFile);
+        validate(DATA_XML + RESOURCE_PATH_DELIMITER + PAR_SCHEMA, DATA_XML + RESOURCE_PATH_DELIMITER + OUTPUT + RESOURCE_PATH_DELIMITER + EXPECTED_NETWORK, exportedNetworkFile);
     }
 }

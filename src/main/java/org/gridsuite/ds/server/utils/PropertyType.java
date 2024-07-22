@@ -10,9 +10,10 @@ package org.gridsuite.ds.server.utils;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public enum PropertyType {
-    ENUM,
     BOOLEAN,
+    ENUM,
     INTEGER,
     FLOAT,
+    DOUBLE,
     STRING,
 }

@@ -34,11 +34,13 @@ public class RestResponseEntityExceptionHandler {
                     PROVIDER_NOT_FOUND
                     -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
             case URI_SYNTAX,
-                    CREATE_MAPPING_SCRIPT_ERROR,
+                    GET_DYNAMIC_MAPPING_ERROR,
+                    EXPORT_PARAMETERS_ERROR,
                     CREATE_TIME_SERIES_ERROR,
                     DELETE_TIME_SERIES_ERROR
                     -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exception.getMessage());
-            case MAPPING_NOT_PROVIDED
+            case MAPPING_NOT_PROVIDED,
+                    MAPPING_NOT_LAST_RULE_WITH_EMPTY_FILTER_ERROR
                 -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
         };
     }
