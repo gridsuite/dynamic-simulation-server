@@ -37,6 +37,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static com.powsybl.commons.test.ComparisonUtils.assertXmlEquals;
+import static org.gridsuite.ds.server.utils.Utils.RESOURCE_PATH_DELIMITER;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
