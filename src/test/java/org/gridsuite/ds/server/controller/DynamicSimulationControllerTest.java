@@ -141,6 +141,16 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         super.setUp();
     }
 
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+
+        // delete all results
+        mockMvc.perform(
+                        delete("/v1/results"))
+                .andExpect(status().isOk());
+    }
+
     @Test
     public void testGivenNotExistingNetworkUuid() throws Exception {
 
