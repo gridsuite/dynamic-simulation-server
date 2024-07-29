@@ -42,13 +42,12 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>30</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>31</gridsuite-dependencies.version>
         <jib.from.image>powsybl/java-dynawo:2.1.0</jib.from.image>
 
         <h2database.version>1.4.200</h2database.version>
         <liquibase-hibernate-package>org.gridsuite.ds.server</liquibase-hibernate-package>
         <string-template.version>4.3.1</string-template.version>
-        <powsybl-ws-commons.version>1.11.0</powsybl-ws-commons.version><!-- should be removed once gridsuite-dependencies is upgraded-->
     </properties>
 
     <build>
@@ -141,17 +140,14 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawaltz</artifactId>
-            <version>2.5.0-alpha-1</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawaltz-dsl</artifactId>
-            <version>2.5.0-alpha-1</version>
         </dependency>
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-filter</artifactId>
-            <version>1.0.9</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
@@ -160,7 +156,6 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-ws-commons</artifactId>
-            <version>${powsybl-ws-commons.version}</version>
         </dependency>
         <dependency>
             <groupId>org.liquibase</groupId>
