@@ -41,6 +41,7 @@ import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.messaging.Message;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.io.IOException;
 import java.util.*;
@@ -431,9 +432,13 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     private void assertNotFoundResult(UUID runUuid) throws Exception {
+        assertResultStatus(runUuid, status().isNotFound());
+    }
+
+    private void assertResultStatus(UUID runUuid, ResultMatcher resultMatcher) throws Exception {
         mockMvc.perform(
                         get("/v1/results/{resultUuid}/status", runUuid))
-                .andExpect(status().isNotFound());
+                .andExpect(resultMatcher);
     }
 
     private void assertRunningStatus(UUID runUuid) throws Exception {
@@ -532,12 +537,12 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         // check result
         // Must have a cancel message in the stop queue
-        Message<byte[]> message = output.receive(1000, dsStoppedDestination);
+        Message<byte[]> message = output.receive(1000, dsCancelFailedDestination);
         assertThat(message.getHeaders())
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
-                .containsEntry(HEADER_MESSAGE, getCancelMessage(COMPUTATION_TYPE));
+                .containsEntry(HEADER_MESSAGE, getCancelFailedMessage(COMPUTATION_TYPE));
         // result has been deleted by cancel so not found
-        assertNotFoundResult(runUuid);
+        assertResultStatus(runUuid, status().isOk());
     }
 
     @Test
@@ -564,12 +569,12 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString());
 
         // Must have a cancel message in the stop queue
-        message = output.receive(1000, dsStoppedDestination);
+        message = output.receive(1000, dsCancelFailedDestination);
         assertThat(message.getHeaders())
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
-                .containsEntry(HEADER_MESSAGE, getCancelMessage(COMPUTATION_TYPE));
+                .containsEntry(HEADER_MESSAGE, getCancelFailedMessage(COMPUTATION_TYPE));
         // result has been deleted by cancel so not found
-        assertNotFoundResult(runUuid);
+        assertResultStatus(runUuid, status().isOk());
     }
     // --- END Test cancelling a running computation ---//
 
