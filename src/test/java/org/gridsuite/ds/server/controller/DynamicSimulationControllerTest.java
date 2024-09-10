@@ -511,7 +511,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     @Test
-    public void testStopEarly() throws Exception {
+    public void testStopEarlyAndFail() throws Exception {
         CountDownLatch cancelLatch = new CountDownLatch(1);
         // Emit messages in separate threads, like in production.
         mockSendRunMessage(() -> CompletableFuture.supplyAsync(() ->
@@ -536,13 +536,15 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         UUID runUuid = runAndCancel(cancelLatch, 0);
 
         // check result
-        // Must have a cancel message in the stop queue
+        // Must have a cancel failed message in the stop
         Message<byte[]> message = output.receive(1000, dsCancelFailedDestination);
         assertThat(message.getHeaders())
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
                 .containsEntry(HEADER_MESSAGE, getCancelFailedMessage(COMPUTATION_TYPE));
-        // result has been deleted by cancel so not found
+        // cancel failed so result still exist
         assertResultStatus(runUuid, status().isOk());
+
+        // FIXME how to test the case when the computation is still in progress and we send a cancel request
     }
 
     @Test
