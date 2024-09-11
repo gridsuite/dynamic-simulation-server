@@ -536,7 +536,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         UUID runUuid = runAndCancel(cancelLatch, 0);
 
         // check result
-        // Must have a cancel failed message in the stop
+        // Must have a cancel failed message in the queue
         Message<byte[]> message = output.receive(1000, dsCancelFailedDestination);
         assertThat(message.getHeaders())
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
@@ -568,12 +568,12 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         assertThat(message.getHeaders())
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString());
 
-        // Must have a cancel message in the stop queue
+        // Must have a cancel failed message in the queue
         message = output.receive(1000, dsCancelFailedDestination);
         assertThat(message.getHeaders())
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
                 .containsEntry(HEADER_MESSAGE, getCancelFailedMessage(COMPUTATION_TYPE));
-        // result has been deleted by cancel so not found
+        // cancel failed so results are not deleted
         assertResultStatus(runUuid, status().isOk());
     }
     // --- END Test cancelling a running computation ---//
