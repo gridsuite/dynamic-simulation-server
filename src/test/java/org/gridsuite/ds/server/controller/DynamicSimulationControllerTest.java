@@ -511,7 +511,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     @Test
-    public void testStopEarlyAndFail() throws Exception {
+    public void testStopEarly() throws Exception {
         CountDownLatch cancelLatch = new CountDownLatch(1);
         // Emit messages in separate threads, like in production.
         mockSendRunMessage(() -> CompletableFuture.supplyAsync(() ->
@@ -543,8 +543,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 .containsEntry(HEADER_MESSAGE, getCancelFailedMessage(COMPUTATION_TYPE));
         // cancel failed so result still exist
         assertResultStatus(runUuid, status().isOk());
-
-        // FIXME how to test the case when the computation is still in progress and we send a cancel request
     }
 
     @Test
