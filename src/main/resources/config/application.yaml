@@ -24,7 +24,9 @@ spring:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}ds.stopped
         publishFailed-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}ds.failed
-      output-bindings: publishRun-out-0;publishResult-out-0;publishCancel-out-0;publishStopped-out-0;publishFailed-out-0
+        publishCancelFailed-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}ds.cancelfailed
+      output-bindings: publishRun-out-0;publishResult-out-0;publishCancel-out-0;publishStopped-out-0;publishFailed-out-0;publishCancelFailed-out-0
 
 powsybl:
   services:
