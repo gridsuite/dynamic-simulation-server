@@ -47,6 +47,7 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
     protected final String dsResultDestination = "ds.result.destination";
     protected final String dsFailedDestination = "ds.failed.destination";
     protected final String dsStoppedDestination = "ds.stopped.destination";
+    protected final String dsCancelFailedDestination = "ds.cancelfailed.destination";
 
     @MockBean
     protected DynamicMappingClient dynamicMappingClient;
@@ -84,7 +85,7 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
         super.tearDown();
 
         OutputDestination output = getOutputDestination();
-        List<String> destinations = List.of(dsFailedDestination, dsResultDestination, dsStoppedDestination);
+        List<String> destinations = List.of(dsFailedDestination, dsResultDestination, dsStoppedDestination, dsCancelFailedDestination);
 
         try {
             TestUtils.assertQueuesEmptyThenClear(destinations, output);
