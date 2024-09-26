@@ -42,7 +42,7 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>33</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>34</gridsuite-dependencies.version>
         <jib.from.image>powsybl/java-dynawo:2.1.0</jib.from.image>
 
         <h2database.version>1.4.200</h2database.version>
@@ -148,8 +148,6 @@
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-filter</artifactId>
-            <!-- FIXME: gridsuite-filter modules' version is overloaded in the dependencies section. The overloads and this property below have to be removed at next gridsuite-dependencies.version upgrade -->
-            <version>1.0.13</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
