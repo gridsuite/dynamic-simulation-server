@@ -43,7 +43,7 @@
 
     <properties>
         <gridsuite-dependencies.version>34</gridsuite-dependencies.version>
-        <jib.from.image>powsybl/java-dynawo:2.1.0</jib.from.image>
+        <jib.from.image>powsybl/java-dynawo:2.2.0</jib.from.image>
 
         <h2database.version>1.4.200</h2database.version>
         <liquibase-hibernate-package>org.gridsuite.ds.server</liquibase-hibernate-package>
