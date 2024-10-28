@@ -140,6 +140,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     @Override
     public void setUp() throws IOException {
         super.setUp();
+        createStorageDir();
     }
 
     @Override
