@@ -20,7 +20,7 @@ public final class FileUtils {
         throw new AssertionError("Utility class should not be instantiated");
     }
 
-    public static void writeStringToFile(Object caller, String filePathName, String content) throws IOException {
+    public static void writeBytesToFile(Object caller, String filePathName, byte[] content) throws IOException {
         File file = new File(caller.getClass().getClassLoader().getResource(".").getFile() + filePathName);
 
         //re-entrant
@@ -30,7 +30,7 @@ public final class FileUtils {
 
         file.createNewFile();
         OutputStream os = new FileOutputStream(file);
-        os.write(content.getBytes());
+        os.write(content);
         os.close();
     }
 }

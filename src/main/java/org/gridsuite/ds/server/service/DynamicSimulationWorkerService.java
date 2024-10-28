@@ -14,6 +14,8 @@ import com.powsybl.dynamicsimulation.*;
 import com.powsybl.dynamicsimulation.groovy.CurveGroovyExtension;
 import com.powsybl.dynamicsimulation.groovy.GroovyCurvesSupplier;
 import com.powsybl.dynamicsimulation.groovy.GroovyExtension;
+import com.powsybl.dynawaltz.DumpFileParameters;
+import com.powsybl.dynawaltz.DynaWaltzParameters;
 import com.powsybl.dynawaltz.DynaWaltzProvider;
 import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynawoModelsSupplier;
@@ -26,6 +28,7 @@ import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.TimeSeries;
 import com.powsybl.ws.commons.computation.service.*;
 import org.apache.commons.collections4.CollectionUtils;
+import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
@@ -42,7 +45,11 @@ import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -159,6 +166,21 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         runContext.setDynamicModelContent(dynamicModel);
         runContext.setEventModelContent(eventModel);
         runContext.setCurveContent(curveModel);
+
+        // enrich dump parameters
+        parametersService.checkStorageInitialization();
+        Path dumpDir = parametersService.getStorageRootDir().resolve(runContext.getResultUuid().toString());
+        if (Files.exists(dumpDir)) {
+            throw DynamicSimulationException.createDirectoryAreadyExists(dumpDir);
+        }
+        try {
+            Files.createDirectory(dumpDir);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        DynaWaltzParameters dynaWaltzParameters = parameters.getExtension(DynaWaltzParameters.class);
+        dynaWaltzParameters.setDumpFileParameters(DumpFileParameters.createExportDumpFileParameters(dumpDir));
     }
 
     @Override

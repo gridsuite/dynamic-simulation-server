@@ -45,7 +45,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_RESULT_UUID;
 import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_USER_ID;
@@ -159,6 +162,12 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     }
 
     @Override
+    public void setUp() throws IOException {
+        super.setUp();
+        createStorageDir();
+    }
+
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
 
@@ -232,9 +241,17 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         String jsonResultTimeSeries = TimeSeries.toJson(resultTimeSeries);
 
         // export result to file
-        FileUtils.writeStringToFile(this, outputDir + RESOURCE_PATH_DELIMITER + "exported_" + RESULT_SIM_JSON, jsonResultTimeSeries);
+        FileUtils.writeBytesToFile(this, outputDir + RESOURCE_PATH_DELIMITER + "exported_" + RESULT_SIM_JSON, jsonResultTimeSeries.getBytes());
 
         // compare result only timeseries
         assertThat(objectMapper.readTree(jsonResultTimeSeries)).isEqualTo(objectMapper.readTree(jsonExpectedTimeSeries));
+
+        // read dump file from dump dir
+        Path dumpDirectory = parametersService.getDumpDirectory(runUuid);
+        try (Stream<Path> files = Files.list(dumpDirectory)) {
+            Path dumpFile = files.findFirst().orElse(null);
+            // export to manual check
+            FileUtils.writeBytesToFile(this, outputDir + RESOURCE_PATH_DELIMITER + Objects.requireNonNull(dumpFile).getFileName(), Files.readAllBytes(dumpFile));
+        }
     }
 }

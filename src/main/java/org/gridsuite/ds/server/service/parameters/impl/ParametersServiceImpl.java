@@ -21,6 +21,7 @@ import com.powsybl.dynawaltz.xml.ParametersXml;
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
+import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gridsuite.ds.server.DynamicSimulationException;
@@ -51,6 +52,10 @@ import org.springframework.stereotype.Service;
 import javax.xml.stream.XMLStreamException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -67,7 +72,40 @@ public class ParametersServiceImpl implements ParametersService {
 
     private final CurveGroovyGeneratorService curveGroovyGeneratorService;
 
+    @Getter
+    private FileSystem fileSystem = FileSystems.getDefault();
+
+    @Getter
+    @Value("${dump-store-directory:#{systemProperties['user.home'].concat(\"/dumps\")}}")
+    private String rootDirectory;
+
     private final String defaultProvider;
+
+    @Override
+    public Path getStorageRootDir() {
+        return getFileSystem().getPath(getRootDirectory());
+    }
+
+    private boolean isStorageCreated() {
+        Path storageRootDir = getStorageRootDir();
+        return Files.exists(storageRootDir) && Files.isDirectory(storageRootDir);
+    }
+
+    @Override
+    public void checkStorageInitialization() {
+        if (!isStorageCreated()) {
+            throw DynamicSimulationException.createStorageNotInitialized(getStorageRootDir());
+        }
+    }
+
+    @Override
+    public Path getDumpDirectory(UUID resultUuid) {
+        Path dumpDirectory = getStorageRootDir().resolve(resultUuid.toString());
+        if (Files.exists(dumpDirectory) && Files.isDirectory(dumpDirectory)) {
+            return dumpDirectory;
+        }
+        throw DynamicSimulationException.createDirectoryNotFound(resultUuid);
+    }
 
     @Autowired
     public ParametersServiceImpl(CurveGroovyGeneratorService curveGroovyGeneratorService,

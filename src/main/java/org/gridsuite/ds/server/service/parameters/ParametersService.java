@@ -7,16 +7,18 @@
 package org.gridsuite.ds.server.service.parameters;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
-import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.dynawaltz.suppliers.events.EventModelConfig;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 
+import java.nio.file.FileSystem;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +26,15 @@ import java.util.UUID;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public interface ParametersService {
+    FileSystem getFileSystem();
+
+    String getRootDirectory();
+
+    void checkStorageInitialization();
+
+    Path getStorageRootDir();
+
+    Path getDumpDirectory(UUID resultUuid);
 
     List<EventModelConfig> getEventModel(List<EventInfos> events);
 

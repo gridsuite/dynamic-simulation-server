@@ -68,12 +68,16 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
 
         // specific headers for dynamic simulation
         runContext.setMapping(getNonNullHeader(headers, HEADER_MAPPING));
+        runContext.setResultUuid(UUID.fromString(getNonNullHeader(headers, RESULT_UUID_HEADER)));
 
         return new DynamicSimulationResultContext(resultUuid, runContext);
     }
 
     @Override
     public Map<String, String> getSpecificMsgHeaders(ObjectMapper ignoredObjectMapper) {
-        return Map.of(HEADER_MAPPING, getRunContext().getMapping());
+        return Map.of(
+            HEADER_MAPPING, getRunContext().getMapping(),
+            RESULT_UUID_HEADER, getRunContext().getResultUuid().toString()
+        );
     }
 }
