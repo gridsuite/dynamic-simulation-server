@@ -7,6 +7,7 @@
 
 package com.powsybl.dynawaltz.xml;
 
+import com.powsybl.dynawo.xml.DynawoSimulationXmlConstants;
 import javanet.staxutils.IndentingXMLStreamWriter;
 
 import javax.xml.stream.XMLOutputFactory;
@@ -47,7 +48,7 @@ public final class XmlStreamWriterFactory {
     private static XMLStreamWriter withIndent(XMLStreamWriter xmlStreamWriter, boolean indent) {
         if (indent) {
             IndentingXMLStreamWriter indentingWriter = new IndentingXMLStreamWriter(xmlStreamWriter);
-            indentingWriter.setIndent(DynaWaltzXmlConstants.INDENT);
+            indentingWriter.setIndent(DynawoSimulationXmlConstants.INDENT);
             return indentingWriter;
         }
         return xmlStreamWriter;

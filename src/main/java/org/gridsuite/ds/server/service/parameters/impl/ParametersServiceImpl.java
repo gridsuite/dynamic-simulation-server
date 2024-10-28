@@ -9,15 +9,15 @@ package org.gridsuite.ds.server.service.parameters.impl;
 import com.powsybl.commons.exceptions.UncheckedXmlStreamException;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
-import com.powsybl.dynawaltz.DynaWaltzParameters;
-import com.powsybl.dynawaltz.DynaWaltzProvider;
-import com.powsybl.dynawaltz.parameters.ParametersSet;
-import com.powsybl.dynawaltz.suppliers.PropertyBuilder;
-import com.powsybl.dynawaltz.suppliers.PropertyType;
-import com.powsybl.dynawaltz.suppliers.SetGroupType;
-import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
-import com.powsybl.dynawaltz.suppliers.events.EventModelConfig;
-import com.powsybl.dynawaltz.xml.ParametersXml;
+import com.powsybl.dynawo.DynawoSimulationParameters;
+import com.powsybl.dynawo.DynawoSimulationProvider;
+import com.powsybl.dynawo.parameters.ParametersSet;
+import com.powsybl.dynawo.suppliers.PropertyBuilder;
+import com.powsybl.dynawo.suppliers.PropertyType;
+import com.powsybl.dynawo.suppliers.SetGroupType;
+import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawo.suppliers.events.EventModelConfig;
+import com.powsybl.dynawo.xml.ParametersXml;
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
@@ -102,13 +102,13 @@ public class ParametersServiceImpl implements ParametersService {
             DynamicSimulationParameters parameters = new DynamicSimulationParameters();
 
             // TODO: Powsybl side - create an explicit dependency to DynaWaltz class and keep dynamic simulation abstraction all over this micro service
-            if (DynaWaltzProvider.NAME.equals(provider)) {
+            if (DynawoSimulationProvider.NAME.equals(provider)) {
                 // --- MODEL PAR --- //
                 List<ParametersSet> modelsParameters = !ArrayUtils.isEmpty(dynamicParams) ? ParametersXml.load(new ByteArrayInputStream(dynamicParams)) : List.of();
 
-                DynaWaltzParameters dynaWaltzParameters = new DynaWaltzParameters();
+                DynawoSimulationParameters dynaWaltzParameters = new DynawoSimulationParameters();
                 dynaWaltzParameters.setModelsParameters(modelsParameters);
-                parameters.addExtension(DynaWaltzParameters.class, dynaWaltzParameters);
+                parameters.addExtension(DynawoSimulationParameters.class, dynaWaltzParameters);
 
                 // --- SOLVER PAR --- //
                 // solver from input parameter

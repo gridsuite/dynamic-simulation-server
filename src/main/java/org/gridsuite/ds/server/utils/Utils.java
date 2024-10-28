@@ -7,9 +7,9 @@
 
 package org.gridsuite.ds.server.utils;
 
-import com.powsybl.dynawaltz.suppliers.Property;
-import com.powsybl.dynawaltz.suppliers.PropertyBuilder;
-import com.powsybl.dynawaltz.suppliers.PropertyType;
+import com.powsybl.dynawo.suppliers.Property;
+import com.powsybl.dynawo.suppliers.PropertyBuilder;
+import com.powsybl.dynawo.suppliers.PropertyType;
 import com.powsybl.iidm.network.TwoSides;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.ds.server.dto.dynamicmapping.automata.BasicProperty;
