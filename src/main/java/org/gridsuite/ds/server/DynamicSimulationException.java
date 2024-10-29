@@ -8,10 +8,6 @@ package org.gridsuite.ds.server;
 
 import lombok.Getter;
 
-import java.nio.file.Path;
-import java.util.Objects;
-import java.util.UUID;
-
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
@@ -29,9 +25,6 @@ public class DynamicSimulationException extends RuntimeException {
         CREATE_TIME_SERIES_ERROR,
         DELETE_TIME_SERIES_ERROR,
         MAPPING_NOT_LAST_RULE_WITH_EMPTY_FILTER_ERROR,
-        DIRECTORY_NOT_FOUND,
-        STORAGE_DIR_NOT_CREATED,
-        DIRECTORY_ALREADY_EXISTS,
     }
 
     private final Type type;
@@ -39,20 +32,5 @@ public class DynamicSimulationException extends RuntimeException {
     public DynamicSimulationException(Type type, String message) {
         super(message);
         this.type = type;
-    }
-
-    public static DynamicSimulationException createStorageNotInitialized(Path storageRootDir) {
-        Objects.requireNonNull(storageRootDir);
-        return new DynamicSimulationException(Type.STORAGE_DIR_NOT_CREATED, "The storage is not initialized: " + storageRootDir);
-    }
-
-    public static DynamicSimulationException createDirectoryAreadyExists(Path directory) {
-        Objects.requireNonNull(directory);
-        return new DynamicSimulationException(Type.DIRECTORY_ALREADY_EXISTS, "A directory with the same name already exists: " + directory);
-    }
-
-    public static DynamicSimulationException createDirectoryNotFound(UUID uuid) {
-        Objects.requireNonNull(uuid);
-        return new DynamicSimulationException(Type.DIRECTORY_NOT_FOUND, "The directory with the following uuid doesn't exist: " + uuid);
     }
 }

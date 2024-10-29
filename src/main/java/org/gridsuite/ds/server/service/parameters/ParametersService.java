@@ -17,8 +17,6 @@ import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 
-import java.nio.file.FileSystem;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,15 +24,6 @@ import java.util.UUID;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public interface ParametersService {
-    FileSystem getFileSystem();
-
-    String getRootDirectory();
-
-    void checkStorageInitialization();
-
-    Path getStorageRootDir();
-
-    Path getDumpDirectory(UUID resultUuid);
 
     List<EventModelConfig> getEventModel(List<EventInfos> events);
 

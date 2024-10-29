@@ -9,6 +9,8 @@ package org.gridsuite.ds.server.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.commons.io.FileUtil;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.dynamicsimulation.*;
 import com.powsybl.dynamicsimulation.groovy.CurveGroovyExtension;
@@ -28,7 +30,6 @@ import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.TimeSeries;
 import com.powsybl.ws.commons.computation.service.*;
 import org.apache.commons.collections4.CollectionUtils;
-import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
@@ -46,15 +47,14 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATION_TYPE;
@@ -168,16 +168,14 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         runContext.setCurveContent(curveModel);
 
         // enrich dump parameters
-        parametersService.checkStorageInitialization();
-        Path dumpDir = parametersService.getStorageRootDir().resolve(runContext.getResultUuid().toString());
-        if (Files.exists(dumpDir)) {
-            throw DynamicSimulationException.createDirectoryAreadyExists(dumpDir);
+        // create a shared root folder, i.e. dumps
+        Path dumpRootDir = getComputationManager().getLocalDir().resolve("dumps");
+        if (!Files.exists(dumpRootDir)) {
+            FileUtil.createDirectory(dumpRootDir);
         }
-        try {
-            Files.createDirectory(dumpDir);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        // create a dump folder only for this run
+        Path dumpDir = dumpRootDir.resolve(runContext.getResultUuid().toString());
+        FileUtil.createDirectory(dumpDir);
 
         DynaWaltzParameters dynaWaltzParameters = parameters.getExtension(DynaWaltzParameters.class);
         dynaWaltzParameters.setDumpFileParameters(DumpFileParameters.createExportDumpFileParameters(dumpDir));
@@ -213,12 +211,63 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     @Bean
     @Override
     public Consumer<Message<String>> consumeRun() {
-        return super.consumeRun();
+        return message -> {
+            AbstractResultContext<DynamicSimulationRunContext> resultContext = fromMessage(message);
+            AtomicReference<ReportNode> rootReporter = new AtomicReference<>(ReportNode.NO_OP);
+            try {
+                long startTime = System.nanoTime();
+
+                Network network = getNetwork(resultContext.getRunContext().getNetworkUuid(),
+                        resultContext.getRunContext().getVariantId());
+                resultContext.getRunContext().setNetwork(network);
+                DynamicSimulationResult result = run(resultContext.getRunContext(), resultContext.getResultUuid(), rootReporter);
+
+                LOGGER.info("Just run in {}s", TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime));
+
+                if (resultCanBeSaved(result)) {
+                    startTime = System.nanoTime();
+                    observer.observe("results.save", resultContext.getRunContext(), () -> saveResult(network, resultContext, result));
+
+                    LOGGER.info("Stored in {}s", TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime));
+
+                    sendResultMessage(resultContext, result);
+                    LOGGER.info("{} complete (resultUuid='{}')", getComputationType(), resultContext.getResultUuid());
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                if (!(e instanceof CancellationException)) {
+                    LOGGER.error(NotificationService.getFailedMessage(getComputationType()), e);
+                    publishFail(resultContext, e.getMessage());
+                    resultService.delete(resultContext.getResultUuid());
+                    this.handleNonCancellationException(resultContext, e, rootReporter);
+                }
+            } finally {
+                futures.remove(resultContext.getResultUuid());
+                cancelComputationRequests.remove(resultContext.getResultUuid());
+                clean(resultContext);
+            }
+        };
     }
 
     @Bean
     @Override
     public Consumer<Message<String>> consumeCancel() {
         return super.consumeCancel();
+    }
+
+    protected void clean(AbstractResultContext<DynamicSimulationRunContext> resultContext) {
+        // clean dump directory if exist
+        Path dumpDir = Optional.ofNullable(resultContext.getRunContext().getDynamicSimulationParameters())
+                .map(parameters -> parameters.getExtension(DynaWaltzParameters.class))
+                .map(dynaWaltzParameters -> ((DynaWaltzParameters) dynaWaltzParameters).getDumpFileParameters().dumpFileFolder())
+                .orElse(null);
+        if (dumpDir != null) {
+            try {
+                FileUtil.removeDir(dumpDir);
+            } catch (IOException e) {
+                LOGGER.error("{}: error while cleaning dump directory", getComputationType(), e);
+            }
+        }
     }
 }
