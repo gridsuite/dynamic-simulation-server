@@ -29,8 +29,10 @@ import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
+import org.gridsuite.ds.server.service.DynamicSimulationResultService;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
+import org.gridsuite.ds.server.utils.Utils;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.util.StreamUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -92,6 +95,9 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private DynamicSimulationResultService dynamicSimulationResultService;
 
     @Override
     public OutputDestination getOutputDestination() {
@@ -237,12 +243,12 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         // compare result only timeseries
         assertThat(objectMapper.readTree(jsonResultTimeSeries)).isEqualTo(objectMapper.readTree(jsonExpectedTimeSeries));
 
-        // read dump file from dump dir
-//        Path dumpDirectory = parametersService.getDumpDirectory(runUuid);
-//        try (Stream<Path> files = Files.list(dumpDirectory)) {
-//            Path dumpFile = files.findFirst().orElse(null);
-//            // export to manual check
-//            FileUtils.writeBytesToFile(this, outputDir + RESOURCE_PATH_DELIMITER + Objects.requireNonNull(dumpFile).getFileName(), Files.readAllBytes(dumpFile));
-//        }
+        // check dump file not empty
+        byte[] outputState = dynamicSimulationResultService.getOutputState(runUuid);
+        assertThat(outputState).isNotEmpty();
+        // export dump file content to manual check
+        File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource(".")).getFile() +
+                             outputDir + RESOURCE_PATH_DELIMITER + "outputState.dmp");
+        Utils.unzip(outputState, file.toPath());
     }
 }

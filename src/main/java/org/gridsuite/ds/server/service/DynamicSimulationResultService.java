@@ -1,8 +1,8 @@
 package org.gridsuite.ds.server.service;
 
 import com.powsybl.timeseries.TimeSeries;
-import org.gridsuite.ds.server.DynamicSimulationException;
 import com.powsybl.ws.commons.computation.service.AbstractComputationResultService;
+import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.model.ResultEntity;
@@ -48,6 +48,13 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
                 .getTimeLineId();
     }
 
+    public byte[] getOutputState(UUID resultUuid) {
+        Objects.requireNonNull(resultUuid);
+        return resultRepository.findById(resultUuid)
+                .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
+                .getOutputState();
+    }
+
     @Transactional
     public List<UUID> updateStatus(List<UUID> resultUuids, DynamicSimulationStatus status) {
         // find result entities
@@ -59,7 +66,7 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     }
 
     @Transactional
-    public void updateResult(UUID resultUuid, List<TimeSeries<?, ?>> timeSeries, List<TimeSeries<?, ?>> timeLineSeries, DynamicSimulationStatus status) {
+    public void updateResult(UUID resultUuid, List<TimeSeries<?, ?>> timeSeries, List<TimeSeries<?, ?>> timeLineSeries, DynamicSimulationStatus status, byte[] outputState) {
 
         // send time-series/timeline to time-series-server
         UUID timeSeriesUuid = Optional.ofNullable(timeSeriesClient.sendTimeSeries(timeSeries))
@@ -77,6 +84,7 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
         resultEntity.setTimeSeriesId(timeSeriesUuid);
         resultEntity.setTimeLineId(timeLineUuid);
         resultEntity.setStatus(status);
+        resultEntity.setOutputState(outputState);
     }
 
     @Override
@@ -84,7 +92,7 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     public void insertStatus(List<UUID> resultUuids, DynamicSimulationStatus status) {
         Objects.requireNonNull(resultUuids);
         resultRepository.saveAll(resultUuids.stream()
-                .map(uuid -> new ResultEntity(uuid, null, null, status)).toList());
+                .map(uuid -> new ResultEntity(uuid, null, null, status, null)).toList());
     }
 
     @Override

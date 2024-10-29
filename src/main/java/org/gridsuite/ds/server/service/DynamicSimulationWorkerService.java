@@ -30,6 +30,7 @@ import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.TimeSeries;
 import com.powsybl.ws.commons.computation.service.*;
 import org.apache.commons.collections4.CollectionUtils;
+import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
@@ -38,6 +39,7 @@ import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClien
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
+import org.gridsuite.ds.server.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -56,7 +58,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.DUMP_FILE_ERROR;
 import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATION_TYPE;
 
 /**
@@ -99,7 +103,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         return DynamicSimulationResultContext.fromMessage(message, objectMapper);
     }
 
-    public void updateResult(UUID resultUuid, DynamicSimulationResult result) {
+    public void updateResult(UUID resultUuid, DynamicSimulationResult result, byte[] outputState) {
         Objects.requireNonNull(resultUuid);
         List<TimeSeries<?, ?>> timeSeries = new ArrayList<>(result.getCurves().values());
         List<TimeSeries<?, ?>> timeLineSeries = new ArrayList<>();
@@ -122,12 +126,31 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 DynamicSimulationStatus.CONVERGED :
                 DynamicSimulationStatus.DIVERGED;
 
-        resultService.updateResult(resultUuid, timeSeries, timeLineSeries, status);
+        resultService.updateResult(resultUuid, timeSeries, timeLineSeries, status, outputState);
     }
 
     @Override
     protected void saveResult(Network network, AbstractResultContext<DynamicSimulationRunContext> resultContext, DynamicSimulationResult result) {
-        updateResult(resultContext.getResultUuid(), result);
+        // read dump file
+        byte[] outputState = null;
+        Path dumpDir = Optional.ofNullable(resultContext.getRunContext().getDynamicSimulationParameters())
+                .map(parameters -> parameters.getExtension(DynaWaltzParameters.class))
+                .map(dynaWaltzParameters -> ((DynaWaltzParameters) dynaWaltzParameters).getDumpFileParameters().dumpFileFolder())
+                .orElse(null);
+        if (dumpDir != null) {
+            try (Stream<Path> files = Files.list(dumpDir)) {
+                Path dumpFile = files.findFirst().orElse(null);
+                if (dumpFile != null) {
+                    // ZIP output state
+                    outputState = Utils.zip(dumpFile);
+                }
+
+            } catch (IOException e) {
+                throw new DynamicSimulationException(DUMP_FILE_ERROR, "Error while reading dump file");
+            }
+        }
+
+        updateResult(resultContext.getResultUuid(), result, outputState);
     }
 
     @Override
@@ -208,6 +231,8 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 runContext.getReportNode());
     }
 
+    // add clean step in finally
+    // FIXME move this override implementation to powsybl-ws-commons
     @Bean
     @Override
     public Consumer<Message<String>> consumeRun() {
