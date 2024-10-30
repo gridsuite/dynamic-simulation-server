@@ -187,16 +187,20 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         runContext.setEventModelContent(eventModel);
         runContext.setCurveContent(curveModel);
 
-        // enrich dump parameters
-        Path dumpRootDir = getComputationManager().getLocalDir();
-        // create a dump folder only for this run
-        Path dumpDir;
+        // create a working folder for this run
+        Path localDir = getComputationManager().getLocalDir();
+        Path workDir;
         try {
-            dumpDir = Files.createTempDirectory(dumpRootDir, "dynamic_simulation_");
+            workDir = Files.createTempDirectory(localDir, "dynamic_simulation_");
+            runContext.setWorkDir(workDir);
+
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
 
+        // enrich dump parameters
+        Path dumpDir = workDir.resolve("dump");
+        FileUtil.createDirectory(dumpDir);
         DynaWaltzParameters dynaWaltzParameters = parameters.getExtension(DynaWaltzParameters.class);
         dynaWaltzParameters.setDumpFileParameters(DumpFileParameters.createExportDumpFileParameters(dumpDir));
     }
@@ -243,16 +247,13 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     @Override
     protected void clean(AbstractResultContext<DynamicSimulationRunContext> resultContext) {
         super.clean(resultContext);
-        // clean dump directory if exist
-        Path dumpDir = Optional.ofNullable(resultContext.getRunContext().getDynamicSimulationParameters())
-                .map(parameters -> parameters.getExtension(DynaWaltzParameters.class))
-                .map(dynaWaltzParameters -> ((DynaWaltzParameters) dynaWaltzParameters).getDumpFileParameters().dumpFileFolder())
-                .orElse(null);
-        if (dumpDir != null) {
+        // clean working directory if exist
+        Path workDir = resultContext.getRunContext().getWorkDir();
+        if (workDir != null) {
             try {
-                FileUtil.removeDir(dumpDir);
+                FileUtil.removeDir(workDir);
             } catch (IOException e) {
-                LOGGER.error("{}: error while cleaning dump directory", getComputationType(), e);
+                LOGGER.error("{}: error while cleaning working directory", getComputationType(), e);
             }
         }
     }
