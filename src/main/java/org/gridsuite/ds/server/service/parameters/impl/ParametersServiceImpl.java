@@ -101,14 +101,14 @@ public class ParametersServiceImpl implements ParametersService {
         try {
             DynamicSimulationParameters parameters = new DynamicSimulationParameters();
 
-            // TODO: Powsybl side - create an explicit dependency to DynaWaltz class and keep dynamic simulation abstraction all over this micro service
+            // TODO: Powsybl side - create an explicit dependency to Dynawo class and keep dynamic simulation abstraction all over this micro service
             if (DynawoSimulationProvider.NAME.equals(provider)) {
                 // --- MODEL PAR --- //
                 List<ParametersSet> modelsParameters = !ArrayUtils.isEmpty(dynamicParams) ? ParametersXml.load(new ByteArrayInputStream(dynamicParams)) : List.of();
 
-                DynawoSimulationParameters dynaWaltzParameters = new DynawoSimulationParameters();
-                dynaWaltzParameters.setModelsParameters(modelsParameters);
-                parameters.addExtension(DynawoSimulationParameters.class, dynaWaltzParameters);
+                DynawoSimulationParameters dynawoParameters = new DynawoSimulationParameters();
+                dynawoParameters.setModelsParameters(modelsParameters);
+                parameters.addExtension(DynawoSimulationParameters.class, dynawoParameters);
 
                 // --- SOLVER PAR --- //
                 // solver from input parameter
@@ -117,8 +117,8 @@ public class ParametersServiceImpl implements ParametersService {
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
                     XmlSerializableParameter.writeParameter(os, XmlSerializableParameter.PARAMETER_SET, inputSolver);
                     ParametersSet solverParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), inputSolver.getId());
-                    dynaWaltzParameters.setSolverType(inputSolver.getType().toSolverType());
-                    dynaWaltzParameters.setSolverParameters(solverParameters);
+                    dynawoParameters.setSolverType(inputSolver.getType().toSolverType());
+                    dynawoParameters.setSolverParameters(solverParameters);
                 }
 
                 // --- NETWORK PAR --- //
@@ -128,7 +128,7 @@ public class ParametersServiceImpl implements ParametersService {
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
                     XmlSerializableParameter.writeParameter(os, XmlSerializableParameter.PARAMETER_SET, network);
                     ParametersSet networkParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), network.getId());
-                    dynaWaltzParameters.setNetworkParameters(networkParameters);
+                    dynawoParameters.setNetworkParameters(networkParameters);
                 }
             }
 
