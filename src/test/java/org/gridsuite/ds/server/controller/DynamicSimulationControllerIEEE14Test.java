@@ -246,6 +246,8 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         // check dump file not empty
         byte[] outputState = dynamicSimulationResultService.getOutputState(runUuid);
         assertThat(outputState).isNotEmpty();
+        logger.info("Size of zipped output state = {} KB ", outputState.length / 1024);
+
         // export dump file content to manual check
         File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource(".")).getFile() +
                              outputDir + RESOURCE_PATH_DELIMITER + "outputState.dmp");
