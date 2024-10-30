@@ -28,8 +28,6 @@ public class DynamicSimulationRunContext extends AbstractComputationRunContext<D
 
     private String mapping;
 
-    private UUID resultUuid;
-
     // fields which are enriched in worker service
     private List<DynamicModelConfig> dynamicModelContent;
 

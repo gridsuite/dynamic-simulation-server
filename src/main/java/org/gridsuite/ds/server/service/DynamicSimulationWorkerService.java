@@ -48,6 +48,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -187,14 +188,14 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         runContext.setCurveContent(curveModel);
 
         // enrich dump parameters
-        // create a shared root folder, i.e. dumps
-        Path dumpRootDir = getComputationManager().getLocalDir().resolve("dumps");
-        if (!Files.exists(dumpRootDir)) {
-            FileUtil.createDirectory(dumpRootDir);
-        }
+        Path dumpRootDir = getComputationManager().getLocalDir();
         // create a dump folder only for this run
-        Path dumpDir = dumpRootDir.resolve(runContext.getResultUuid().toString());
-        FileUtil.createDirectory(dumpDir);
+        Path dumpDir;
+        try {
+            dumpDir = Files.createTempDirectory(dumpRootDir, "dynamic_simulation_");
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
 
         DynaWaltzParameters dynaWaltzParameters = parameters.getExtension(DynaWaltzParameters.class);
         dynaWaltzParameters.setDumpFileParameters(DumpFileParameters.createExportDumpFileParameters(dumpDir));
