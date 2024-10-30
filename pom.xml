@@ -42,7 +42,7 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>34</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>35-SNAPSHOT</gridsuite-dependencies.version>
         <jib.from.image>powsybl/java-dynawo:2.2.0</jib.from.image>
 
         <h2database.version>1.4.200</h2database.version>
@@ -87,7 +87,6 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
-
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
@@ -218,11 +217,6 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.vintage</groupId>
-            <artifactId>junit-vintage-engine</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

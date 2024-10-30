@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.io.FileUtil;
-import com.powsybl.commons.report.ReportNode;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.dynamicsimulation.*;
 import com.powsybl.dynamicsimulation.groovy.CurveGroovyExtension;
@@ -53,10 +52,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -231,48 +227,10 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 runContext.getReportNode());
     }
 
-    // add clean step in finally
-    // FIXME move this override implementation to powsybl-ws-commons
     @Bean
     @Override
     public Consumer<Message<String>> consumeRun() {
-        return message -> {
-            AbstractResultContext<DynamicSimulationRunContext> resultContext = fromMessage(message);
-            AtomicReference<ReportNode> rootReporter = new AtomicReference<>(ReportNode.NO_OP);
-            try {
-                long startTime = System.nanoTime();
-
-                Network network = getNetwork(resultContext.getRunContext().getNetworkUuid(),
-                        resultContext.getRunContext().getVariantId());
-                resultContext.getRunContext().setNetwork(network);
-                DynamicSimulationResult result = run(resultContext.getRunContext(), resultContext.getResultUuid(), rootReporter);
-
-                LOGGER.info("Just run in {}s", TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime));
-
-                if (resultCanBeSaved(result)) {
-                    startTime = System.nanoTime();
-                    observer.observe("results.save", resultContext.getRunContext(), () -> saveResult(network, resultContext, result));
-
-                    LOGGER.info("Stored in {}s", TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime));
-
-                    sendResultMessage(resultContext, result);
-                    LOGGER.info("{} complete (resultUuid='{}')", getComputationType(), resultContext.getResultUuid());
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            } catch (Exception e) {
-                if (!(e instanceof CancellationException)) {
-                    LOGGER.error(NotificationService.getFailedMessage(getComputationType()), e);
-                    publishFail(resultContext, e.getMessage());
-                    resultService.delete(resultContext.getResultUuid());
-                    this.handleNonCancellationException(resultContext, e, rootReporter);
-                }
-            } finally {
-                futures.remove(resultContext.getResultUuid());
-                cancelComputationRequests.remove(resultContext.getResultUuid());
-                clean(resultContext);
-            }
-        };
+        return super.consumeRun();
     }
 
     @Bean
@@ -281,7 +239,9 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         return super.consumeCancel();
     }
 
+    @Override
     protected void clean(AbstractResultContext<DynamicSimulationRunContext> resultContext) {
+        super.clean(resultContext);
         // clean dump directory if exist
         Path dumpDir = Optional.ofNullable(resultContext.getRunContext().getDynamicSimulationParameters())
                 .map(parameters -> parameters.getExtension(DynaWaltzParameters.class))
