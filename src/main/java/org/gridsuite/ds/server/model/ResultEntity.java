@@ -47,7 +47,7 @@ public class ResultEntity implements Serializable {
     @Enumerated(EnumType.STRING)
     private DynamicSimulationStatus status;
 
-    @Column(name = "outputState", columnDefinition = "BYTEA")
+    @Column(name = "outputState")
     private byte[] outputState;
 
 }
