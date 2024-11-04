@@ -94,6 +94,7 @@ public final class Utils {
     public static byte[] zip(Path filePath) {
         try (InputStream is = Files.newInputStream(filePath);
              ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+            // Important: zipOs must be outside of try to call manually close() in order to add EOF to os
             ZipOutputStream zipOs = new ZipOutputStream(os);
             zipOs.putNextEntry(new ZipEntry(filePath.getFileName().toString()));
             byte[] buffer = new byte[1024];
@@ -101,6 +102,7 @@ public final class Utils {
             while ((length = is.read(buffer)) > 0) {
                 zipOs.write(buffer, 0, length);
             }
+            // call close() manually to add EOF to os
             zipOs.close();
             return os.toByteArray();
         } catch (IOException e) {
