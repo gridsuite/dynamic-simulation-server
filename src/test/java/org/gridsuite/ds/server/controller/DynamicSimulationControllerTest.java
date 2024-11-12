@@ -194,9 +194,11 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 new TimelineEvent(104396, "CLA_2_4 - CLA", "arming by over-current constraint")
         );
 
-        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, timeLine)))
+        Map<String, Double> finalStateValues = new HashMap<>();
+
+        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, finalStateValues, timeLine)))
                 .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any());
-        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, timeLine)))
+        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, finalStateValues, timeLine)))
                 .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), isNull());
 
         // prepare parameters
@@ -330,8 +332,9 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         // mock DynamicSimulationWorkerService without time-series and timeline
         Map<String, DoubleTimeSeries> curves = new HashMap<>();
         List<TimelineEvent> timeLine = List.of();
+        Map<String, Double> finalStateValues = new HashMap<>();
 
-        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, timeLine)))
+        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, finalStateValues, timeLine)))
                 .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any());
 
         // prepare parameters
@@ -491,7 +494,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
             // fake a long computation 1s
             return CompletableFuture.supplyAsync(() ->
-                            new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), List.of()),
+                            new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), Map.of(), List.of()),
                     CompletableFuture.delayedExecutor(1000, TimeUnit.MILLISECONDS)
             );
         });
@@ -515,7 +518,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         CountDownLatch cancelLatch = new CountDownLatch(1);
         // Emit messages in separate threads, like in production.
         mockSendRunMessage(() -> CompletableFuture.supplyAsync(() ->
-                new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), List.of())
+                new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), Map.of(), List.of())
             )
         );
 
@@ -555,7 +558,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
             // fake a short computation
             return CompletableFuture.supplyAsync(() ->
-                    new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), List.of())
+                    new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", Map.of(), Map.of(), List.of())
             );
         });
 

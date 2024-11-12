@@ -11,14 +11,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.dynamicsimulation.*;
-import com.powsybl.dynamicsimulation.groovy.CurveGroovyExtension;
-import com.powsybl.dynamicsimulation.groovy.GroovyCurvesSupplier;
 import com.powsybl.dynamicsimulation.groovy.GroovyExtension;
-import com.powsybl.dynawaltz.DynaWaltzProvider;
-import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
-import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynawoModelsSupplier;
-import com.powsybl.dynawaltz.suppliers.events.DynawoEventModelsSupplier;
-import com.powsybl.dynawaltz.suppliers.events.EventModelConfig;
+import com.powsybl.dynamicsimulation.groovy.GroovyOutputVariablesSupplier;
+import com.powsybl.dynamicsimulation.groovy.OutputVariableGroovyExtension;
+import com.powsybl.dynawo.DynawoSimulationProvider;
+import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawo.suppliers.dynamicmodels.DynawoModelsSupplier;
+import com.powsybl.dynawo.suppliers.events.DynawoEventModelsSupplier;
+import com.powsybl.dynawo.suppliers.events.EventModelConfig;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -168,10 +168,9 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
 
         EventModelsSupplier eventModelsSupplier = new DynawoEventModelsSupplier(runContext.getEventModelContent());
 
-        List<CurveGroovyExtension> curveExtensions = GroovyExtension.find(CurveGroovyExtension.class, DynaWaltzProvider.NAME);
-        CurvesSupplier curvesSupplier = new GroovyCurvesSupplier(
-                new ByteArrayInputStream(runContext.getCurveContent().getBytes()), curveExtensions
-        );
+        GroovyOutputVariablesSupplier outputVariablesSupplier = new GroovyOutputVariablesSupplier(
+            new ByteArrayInputStream(runContext.getCurveContent().getBytes()),
+            GroovyExtension.find(OutputVariableGroovyExtension.class, DynawoSimulationProvider.NAME));
 
         DynamicSimulationParameters parameters = runContext.getDynamicSimulationParameters();
         LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {},",
@@ -181,7 +180,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         return runner.runAsync(runContext.getNetwork(),
                 dynamicModelsSupplier,
                 eventModelsSupplier,
-                curvesSupplier,
+                outputVariablesSupplier,
                 runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
                 getComputationManager(),
                 parameters,
