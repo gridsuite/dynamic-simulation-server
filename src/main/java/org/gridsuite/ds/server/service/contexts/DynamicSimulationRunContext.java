@@ -29,7 +29,8 @@ public class DynamicSimulationRunContext extends AbstractComputationRunContext<D
 
     private String mapping;
 
-    // fields which are enriched in worker service
+    // --- Fields which are enriched in worker service --- //
+
     private Path workDir;
 
     private List<DynamicModelConfig> dynamicModelContent;
