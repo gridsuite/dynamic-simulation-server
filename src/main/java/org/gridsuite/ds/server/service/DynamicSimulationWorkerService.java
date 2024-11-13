@@ -12,16 +12,16 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.io.FileUtil;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.dynamicsimulation.*;
-import com.powsybl.dynamicsimulation.groovy.CurveGroovyExtension;
-import com.powsybl.dynamicsimulation.groovy.GroovyCurvesSupplier;
 import com.powsybl.dynamicsimulation.groovy.GroovyExtension;
-import com.powsybl.dynawaltz.DumpFileParameters;
-import com.powsybl.dynawaltz.DynaWaltzParameters;
-import com.powsybl.dynawaltz.DynaWaltzProvider;
-import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
-import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynawoModelsSupplier;
-import com.powsybl.dynawaltz.suppliers.events.DynawoEventModelsSupplier;
-import com.powsybl.dynawaltz.suppliers.events.EventModelConfig;
+import com.powsybl.dynamicsimulation.groovy.GroovyOutputVariablesSupplier;
+import com.powsybl.dynamicsimulation.groovy.OutputVariableGroovyExtension;
+import com.powsybl.dynawo.DumpFileParameters;
+import com.powsybl.dynawo.DynawoSimulationParameters;
+import com.powsybl.dynawo.DynawoSimulationProvider;
+import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawo.suppliers.dynamicmodels.DynawoModelsSupplier;
+import com.powsybl.dynawo.suppliers.events.DynawoEventModelsSupplier;
+import com.powsybl.dynawo.suppliers.events.EventModelConfig;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -131,8 +131,8 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         // read dump file
         byte[] outputState = null;
         Path dumpDir = Optional.ofNullable(resultContext.getRunContext().getDynamicSimulationParameters())
-                .map(parameters -> parameters.getExtension(DynaWaltzParameters.class))
-                .map(dynaWaltzParameters -> ((DynaWaltzParameters) dynaWaltzParameters).getDumpFileParameters().dumpFileFolder())
+                .map(parameters -> parameters.getExtension(DynawoSimulationParameters.class))
+                .map(dynawoSimulationParameters -> ((DynawoSimulationParameters) dynawoSimulationParameters).getDumpFileParameters().dumpFileFolder())
                 .orElse(null);
         if (dumpDir != null) {
             try (Stream<Path> files = Files.list(dumpDir)) {
@@ -201,8 +201,8 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         // enrich dump parameters
         Path dumpDir = workDir.resolve("dump");
         FileUtil.createDirectory(dumpDir);
-        DynaWaltzParameters dynaWaltzParameters = parameters.getExtension(DynaWaltzParameters.class);
-        dynaWaltzParameters.setDumpFileParameters(DumpFileParameters.createExportDumpFileParameters(dumpDir));
+        DynawoSimulationParameters dynawoSimulationParameters = parameters.getExtension(DynawoSimulationParameters.class);
+        dynawoSimulationParameters.setDumpFileParameters(DumpFileParameters.createExportDumpFileParameters(dumpDir));
     }
 
     @Override
@@ -212,10 +212,9 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
 
         EventModelsSupplier eventModelsSupplier = new DynawoEventModelsSupplier(runContext.getEventModelContent());
 
-        List<CurveGroovyExtension> curveExtensions = GroovyExtension.find(CurveGroovyExtension.class, DynaWaltzProvider.NAME);
-        CurvesSupplier curvesSupplier = new GroovyCurvesSupplier(
-                new ByteArrayInputStream(runContext.getCurveContent().getBytes()), curveExtensions
-        );
+        GroovyOutputVariablesSupplier outputVariablesSupplier = new GroovyOutputVariablesSupplier(
+            new ByteArrayInputStream(runContext.getCurveContent().getBytes()),
+            GroovyExtension.find(OutputVariableGroovyExtension.class, DynawoSimulationProvider.NAME));
 
         DynamicSimulationParameters parameters = runContext.getDynamicSimulationParameters();
         LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {},",
@@ -225,7 +224,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         return runner.runAsync(runContext.getNetwork(),
                 dynamicModelsSupplier,
                 eventModelsSupplier,
-                curvesSupplier,
+                outputVariablesSupplier,
                 runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
                 getComputationManager(),
                 parameters,
@@ -253,7 +252,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
             try {
                 FileUtil.removeDir(workDir);
             } catch (IOException e) {
-                LOGGER.error("{}: error while cleaning working directory", getComputationType(), e);
+                LOGGER.error("{}: Error occurs while cleaning working directory", getComputationType(), e);
             }
         }
     }

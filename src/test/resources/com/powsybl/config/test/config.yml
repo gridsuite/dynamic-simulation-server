@@ -1,4 +1,4 @@
-dynawaltz:
+dynawo:
   # home dir references to directory inside the container java-dynawo
   homeDir: /dynaflow-launcher
   debug: true

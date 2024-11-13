@@ -42,7 +42,7 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>35-SNAPSHOT</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>35</gridsuite-dependencies.version>
         <jib.from.image>powsybl/java-dynawo:2.2.0</jib.from.image>
 
         <h2database.version>1.4.200</h2database.version>
@@ -87,6 +87,7 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
+
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
@@ -138,11 +139,11 @@
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-dynawaltz</artifactId>
+            <artifactId>powsybl-dynawo-simulation</artifactId>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-dynawaltz-dsl</artifactId>
+            <artifactId>powsybl-dynawo-dsl</artifactId>
         </dependency>
         <dependency>
             <groupId>org.gridsuite</groupId>

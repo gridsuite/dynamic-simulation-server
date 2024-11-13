@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package com.powsybl.dynawaltz.xml;
+package com.powsybl.dynawo.xml;
 
 import javanet.staxutils.IndentingXMLStreamWriter;
 
@@ -16,7 +16,7 @@ import java.io.OutputStream;
 import java.io.Writer;
 
 /**
- * TODO update next version powsybl dynawo 1.15.0
+ * TODO update next version powsybl-dynawo 2.7.0
  * @author Mathieu Bague <mathieu.bague@rte-france.com>
  */
 public final class XmlStreamWriterFactory {
@@ -47,7 +47,7 @@ public final class XmlStreamWriterFactory {
     private static XMLStreamWriter withIndent(XMLStreamWriter xmlStreamWriter, boolean indent) {
         if (indent) {
             IndentingXMLStreamWriter indentingWriter = new IndentingXMLStreamWriter(xmlStreamWriter);
-            indentingWriter.setIndent(DynaWaltzXmlConstants.INDENT);
+            indentingWriter.setIndent(DynawoSimulationXmlConstants.INDENT);
             return indentingWriter;
         }
         return xmlStreamWriter;

@@ -7,8 +7,8 @@
 package org.gridsuite.ds.server.service.contexts;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
-import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
-import com.powsybl.dynawaltz.suppliers.events.EventModelConfig;
+import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawo.suppliers.events.EventModelConfig;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import com.powsybl.ws.commons.computation.service.AbstractComputationRunContext;
 import lombok.Builder;
