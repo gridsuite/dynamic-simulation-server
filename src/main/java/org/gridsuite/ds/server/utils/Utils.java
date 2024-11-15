@@ -21,9 +21,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -94,14 +93,13 @@ public final class Utils {
     public static byte[] zip(Path filePath) {
         try (InputStream is = Files.newInputStream(filePath);
              ByteArrayOutputStream os = new ByteArrayOutputStream();
-             ZipOutputStream zipOs = new ZipOutputStream(os)) {
-            zipOs.putNextEntry(new ZipEntry(filePath.getFileName().toString()));
+             GZIPOutputStream zipOs = new GZIPOutputStream(os)) {
             byte[] buffer = new byte[1024];
             int length;
             while ((length = is.read(buffer)) > 0) {
                 zipOs.write(buffer, 0, length);
             }
-            zipOs.closeEntry();
+            zipOs.finish();
             return os.toByteArray();
         } catch (IOException e) {
             throw new UncheckedIOException("Error occurred while zipping the file " + filePath.toAbsolutePath(), e);
@@ -111,14 +109,11 @@ public final class Utils {
     public static void unzip(byte[] zippedBytes, Path filePath) {
         try (ByteArrayInputStream is = new ByteArrayInputStream(zippedBytes);
              FileOutputStream fos = new FileOutputStream(new File(filePath.toUri()));
-             ZipInputStream zipIs = new ZipInputStream(is)) {
-            if (zipIs.getNextEntry() != null) {
-                byte[] buffer = new byte[1024];
-                int length;
-                while ((length = zipIs.read(buffer)) > 0) {
-                    fos.write(buffer, 0, length);
-                }
-                zipIs.closeEntry();
+             GZIPInputStream zipIs = new GZIPInputStream(is)) {
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = zipIs.read(buffer)) > 0) {
+                fos.write(buffer, 0, length);
             }
         } catch (IOException e) {
             throw new UncheckedIOException("Error occurred while unzipping a zipped content to the file " + filePath.toAbsolutePath(), e);
