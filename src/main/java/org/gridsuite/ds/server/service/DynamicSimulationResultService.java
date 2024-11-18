@@ -13,10 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.RESULT_UUID_NOT_FOUND;
 
@@ -36,33 +33,28 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
 
     public UUID getTimeSeriesId(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return resultRepository.findById(resultUuid)
+        return resultRepository.findById(resultUuid, ResultEntity.WithoutOutputState.class)
                 .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
                 .getTimeSeriesId();
     }
 
     public UUID getTimeLineId(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return resultRepository.findById(resultUuid)
+        return resultRepository.findById(resultUuid, ResultEntity.WithoutOutputState.class)
                 .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
                 .getTimeLineId();
     }
 
     public byte[] getOutputState(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return resultRepository.findById(resultUuid)
+        return resultRepository.findById(resultUuid, ResultEntity.OutputStateOnly.class)
                 .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
                 .getOutputState();
     }
 
     @Transactional
     public List<UUID> updateStatus(List<UUID> resultUuids, DynamicSimulationStatus status) {
-        // find result entities
-        List<ResultEntity> resultEntities = resultRepository.findAllById(resultUuids);
-        // set entity with new values
-        resultEntities.forEach(resultEntity -> resultEntity.setStatus(status));
-        // save entities into database
-        return resultRepository.saveAllAndFlush(resultEntities).stream().map(ResultEntity::getId).toList();
+        return resultRepository.updateStatus(resultUuids, status) > 0 ? resultUuids : Collections.emptyList();
     }
 
     @Transactional
@@ -76,15 +68,11 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
                 .map(TimeSeriesGroupInfos::getId)
                 .orElse(null);
 
-        LOGGER.info("Update dynamic simulation [resultUuid={}, timeSeriesUuid={}, timeLineUuid={}, status={}",
+        LOGGER.debug("Update dynamic simulation [resultUuid={}, timeSeriesUuid={}, timeLineUuid={}, status={}",
                 resultUuid, timeSeriesUuid, timeLineUuid, status);
 
-        // update time-series/timeline uuids and result status to the db
-        ResultEntity resultEntity = resultRepository.findById(resultUuid).orElseThrow();
-        resultEntity.setTimeSeriesId(timeSeriesUuid);
-        resultEntity.setTimeLineId(timeLineUuid);
-        resultEntity.setStatus(status);
-        resultEntity.setOutputState(outputState);
+        // update time-series/timeline uuids, status and outputState to the db
+        resultRepository.updateResult(resultUuid, timeSeriesUuid, timeLineUuid, status, outputState);
     }
 
     @Override
@@ -99,7 +87,7 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     @Transactional
     public void delete(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        ResultEntity resultEntity = resultRepository.findById(resultUuid).orElse(null);
+        ResultEntity.WithoutOutputState resultEntity = resultRepository.findById(resultUuid, ResultEntity.WithoutOutputState.class).orElse(null);
         if (resultEntity == null) {
             return;
         }
@@ -114,22 +102,22 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     @Override
     @Transactional
     public void deleteAll() {
-        List<ResultEntity> resultEntities = resultRepository.findAll();
+        List<ResultEntity.WithoutOutputState> resultEntities = resultRepository.findBy(ResultEntity.WithoutOutputState.class);
 
         // call time series client to delete time-series and timeline
-        for (ResultEntity resultEntity : resultEntities) {
+        for (ResultEntity.WithoutOutputState resultEntity : resultEntities) {
             timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeSeriesId());
             timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeLineId());
         }
 
         // then delete all results in local db
-        resultRepository.deleteAllById(resultEntities.stream().map(ResultEntity::getId).toList());
+        resultRepository.deleteAll();
     }
 
     @Override
     public DynamicSimulationStatus findStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return resultRepository.findById(resultUuid)
+        return resultRepository.findById(resultUuid, ResultEntity.WithoutOutputState.class)
                 .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
                 .getStatus();
     }

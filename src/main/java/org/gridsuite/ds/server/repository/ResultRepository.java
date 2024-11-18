@@ -6,10 +6,16 @@
  */
 package org.gridsuite.ds.server.repository;
 
+import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.model.ResultEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -17,4 +23,17 @@ import java.util.UUID;
  */
 @Repository
 public interface ResultRepository extends JpaRepository<ResultEntity, UUID> {
+    <T> Optional<T> findById(UUID id, Class<T> type);
+
+    <T> List<T> findBy(Class<T> type);
+
+    @Modifying
+    @Query("UPDATE ResultEntity r SET r.status = :status WHERE r.id IN :resultUuids")
+    int updateStatus(@Param("resultUuids") List<UUID> resultUuids, @Param("status") DynamicSimulationStatus status);
+
+    @Modifying
+    @Query("UPDATE ResultEntity r SET r.status = :status, r.timeSeriesId = :timeSeriesId, r.timeLineId = :timeLineId, r.outputState = :outputState" +
+           " WHERE r.id = :resultUuid")
+    int updateResult(@Param("resultUuid") UUID resultUuid, @Param("timeSeriesId") UUID timeSeriesId, @Param("timeLineId") UUID timeLineId,
+                      @Param("status") DynamicSimulationStatus status, @Param("outputState") byte[] outputState);
 }

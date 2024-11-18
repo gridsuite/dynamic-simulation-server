@@ -25,6 +25,18 @@ import java.util.UUID;
 @Entity
 public class ResultEntity implements Serializable {
 
+    public interface WithoutOutputState {
+        DynamicSimulationStatus getStatus();
+
+        UUID getTimeSeriesId();
+
+        UUID getTimeLineId();
+    }
+
+    public interface OutputStateOnly {
+        byte[] getOutputState();
+    }
+
     public ResultEntity(UUID id, UUID timeSeriesId, UUID timeLineId, DynamicSimulationStatus status, byte[] outputState) {
         this.id = id;
         this.timeSeriesId = timeSeriesId;
