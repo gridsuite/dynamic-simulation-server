@@ -102,7 +102,8 @@ public class DynamicSimulationResultServiceTest {
                 entityUuid,
                 List.of(mock(StoredDoubleTimeSeries.class)),
                 List.of(mock(StringTimeSeries.class)),
-                DynamicSimulationStatus.CONVERGED
+                DynamicSimulationStatus.CONVERGED,
+                null
         );
 
         // new uuids time-series and timeline must be inserted
@@ -115,7 +116,8 @@ public class DynamicSimulationResultServiceTest {
                 entityUuid,
                 null,
                 null,
-                DynamicSimulationStatus.CONVERGED
+                DynamicSimulationStatus.CONVERGED,
+                null
         );
         // no uuids time-series and timeline
         updatedResultEntityOpt = resultRepository.findById(entityUuid);
@@ -130,8 +132,8 @@ public class DynamicSimulationResultServiceTest {
 
         // --- delete all --- //
         resultRepository.saveAllAndFlush(List.of(
-                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING),
-                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING)
+                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING, null),
+                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING, null)
         )).stream().map(ResultEntity::getId).toList();
 
         dynamicSimulationResultService.deleteAll();

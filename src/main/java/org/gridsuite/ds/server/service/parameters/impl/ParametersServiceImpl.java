@@ -106,9 +106,9 @@ public class ParametersServiceImpl implements ParametersService {
                 // --- MODEL PAR --- //
                 List<ParametersSet> modelsParameters = !ArrayUtils.isEmpty(dynamicParams) ? ParametersXml.load(new ByteArrayInputStream(dynamicParams)) : List.of();
 
-                DynawoSimulationParameters dynawoParameters = new DynawoSimulationParameters();
-                dynawoParameters.setModelsParameters(modelsParameters);
-                parameters.addExtension(DynawoSimulationParameters.class, dynawoParameters);
+                DynawoSimulationParameters dynawoSimulationParameters = new DynawoSimulationParameters();
+                dynawoSimulationParameters.setModelsParameters(modelsParameters);
+                parameters.addExtension(DynawoSimulationParameters.class, dynawoSimulationParameters);
 
                 // --- SOLVER PAR --- //
                 // solver from input parameter
@@ -117,8 +117,8 @@ public class ParametersServiceImpl implements ParametersService {
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
                     XmlSerializableParameter.writeParameter(os, XmlSerializableParameter.PARAMETER_SET, inputSolver);
                     ParametersSet solverParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), inputSolver.getId());
-                    dynawoParameters.setSolverType(inputSolver.getType().toSolverType());
-                    dynawoParameters.setSolverParameters(solverParameters);
+                    dynawoSimulationParameters.setSolverType(inputSolver.getType().toSolverType());
+                    dynawoSimulationParameters.setSolverParameters(solverParameters);
                 }
 
                 // --- NETWORK PAR --- //
@@ -128,7 +128,7 @@ public class ParametersServiceImpl implements ParametersService {
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
                     XmlSerializableParameter.writeParameter(os, XmlSerializableParameter.PARAMETER_SET, network);
                     ParametersSet networkParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), network.getId());
-                    dynawoParameters.setNetworkParameters(networkParameters);
+                    dynawoSimulationParameters.setNetworkParameters(networkParameters);
                 }
             }
 

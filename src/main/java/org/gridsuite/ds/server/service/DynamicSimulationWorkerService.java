@@ -9,11 +9,14 @@ package org.gridsuite.ds.server.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.commons.io.FileUtil;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.dynamicsimulation.*;
 import com.powsybl.dynamicsimulation.groovy.GroovyExtension;
 import com.powsybl.dynamicsimulation.groovy.GroovyOutputVariablesSupplier;
 import com.powsybl.dynamicsimulation.groovy.OutputVariableGroovyExtension;
+import com.powsybl.dynawo.DumpFileParameters;
+import com.powsybl.dynawo.DynawoSimulationParameters;
 import com.powsybl.dynawo.DynawoSimulationProvider;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynawoModelsSupplier;
@@ -26,6 +29,7 @@ import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.TimeSeries;
 import com.powsybl.ws.commons.computation.service.*;
 import org.apache.commons.collections4.CollectionUtils;
+import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
@@ -34,6 +38,7 @@ import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClien
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
+import org.gridsuite.ds.server.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -41,15 +46,18 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.DUMP_FILE_ERROR;
 import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATION_TYPE;
 
 /**
@@ -92,7 +100,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         return DynamicSimulationResultContext.fromMessage(message, objectMapper);
     }
 
-    public void updateResult(UUID resultUuid, DynamicSimulationResult result) {
+    public void updateResult(UUID resultUuid, DynamicSimulationResult result, byte[] outputState) {
         Objects.requireNonNull(resultUuid);
         List<TimeSeries<?, ?>> timeSeries = new ArrayList<>(result.getCurves().values());
         List<TimeSeries<?, ?>> timeLineSeries = new ArrayList<>();
@@ -105,7 +113,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 try {
                     return objectMapper.writeValueAsString(event);
                 } catch (JsonProcessingException e) {
-                    throw new PowsyblException("Error while serializing time line event: " + event.toString(), e);
+                    throw new PowsyblException("Error occurred while serializing time line event: " + event.toString(), e);
                 }
             }).toArray(String[]::new);
             timeLineSeries.add(TimeSeries.createString("timeLine", new IrregularTimeSeriesIndex(timeLineIndexes), timeLineValues));
@@ -115,12 +123,19 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 DynamicSimulationStatus.CONVERGED :
                 DynamicSimulationStatus.DIVERGED;
 
-        resultService.updateResult(resultUuid, timeSeries, timeLineSeries, status);
+        resultService.updateResult(resultUuid, timeSeries, timeLineSeries, status, outputState);
     }
 
     @Override
     protected void saveResult(Network network, AbstractResultContext<DynamicSimulationRunContext> resultContext, DynamicSimulationResult result) {
-        updateResult(resultContext.getResultUuid(), result);
+        // read dump file
+        Path dumpDir = getDumpDir(resultContext.getRunContext().getDynamicSimulationParameters());
+        byte[] outputState = null;
+        if (dumpDir != null) {
+            outputState = zipDumpFile(dumpDir);
+        }
+
+        updateResult(resultContext.getResultUuid(), result, outputState);
     }
 
     @Override
@@ -159,6 +174,14 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         runContext.setDynamicModelContent(dynamicModel);
         runContext.setEventModelContent(eventModel);
         runContext.setCurveContent(curveModel);
+
+        // create a working folder for this run
+        Path workDir;
+        workDir = createWorkingDirectory();
+        runContext.setWorkDir(workDir);
+
+        // enrich dump parameters
+        setupDumpParameters(workDir, parameters);
     }
 
     @Override
@@ -197,5 +220,72 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     @Override
     public Consumer<Message<String>> consumeCancel() {
         return super.consumeCancel();
+    }
+
+    @Override
+    protected void clean(AbstractResultContext<DynamicSimulationRunContext> resultContext) {
+        super.clean(resultContext);
+        // clean working directory
+        Path workDir = resultContext.getRunContext().getWorkDir();
+        removeWorkingDirectory(workDir);
+    }
+
+    // --- Dump file related methods --- //
+
+    private void setupDumpParameters(Path workDir, DynamicSimulationParameters parameters) {
+        Path dumpDir = workDir.resolve("dump");
+        FileUtil.createDirectory(dumpDir);
+        DynawoSimulationParameters dynawoSimulationParameters = parameters.getExtension(DynawoSimulationParameters.class);
+        dynawoSimulationParameters.setDumpFileParameters(DumpFileParameters.createExportDumpFileParameters(dumpDir));
+    }
+
+    @Nullable
+    private Path getDumpDir(DynamicSimulationParameters dynamicSimulationParameters) {
+        return Optional.ofNullable(dynamicSimulationParameters)
+                .map(parameters -> parameters.getExtension(DynawoSimulationParameters.class))
+                .map(dynawoSimulationParameters -> ((DynawoSimulationParameters) dynawoSimulationParameters).getDumpFileParameters().dumpFileFolder())
+                .orElse(null);
+    }
+
+    @Nullable
+    private byte[] zipDumpFile(Path dumpDir) {
+        byte[] outputState = null;
+        try (Stream<Path> files = Files.list(dumpDir)) {
+            // dynawo export only one dump file
+            Path dumpFile = files.findFirst().orElse(null);
+            if (dumpFile != null) {
+                // ZIP output state
+                outputState = Utils.zip(dumpFile);
+            }
+
+        } catch (IOException e) {
+            throw new DynamicSimulationException(DUMP_FILE_ERROR, String.format("Error occurred while reading the dump file in the directory %s",
+                    dumpDir.toAbsolutePath()));
+        }
+        return outputState;
+    }
+
+    private Path createWorkingDirectory() {
+        Path workDir;
+        Path localDir = getComputationManager().getLocalDir();
+        try {
+            workDir = Files.createTempDirectory(localDir, "dynamic_simulation_");
+        } catch (IOException e) {
+            throw new DynamicSimulationException(DUMP_FILE_ERROR, String.format("Error occurred while creating a working directory inside the local directory %s",
+                    localDir.toAbsolutePath()));
+        }
+        return workDir;
+    }
+
+    private void removeWorkingDirectory(Path workDir) {
+        if (workDir != null) {
+            try {
+                FileUtil.removeDir(workDir);
+            } catch (IOException e) {
+                LOGGER.error(String.format("%s: Error occurred while cleaning working directory at %s", getComputationType(), workDir.toAbsolutePath()), e);
+            }
+        } else {
+            LOGGER.info("{}: No working directory to clean", getComputationType());
+        }
     }
 }

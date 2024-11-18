@@ -15,9 +15,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.ds.server.dto.dynamicmapping.automata.BasicProperty;
 import org.gridsuite.ds.server.dto.event.EventPropertyInfos;
 
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -83,5 +88,35 @@ public final class Utils {
         }
 
         return propertyBuilder.build();
+    }
+
+    public static byte[] zip(Path filePath) {
+        try (InputStream is = Files.newInputStream(filePath);
+             ByteArrayOutputStream os = new ByteArrayOutputStream();
+             GZIPOutputStream zipOs = new GZIPOutputStream(os)) {
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = is.read(buffer)) > 0) {
+                zipOs.write(buffer, 0, length);
+            }
+            zipOs.finish();
+            return os.toByteArray();
+        } catch (IOException e) {
+            throw new UncheckedIOException("Error occurred while zipping the file " + filePath.toAbsolutePath(), e);
+        }
+    }
+
+    public static void unzip(byte[] zippedBytes, Path filePath) {
+        try (ByteArrayInputStream is = new ByteArrayInputStream(zippedBytes);
+             FileOutputStream fos = new FileOutputStream(new File(filePath.toUri()));
+             GZIPInputStream zipIs = new GZIPInputStream(is)) {
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = zipIs.read(buffer)) > 0) {
+                fos.write(buffer, 0, length);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("Error occurred while unzipping a zipped content to the file " + filePath.toAbsolutePath(), e);
+        }
     }
 }

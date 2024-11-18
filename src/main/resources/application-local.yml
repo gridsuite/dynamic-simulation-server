@@ -4,7 +4,6 @@ server:
 spring:
   rabbitmq:
     addresses: localhost
-    port: 5672
 
 powsybl-ws:
   database:

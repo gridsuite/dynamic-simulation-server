@@ -29,8 +29,10 @@ import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
+import org.gridsuite.ds.server.service.DynamicSimulationResultService;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
+import org.gridsuite.ds.server.utils.Utils;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.util.StreamUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -92,6 +95,9 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private DynamicSimulationResultService dynamicSimulationResultService;
 
     @Override
     public OutputDestination getOutputDestination() {
@@ -232,9 +238,21 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         String jsonResultTimeSeries = TimeSeries.toJson(resultTimeSeries);
 
         // export result to file
-        FileUtils.writeStringToFile(this, outputDir + RESOURCE_PATH_DELIMITER + "exported_" + RESULT_SIM_JSON, jsonResultTimeSeries);
+        FileUtils.writeBytesToFile(this, outputDir + RESOURCE_PATH_DELIMITER + "exported_" + RESULT_SIM_JSON, jsonResultTimeSeries.getBytes());
 
         // compare result only timeseries
         assertThat(objectMapper.readTree(jsonResultTimeSeries)).isEqualTo(objectMapper.readTree(jsonExpectedTimeSeries));
+
+        // check dump file not empty
+        byte[] outputState = dynamicSimulationResultService.getOutputState(runUuid);
+        assertThat(outputState)
+                .withFailMessage("Expecting Output state of dynamic simulation to be not empty but was empty.")
+                .isNotEmpty();
+        logger.info("Size of zipped output state = {} KB ", outputState.length / 1024);
+
+        // export dump file content to manual check
+        File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource(".")).getFile() +
+                             outputDir + RESOURCE_PATH_DELIMITER + "outputState.dmp");
+        Utils.unzip(outputState, file.toPath());
     }
 }

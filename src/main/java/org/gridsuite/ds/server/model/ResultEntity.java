@@ -25,11 +25,24 @@ import java.util.UUID;
 @Entity
 public class ResultEntity implements Serializable {
 
-    public ResultEntity(UUID id, UUID timeSeriesId, UUID timeLineId, DynamicSimulationStatus status) {
+    public interface WithoutOutputState {
+        DynamicSimulationStatus getStatus();
+
+        UUID getTimeSeriesId();
+
+        UUID getTimeLineId();
+    }
+
+    public interface OutputStateOnly {
+        byte[] getOutputState();
+    }
+
+    public ResultEntity(UUID id, UUID timeSeriesId, UUID timeLineId, DynamicSimulationStatus status, byte[] outputState) {
         this.id = id;
         this.timeSeriesId = timeSeriesId;
         this.timeLineId = timeLineId;
         this.status = status;
+        this.outputState = outputState;
     }
 
     @Id
@@ -45,5 +58,8 @@ public class ResultEntity implements Serializable {
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private DynamicSimulationStatus status;
+
+    @Column(name = "outputState")
+    private byte[] outputState;
 
 }
