@@ -208,6 +208,16 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         return super.consumeCancel();
     }
 
+    @Override
+    protected void clean(AbstractResultContext<DynamicSimulationRunContext> resultContext) {
+        super.clean(resultContext);
+        if (!resultContext.getRunContext().isDebug()) {
+            // clean dump directory
+            Path dumpDir = getDumpDir(resultContext.getRunContext().getDynamicSimulationParameters());
+            removeDirectory(dumpDir);
+        }
+    }
+
     // --- Dump file related methods --- //
 
     private void setupDumpParameters(Path workDir, DynamicSimulationParameters parameters) {
@@ -241,5 +251,17 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                     dumpDir.toAbsolutePath()));
         }
         return outputState;
+    }
+
+    private void removeDirectory(Path dir) {
+        if (dir != null) {
+            try {
+                FileUtil.removeDir(dir);
+            } catch (IOException e) {
+                LOGGER.error(String.format("%s: Error occurred while cleaning directory at %s", getComputationType(), dir.toAbsolutePath()), e);
+            }
+        } else {
+            LOGGER.info("{}: No directory to clean", getComputationType());
+        }
     }
 }
