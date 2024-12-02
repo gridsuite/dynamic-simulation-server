@@ -10,7 +10,6 @@ package org.gridsuite.ds.server.controller;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.computation.local.test.ComputationDockerConfig;
 import com.powsybl.computation.local.test.DockerLocalComputationManager;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
@@ -42,10 +41,5 @@ public abstract class AbstractDynawoTest {
                 .setDockerImageId(DOCKER_IMAGE_ID);
         Path localDir = tempFolder.getRoot().toPath();
         computationManager = new DockerLocalComputationManager(localDir, dockerDir, config);
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        computationManager.close();
     }
 }

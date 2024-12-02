@@ -16,7 +16,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 
-import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,8 +30,6 @@ public class DynamicSimulationRunContext extends AbstractComputationRunContext<D
 
     // --- Fields which are enriched in worker service --- //
 
-    private Path workDir;
-
     private List<DynamicModelConfig> dynamicModelContent;
 
     private List<EventModelConfig> eventModelContent;
@@ -43,8 +40,8 @@ public class DynamicSimulationRunContext extends AbstractComputationRunContext<D
 
     @Builder
     public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
-                                       ReportInfos reportInfos, String userId, DynamicSimulationParametersInfos parameters) {
-        super(networkUuid, variantId, receiver, reportInfos, userId, provider, parameters);
+                                       ReportInfos reportInfos, String userId, DynamicSimulationParametersInfos parameters, boolean debug) {
+        super(networkUuid, variantId, receiver, reportInfos, userId, provider, parameters, debug);
         this.mapping = mapping;
     }
 }
