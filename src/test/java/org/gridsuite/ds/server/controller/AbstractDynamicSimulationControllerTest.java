@@ -80,10 +80,7 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
     }
 
     @After
-    @Override
     public void tearDown() throws Exception {
-        super.tearDown();
-
         OutputDestination output = getOutputDestination();
         List<String> destinations = List.of(dsFailedDestination, dsResultDestination, dsStoppedDestination, dsCancelFailedDestination);
 
@@ -104,7 +101,7 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
 
     private void initDynamicSimulationWorkerServiceSpy() {
         // setup spy bean
-        when(dynamicSimulationWorkerService.getComputationManager()).thenReturn(computationManager);
+        when(dynamicSimulationWorkerService.createComputationManager()).thenReturn(computationManager);
     }
 
 }

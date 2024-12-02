@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.io.FileUtil;
-import com.powsybl.computation.ComputationManager;
 import com.powsybl.dynamicsimulation.*;
 import com.powsybl.dynamicsimulation.groovy.GroovyExtension;
 import com.powsybl.dynamicsimulation.groovy.GroovyOutputVariablesSupplier;
@@ -84,15 +83,6 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         super(networkStoreService, notificationService, reportService, dynamicSimulationResultService, executionService, observer, objectMapper);
         this.dynamicMappingClient = Objects.requireNonNull(dynamicMappingClient);
         this.parametersService = Objects.requireNonNull(parametersService);
-    }
-
-    /**
-     * Use this method to mock with DockerLocalComputationManager in case of integration tests with test container
-     *
-     * @return a computation manager
-     */
-    public ComputationManager getComputationManager() {
-        return executionService.getComputationManager();
     }
 
     @Override
@@ -175,12 +165,8 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         runContext.setEventModelContent(eventModel);
         runContext.setCurveContent(curveModel);
 
-        // create a working folder for this run
-        Path workDir;
-        workDir = createWorkingDirectory();
-        runContext.setWorkDir(workDir);
-
         // enrich dump parameters
+        Path workDir = runContext.getComputationManager().getLocalDir();
         setupDumpParameters(workDir, parameters);
     }
 
@@ -205,7 +191,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 eventModelsSupplier,
                 outputVariablesSupplier,
                 runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
-                getComputationManager(),
+                runContext.getComputationManager(),
                 parameters,
                 runContext.getReportNode());
     }
@@ -220,14 +206,6 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     @Override
     public Consumer<Message<String>> consumeCancel() {
         return super.consumeCancel();
-    }
-
-    @Override
-    protected void clean(AbstractResultContext<DynamicSimulationRunContext> resultContext) {
-        super.clean(resultContext);
-        // clean working directory
-        Path workDir = resultContext.getRunContext().getWorkDir();
-        removeWorkingDirectory(workDir);
     }
 
     // --- Dump file related methods --- //
@@ -263,29 +241,5 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                     dumpDir.toAbsolutePath()));
         }
         return outputState;
-    }
-
-    private Path createWorkingDirectory() {
-        Path workDir;
-        Path localDir = getComputationManager().getLocalDir();
-        try {
-            workDir = Files.createTempDirectory(localDir, "dynamic_simulation_");
-        } catch (IOException e) {
-            throw new DynamicSimulationException(DUMP_FILE_ERROR, String.format("Error occurred while creating a working directory inside the local directory %s",
-                    localDir.toAbsolutePath()));
-        }
-        return workDir;
-    }
-
-    private void removeWorkingDirectory(Path workDir) {
-        if (workDir != null) {
-            try {
-                FileUtil.removeDir(workDir);
-            } catch (IOException e) {
-                LOGGER.error(String.format("%s: Error occurred while cleaning working directory at %s", getComputationType(), workDir.toAbsolutePath()), e);
-            }
-        } else {
-            LOGGER.info("{}: No working directory to clean", getComputationType());
-        }
     }
 }
