@@ -26,6 +26,8 @@ public class DynamicSimulationException extends RuntimeException {
         DELETE_TIME_SERIES_ERROR,
         MAPPING_NOT_LAST_RULE_WITH_EMPTY_FILTER_ERROR,
         DUMP_FILE_ERROR,
+        DYNAMIC_SIMULATION_PARAMETERS_ERROR,
+        DYNAMIC_MODEL_ERROR,
     }
 
     private final Type type;

@@ -36,9 +36,7 @@ public final class Utils {
     }
 
     public static List<String> convertStringToList(String stringArray) {
-        List<String> converted = new ArrayList<>();
-        converted.addAll(Arrays.asList(stringArray.split(",")));
-        return converted;
+        return new ArrayList<>(Arrays.asList(stringArray.split(",")));
     }
 
     public static Property convertProperty(EventPropertyInfos property) {
@@ -88,6 +86,20 @@ public final class Utils {
         }
 
         return propertyBuilder.build();
+    }
+
+    public static byte[] zip(String content) throws IOException {
+        try (InputStream is = new ByteArrayInputStream(content.getBytes());
+             ByteArrayOutputStream os = new ByteArrayOutputStream();
+             GZIPOutputStream zipOs = new GZIPOutputStream(os)) {
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = is.read(buffer)) > 0) {
+                zipOs.write(buffer, 0, length);
+            }
+            zipOs.finish();
+            return os.toByteArray();
+        }
     }
 
     public static byte[] zip(Path filePath) {
