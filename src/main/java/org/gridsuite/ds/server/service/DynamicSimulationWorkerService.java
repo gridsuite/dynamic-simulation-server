@@ -57,7 +57,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.DUMP_FILE_ERROR;
+import static org.gridsuite.ds.server.DynamicSimulationException.Type.*;
 import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATION_TYPE;
 
 /**
@@ -100,7 +100,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         return DynamicSimulationResultContext.fromMessage(message, objectMapper);
     }
 
-    public void updateResult(UUID resultUuid, DynamicSimulationResult result, byte[] outputState) {
+    public void updateResult(UUID resultUuid, DynamicSimulationResult result, byte[] outputState, byte[] parameters, byte[] dynamicModel) {
         Objects.requireNonNull(resultUuid);
         List<TimeSeries<?, ?>> timeSeries = new ArrayList<>(result.getCurves().values());
         List<TimeSeries<?, ?>> timeLineSeries = new ArrayList<>();
@@ -123,19 +123,26 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 DynamicSimulationStatus.CONVERGED :
                 DynamicSimulationStatus.DIVERGED;
 
-        resultService.updateResult(resultUuid, timeSeries, timeLineSeries, status, outputState);
+        resultService.updateResult(resultUuid, timeSeries, timeLineSeries, status, outputState, parameters, dynamicModel);
     }
 
     @Override
     protected void saveResult(Network network, AbstractResultContext<DynamicSimulationRunContext> resultContext, DynamicSimulationResult result) {
         // read dump file
-        Path dumpDir = getDumpDir(resultContext.getRunContext().getDynamicSimulationParameters());
+        DynamicSimulationParameters parameters = resultContext.getRunContext().getDynamicSimulationParameters();
+        Path dumpDir = getDumpDir(parameters);
         byte[] outputState = null;
         if (dumpDir != null) {
             outputState = zipDumpFile(dumpDir);
         }
 
-        updateResult(resultContext.getResultUuid(), result, outputState);
+        // serialize parameters to reuse in dynamic security analysis
+        byte[] zippedJsonParameters = zipParameters(parameters);
+
+        // serialize dynamic model to reuse in dynamic security analysis
+        byte[] zippedJsonDynamicModel = zipDynamicModel(resultContext.getRunContext().getDynamicModelContent());
+
+        updateResult(resultContext.getResultUuid(), result, outputState, zippedJsonParameters, zippedJsonDynamicModel);
     }
 
     @Override
@@ -163,8 +170,8 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         List<EventModelConfig > eventModel = parametersService.getEventModel(parametersInfos.getEvents());
 
         // set start and stop times
-        parameters.setStartTime(parametersInfos.getStartTime().intValue()); // TODO remove intValue() when correct startTime to double in powsybl
-        parameters.setStopTime(parametersInfos.getStopTime().intValue()); // TODO remove intValue() when correct stopTime to double in powsybl
+        parameters.setStartTime(parametersInfos.getStartTime());
+        parameters.setStopTime(parametersInfos.getStopTime());
 
         // groovy scripts
         String curveModel = parametersService.getCurveModel(parametersInfos.getCurves());
@@ -263,6 +270,28 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                     dumpDir.toAbsolutePath()));
         }
         return outputState;
+    }
+
+    private byte[] zipParameters(DynamicSimulationParameters parameters) {
+        byte[] zippedJsonParameters;
+        try {
+            String jsonParameters = objectMapper.writeValueAsString(parameters);
+            zippedJsonParameters = Utils.zip(jsonParameters);
+        } catch (IOException e) {
+            throw new DynamicSimulationException(DYNAMIC_SIMULATION_PARAMETERS_ERROR, "Error occurred while zipping the dynamic simulation parameters");
+        }
+        return zippedJsonParameters;
+    }
+
+    private byte[] zipDynamicModel(List<DynamicModelConfig> dynamicModelContent) {
+        byte[] zippedJsonDynamicModelContent;
+        try {
+            String jsonDynamicModelContent = objectMapper.writeValueAsString(dynamicModelContent);
+            zippedJsonDynamicModelContent = Utils.zip(jsonDynamicModelContent);
+        } catch (IOException e) {
+            throw new DynamicSimulationException(DYNAMIC_MODEL_ERROR, "Error occurred while zipping the dynamic model");
+        }
+        return zippedJsonDynamicModelContent;
     }
 
     private Path createWorkingDirectory() {
