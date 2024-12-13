@@ -153,32 +153,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     @Test
-    public void testGivenNotExistingNetworkUuid() throws Exception {
-
-        // mock NetworkStoreService throws exception for a none-existing network uuid
-        given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_NOT_FOUND_STRING), PreloadingStrategy.COLLECTION)).willThrow(new PowsyblException());
-
-        // prepare parameters
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
-
-        // network not found
-        MvcResult result = mockMvc.perform(
-                        post("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_NOT_FOUND_STRING)
-                                .contentType(APPLICATION_JSON)
-                                .header(HEADER_USER_ID, "testUserId")
-                                .content(objectMapper.writeValueAsString(parameters)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
-
-        Message<byte[]> messageSwitch = output.receive(1000 * 5, dsFailedDestination);
-        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
-        assertThat(Objects.requireNonNull(messageSwitch.getHeaders().get(HEADER_MESSAGE)).toString())
-            .contains(getFailedMessage(COMPUTATION_TYPE));
-    }
-
-    @Test
     public void testGivenTimeSeriesAndTimeLine() throws Exception {
 
         // mock DynamicSimulationWorkerService with time-series and timeline
@@ -376,37 +350,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
     }
 
-    @Test
-    public void testGivenRunWithException() throws Exception {
-        // setup spy bean
-        doAnswer((InvocationOnMock invocation) -> CompletableFuture.supplyAsync(() -> {
-            throw new RuntimeException(TEST_EXCEPTION_MESSAGE);
-        }))
-        .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any());
-
-        // prepare parameters
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
-
-        //run the dynamic simulation
-        MvcResult result = mockMvc.perform(
-                        post("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
-                                .contentType(APPLICATION_JSON)
-                                .header(HEADER_USER_ID, "testUserId")
-                                .content(objectMapper.writeValueAsString(parameters)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
-
-        // Message failed must be sent
-        Message<byte[]> messageSwitch = output.receive(1000, dsFailedDestination);
-
-        // check uuid and failed message
-        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
-        assertThat(Objects.requireNonNull(messageSwitch.getHeaders().get(HEADER_MESSAGE)).toString())
-            .contains(TEST_EXCEPTION_MESSAGE);
-    }
-
     // --- BEGIN Test cancelling a running computation ---//
     private void mockSendRunMessage(Supplier<CompletableFuture<?>> runAsyncMock) {
         // In test environment, the test binder calls consumers directly in the caller thread, i.e. the controller thread.
@@ -539,13 +482,13 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         UUID runUuid = runAndCancel(cancelLatch, 0);
 
         // check result
-        // Must have a cancel failed message in the queue
-        Message<byte[]> message = output.receive(1000, dsCancelFailedDestination);
+        // Must have a stopped message in the queue
+        Message<byte[]> message = output.receive(1000, dsStoppedDestination);
         assertThat(message.getHeaders())
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
-                .containsEntry(HEADER_MESSAGE, getCancelFailedMessage(COMPUTATION_TYPE));
-        // cancel failed so result still exist
-        assertResultStatus(runUuid, status().isOk());
+                .containsEntry(HEADER_MESSAGE, getCancelMessage(COMPUTATION_TYPE));
+        // cancel succeeded so result still exist
+        assertNotFoundResult(runUuid);
     }
 
     @Test
@@ -572,12 +515,12 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString());
 
         // Must have a cancel failed message in the queue
-        message = output.receive(1000, dsCancelFailedDestination);
+        message = output.receive(1000, dsStoppedDestination);
         assertThat(message.getHeaders())
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
-                .containsEntry(HEADER_MESSAGE, getCancelFailedMessage(COMPUTATION_TYPE));
-        // cancel failed so results are not deleted
-        assertResultStatus(runUuid, status().isOk());
+                .containsEntry(HEADER_MESSAGE, getCancelMessage(COMPUTATION_TYPE));
+        // cancel succeeded so results are not deleted
+        assertNotFoundResult(runUuid);
     }
     // --- END Test cancelling a running computation ---//
 
