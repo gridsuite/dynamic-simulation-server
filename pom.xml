@@ -87,7 +87,11 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
-
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-ws-commons</artifactId>
+                <version>1.19.0-SNAPSHOT</version>
+            </dependency>
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
