@@ -7,7 +7,6 @@
 package org.gridsuite.ds.server.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
 import com.powsybl.commons.datasource.ResourceSet;
@@ -33,7 +32,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.binder.test.InputDestination;
@@ -482,13 +480,13 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         UUID runUuid = runAndCancel(cancelLatch, 0);
 
         // check result
-        // Must have a stopped message in the queue
-        Message<byte[]> message = output.receive(1000, dsStoppedDestination);
+        // Must have a cancel failed message in the queue
+        Message<byte[]> message = output.receive(1000, dsCancelFailedDestination);
         assertThat(message.getHeaders())
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
-                .containsEntry(HEADER_MESSAGE, getCancelMessage(COMPUTATION_TYPE));
-        // cancel succeeded so result still exist
-        assertNotFoundResult(runUuid);
+                .containsEntry(HEADER_MESSAGE, getCancelFailedMessage(COMPUTATION_TYPE));
+        // cancel failed so result still exist
+        assertResultStatus(runUuid, status().isOk());
     }
 
     @Test
@@ -515,12 +513,12 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString());
 
         // Must have a cancel failed message in the queue
-        message = output.receive(1000, dsStoppedDestination);
+        message = output.receive(1000, dsCancelFailedDestination);
         assertThat(message.getHeaders())
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
-                .containsEntry(HEADER_MESSAGE, getCancelMessage(COMPUTATION_TYPE));
-        // cancel succeeded so results are not deleted
-        assertNotFoundResult(runUuid);
+                .containsEntry(HEADER_MESSAGE, getCancelFailedMessage(COMPUTATION_TYPE));
+        // cancel failed so results are not deleted
+        assertResultStatus(runUuid, status().isOk());
     }
     // --- END Test cancelling a running computation ---//
 

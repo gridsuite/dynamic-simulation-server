@@ -45,7 +45,6 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     protected final String dsResultDestination = "ds.result.destination";
-    protected final String dsFailedDestination = "ds.run.dlx";
     protected final String dsStoppedDestination = "ds.stopped.destination";
     protected final String dsCancelFailedDestination = "ds.cancelfailed.destination";
 
