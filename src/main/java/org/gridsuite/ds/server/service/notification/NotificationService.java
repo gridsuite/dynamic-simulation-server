@@ -20,6 +20,4 @@ public interface NotificationService {
     void emitResultDynamicSimulationMessage(Message<String> message);
 
     void emitCancelDynamicSimulationMessage(Message<String> message);
-
-    void emitFailDynamicSimulationMessage(Message<String> message);
 }

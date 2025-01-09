@@ -7,7 +7,6 @@
 package org.gridsuite.ds.server.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
 import com.powsybl.commons.datasource.ResourceSet;
@@ -33,7 +32,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.binder.test.InputDestination;
@@ -150,32 +148,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         mockMvc.perform(
                         delete("/v1/results"))
                 .andExpect(status().isOk());
-    }
-
-    @Test
-    public void testGivenNotExistingNetworkUuid() throws Exception {
-
-        // mock NetworkStoreService throws exception for a none-existing network uuid
-        given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_NOT_FOUND_STRING), PreloadingStrategy.COLLECTION)).willThrow(new PowsyblException());
-
-        // prepare parameters
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
-
-        // network not found
-        MvcResult result = mockMvc.perform(
-                        post("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_NOT_FOUND_STRING)
-                                .contentType(APPLICATION_JSON)
-                                .header(HEADER_USER_ID, "testUserId")
-                                .content(objectMapper.writeValueAsString(parameters)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
-
-        Message<byte[]> messageSwitch = output.receive(1000 * 5, dsFailedDestination);
-        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
-        assertThat(Objects.requireNonNull(messageSwitch.getHeaders().get(HEADER_MESSAGE)).toString())
-            .contains(getFailedMessage(COMPUTATION_TYPE));
     }
 
     @Test
@@ -374,37 +346,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                         get("/v1/results/{resultUuid}/timeline", runUuid))
                 .andExpect(status().isNoContent());
 
-    }
-
-    @Test
-    public void testGivenRunWithException() throws Exception {
-        // setup spy bean
-        doAnswer((InvocationOnMock invocation) -> CompletableFuture.supplyAsync(() -> {
-            throw new RuntimeException(TEST_EXCEPTION_MESSAGE);
-        }))
-        .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any());
-
-        // prepare parameters
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
-
-        //run the dynamic simulation
-        MvcResult result = mockMvc.perform(
-                        post("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
-                                .contentType(APPLICATION_JSON)
-                                .header(HEADER_USER_ID, "testUserId")
-                                .content(objectMapper.writeValueAsString(parameters)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
-
-        // Message failed must be sent
-        Message<byte[]> messageSwitch = output.receive(1000, dsFailedDestination);
-
-        // check uuid and failed message
-        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
-        assertThat(Objects.requireNonNull(messageSwitch.getHeaders().get(HEADER_MESSAGE)).toString())
-            .contains(TEST_EXCEPTION_MESSAGE);
     }
 
     // --- BEGIN Test cancelling a running computation ---//
