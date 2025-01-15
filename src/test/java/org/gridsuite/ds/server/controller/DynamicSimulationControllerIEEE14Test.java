@@ -82,6 +82,9 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     private static final String VARIANT_1_ID = "variant_1";
     private static final String NETWORK_FILE = "IEEE14.iidm";
 
+    // TODO remove when DynamicSimulationResultDeserializer correct curves by LinkedHashMap
+    private static final Comparator<TimeSeries<?, ?>> TIME_SERIES_COMPARATOR = Comparator.comparing(timeSeries -> timeSeries.getMetadata().getName());
+
     private final Map<UUID, List<TimeSeries<?, ?>>> timeSeriesMockBd = new HashMap<>();
 
     @Autowired
@@ -232,9 +235,12 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
                            RESOURCE_PATH_DELIMITER + testBaseDir +
                            RESOURCE_PATH_DELIMITER + OUTPUT;
         DynamicSimulationResult expectedResult = DynamicSimulationResultDeserializer.read(getClass().getResourceAsStream(outputDir + RESOURCE_PATH_DELIMITER + RESULT_SIM_JSON));
-        String jsonExpectedTimeSeries = TimeSeries.toJson(new ArrayList<>(expectedResult.getCurves().values()));
+        List<TimeSeries<?, ?>> expectedTimeSeries = new ArrayList<>(expectedResult.getCurves().values());
+        expectedTimeSeries.sort(TIME_SERIES_COMPARATOR);
+        String jsonExpectedTimeSeries = TimeSeries.toJson(expectedTimeSeries);
 
         // convert result time series to json
+        resultTimeSeries.sort(TIME_SERIES_COMPARATOR);
         String jsonResultTimeSeries = TimeSeries.toJson(resultTimeSeries);
 
         // export result to file
