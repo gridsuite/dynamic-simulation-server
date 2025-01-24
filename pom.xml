@@ -48,6 +48,10 @@
         <h2database.version>1.4.200</h2database.version>
         <liquibase-hibernate-package>org.gridsuite.ds.server</liquibase-hibernate-package>
         <string-template.version>4.3.1</string-template.version>
+
+        <!-- FIXME: powsybl-time-series, powsybl-dynamic-simulation, powsybl-dynawo modules' versions are overloaded in the dependencies section. The overloads and this property below have to be removed at next gridsuite-dependencies.version upgrade -->
+        <powsybl-core.version>6.6.1</powsybl-core.version>
+        <powsybl-dynawo.version>2.7.1</powsybl-dynawo.version>
     </properties>
 
     <build>
@@ -87,6 +91,37 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
+            <!-- FIXME: to be removed at next gridsuite-dependencies upgrade  -->
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-time-series-api</artifactId>
+                <version>${powsybl-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-time-series-dsl</artifactId>
+                <version>${powsybl-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-dynamic-simulation-api</artifactId>
+                <version>${powsybl-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-dynamic-simulation-dsl</artifactId>
+                <version>${powsybl-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-dynawo-simulation</artifactId>
+                <version>${powsybl-dynawo.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-dynawo-dsl</artifactId>
+                <version>${powsybl-dynawo.version}</version>
+            </dependency>
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
