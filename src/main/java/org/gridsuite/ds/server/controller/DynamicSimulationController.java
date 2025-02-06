@@ -108,8 +108,7 @@ public class DynamicSimulationController {
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
     public ResponseEntity<DynamicSimulationStatus> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         DynamicSimulationStatus result = dynamicSimulationResultService.findStatus(resultUuid);
-        return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result) :
-                ResponseEntity.noContent().build();
+        return ResponseEntity.ok().body(result);
     }
 
     @GetMapping(value = "/results/{resultUuid}/output-state", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)

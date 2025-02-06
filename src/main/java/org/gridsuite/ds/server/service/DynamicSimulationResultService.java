@@ -133,7 +133,7 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     public DynamicSimulationStatus findStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid, ResultEntity.BasicFields.class)
-                .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
-                .getStatus();
+                .map(ResultEntity.BasicFields::getStatus)
+                .orElse(null);
     }
 }
