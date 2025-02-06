@@ -157,11 +157,9 @@ public class ParametersServiceImpl implements ParametersService {
         // set provider for run context
         String providerToUse = provider;
         if (providerToUse == null) {
-            providerToUse = runContext.getParameters().getProvider();
+            providerToUse = Optional.ofNullable(runContext.getParameters().getProvider()).orElse(defaultProvider);
         }
-        if (providerToUse == null) {
-            providerToUse = defaultProvider;
-        }
+
         runContext.setProvider(providerToUse);
 
         // check provider
