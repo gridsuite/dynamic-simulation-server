@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.io.FileUtil;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.dynamicsimulation.*;
 import com.powsybl.dynamicsimulation.groovy.GroovyExtension;
@@ -54,6 +55,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -215,6 +217,19 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 getComputationManager(),
                 parameters,
                 runContext.getReportNode());
+    }
+
+    @Override
+    protected void handleNonCancellationException(AbstractResultContext<DynamicSimulationRunContext> resultContext, Exception exception, AtomicReference<ReportNode> rootReporter) {
+        super.handleNonCancellationException(resultContext, exception, rootReporter);
+        // try to get report nodes at powsybl level
+        List<ReportNode> computationReportNodes = Optional.ofNullable(resultContext.getRunContext().getReportNode()).map(ReportNode::getChildren).orElse(null);
+        if (CollectionUtils.isNotEmpty(computationReportNodes)) { // means computing has started at powsybl level
+            //  re-inject result table since it has been removed by handling exception in the super
+            resultService.insertStatus(List.of(resultContext.getResultUuid()), DynamicSimulationStatus.DIVERGED);
+            // continue sending report for tracing reason
+            super.postRun(resultContext.getRunContext(), rootReporter, null);
+        }
     }
 
     @Bean
