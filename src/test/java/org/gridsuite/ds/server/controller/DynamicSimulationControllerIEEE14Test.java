@@ -259,7 +259,8 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
                 .isNotEmpty();
         logger.info("Size of zipped output state = {} KB ", zippedOutputState.length / 1024);
 
-        // export dump file content to manual check
+        // export dump file content in original and gzip formats to manual check
+        FileUtils.writeBytesToFile(this, outputDir + RESOURCE_PATH_DELIMITER + "outputState.dmp.gz", zippedOutputState);
         File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource(".")).getFile() +
                              outputDir + RESOURCE_PATH_DELIMITER + "outputState.dmp");
         Utils.unzip(zippedOutputState, file.toPath());
