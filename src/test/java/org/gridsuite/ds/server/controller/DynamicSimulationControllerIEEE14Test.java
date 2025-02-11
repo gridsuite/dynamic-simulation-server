@@ -32,13 +32,11 @@ import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
-import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.gridsuite.ds.server.utils.Utils;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.messaging.Message;
 import org.springframework.test.web.servlet.MockMvc;
@@ -95,9 +93,6 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     private OutputDestination output;
 
     @Autowired
-    private InputDestination input;
-
-    @Autowired
     private ObjectMapper objectMapper;
 
     @Override
@@ -132,12 +127,12 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
             ParameterFile parameterFile = new ParameterFile(
                     MAPPING_NAME_01,
                     parametersFile);
-            given(dynamicMappingClient.exportParameters(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(parameterFile);
+            given(dynamicMappingClient.exportParameters(MAPPING_NAME_01)).willReturn(parameterFile);
 
             // load mapping.json
             String mappingPath = inputDir + RESOURCE_PATH_DELIMITER + MAPPING_FILE;
             InputMapping inputMapping = objectMapper.readValue(getClass().getResourceAsStream(mappingPath), InputMapping.class);
-            given(dynamicMappingClient.getMapping(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(inputMapping);
+            given(dynamicMappingClient.getMapping(MAPPING_NAME_01)).willReturn(inputMapping);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -180,7 +175,6 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
     @Test
     public void test01GivenCurvesAndEvents() throws Exception {
-        String testBaseDir = MAPPING_NAME_01;
 
         // prepare parameters
         DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
@@ -230,7 +224,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         // --- CHECK result at detail level --- //
         // prepare expected result to compare
         String outputDir = DATA_IEEE14_BASE_DIR +
-                           RESOURCE_PATH_DELIMITER + testBaseDir +
+                           RESOURCE_PATH_DELIMITER + MAPPING_NAME_01 +
                            RESOURCE_PATH_DELIMITER + OUTPUT;
         DynamicSimulationResult expectedResult = DynamicSimulationResultDeserializer.read(getClass().getResourceAsStream(outputDir + RESOURCE_PATH_DELIMITER + RESULT_SIM_JSON));
         List<TimeSeries<?, ?>> expectedTimeSeries = new ArrayList<>(expectedResult.getCurves().values());
