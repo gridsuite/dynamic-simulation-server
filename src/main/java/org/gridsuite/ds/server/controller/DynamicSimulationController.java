@@ -6,13 +6,13 @@
  */
 package org.gridsuite.ds.server.controller;
 
+import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.collections4.CollectionUtils;
-import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.DynamicSimulationResultService;
@@ -26,8 +26,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-import static org.gridsuite.ds.server.DynamicSimulationApi.API_VERSION;
 import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_USER_ID;
+import static org.gridsuite.ds.server.DynamicSimulationApi.API_VERSION;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
@@ -62,6 +62,7 @@ public class DynamicSimulationController {
                                           @RequestParam(name = "reporterId", required = false) String reportName,
                                           @RequestParam(name = "reportType", required = false, defaultValue = "DynamicSimulation") String reportType,
                                           @RequestParam(name = "provider", required = false) String provider,
+                                          @RequestParam(name = "debug", required = false) Boolean debug,
                                           @RequestBody DynamicSimulationParametersInfos parameters,
                                           @RequestHeader(HEADER_USER_ID) String userId) {
 
@@ -73,7 +74,8 @@ public class DynamicSimulationController {
             mappingName,
             ReportInfos.builder().reportUuid(reportId).reporterId(reportName).computationType(reportType).build(),
             userId,
-            parameters);
+            parameters,
+            debug);
 
         UUID resultUuid = dynamicSimulationService.runAndSaveResult(dynamicSimulationRunContext);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
