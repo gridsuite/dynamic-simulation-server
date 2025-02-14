@@ -33,23 +33,37 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
 
     public UUID getTimeSeriesId(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return resultRepository.findById(resultUuid, ResultEntity.WithoutOutputState.class)
+        return resultRepository.findById(resultUuid, ResultEntity.BasicFields.class)
                 .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
                 .getTimeSeriesId();
     }
 
     public UUID getTimeLineId(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return resultRepository.findById(resultUuid, ResultEntity.WithoutOutputState.class)
+        return resultRepository.findById(resultUuid, ResultEntity.BasicFields.class)
                 .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
                 .getTimeLineId();
     }
 
     public byte[] getOutputState(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return resultRepository.findById(resultUuid, ResultEntity.OutputStateOnly.class)
+        return resultRepository.findById(resultUuid, ResultEntity.OutputState.class)
                 .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
                 .getOutputState();
+    }
+
+    public byte[] getParameters(UUID resultUuid) {
+        Objects.requireNonNull(resultUuid);
+        return resultRepository.findById(resultUuid, ResultEntity.Parameters.class)
+                .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
+                .getParameters();
+    }
+
+    public byte[] getDynamicModel(UUID resultUuid) {
+        Objects.requireNonNull(resultUuid);
+        return resultRepository.findById(resultUuid, ResultEntity.DynamicModel.class)
+                .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
+                .getDynamicModel();
     }
 
     @Transactional
@@ -58,7 +72,8 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     }
 
     @Transactional
-    public void updateResult(UUID resultUuid, List<TimeSeries<?, ?>> timeSeries, List<TimeSeries<?, ?>> timeLineSeries, DynamicSimulationStatus status, byte[] outputState) {
+    public void updateResult(UUID resultUuid, List<TimeSeries<?, ?>> timeSeries, List<TimeSeries<?, ?>> timeLineSeries,
+                             DynamicSimulationStatus status, byte[] outputState, byte[] parameters, byte[] dynamicModel) {
 
         // send time-series/timeline to time-series-server
         UUID timeSeriesUuid = Optional.ofNullable(timeSeriesClient.sendTimeSeries(timeSeries))
@@ -72,7 +87,7 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
                 resultUuid, timeSeriesUuid, timeLineUuid, status);
 
         // update time-series/timeline uuids, status and outputState to the db
-        resultRepository.updateResult(resultUuid, timeSeriesUuid, timeLineUuid, status, outputState);
+        resultRepository.updateResult(resultUuid, timeSeriesUuid, timeLineUuid, status, outputState, parameters, dynamicModel);
     }
 
     @Override
@@ -80,14 +95,14 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     public void insertStatus(List<UUID> resultUuids, DynamicSimulationStatus status) {
         Objects.requireNonNull(resultUuids);
         resultRepository.saveAll(resultUuids.stream()
-                .map(uuid -> new ResultEntity(uuid, null, null, status, null)).toList());
+                .map(uuid -> new ResultEntity(uuid, null, null, status, null, null, null)).toList());
     }
 
     @Override
     @Transactional
     public void delete(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        ResultEntity.WithoutOutputState resultEntity = resultRepository.findById(resultUuid, ResultEntity.WithoutOutputState.class).orElse(null);
+        ResultEntity.BasicFields resultEntity = resultRepository.findById(resultUuid, ResultEntity.BasicFields.class).orElse(null);
         if (resultEntity == null) {
             return;
         }
@@ -102,10 +117,10 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     @Override
     @Transactional
     public void deleteAll() {
-        List<ResultEntity.WithoutOutputState> resultEntities = resultRepository.findBy(ResultEntity.WithoutOutputState.class);
+        List<ResultEntity.BasicFields> resultEntities = resultRepository.findBy(ResultEntity.BasicFields.class);
 
         // call time series client to delete time-series and timeline
-        for (ResultEntity.WithoutOutputState resultEntity : resultEntities) {
+        for (ResultEntity.BasicFields resultEntity : resultEntities) {
             timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeSeriesId());
             timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeLineId());
         }
@@ -117,8 +132,8 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     @Override
     public DynamicSimulationStatus findStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return resultRepository.findById(resultUuid, ResultEntity.WithoutOutputState.class)
-                .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
-                .getStatus();
+        return resultRepository.findById(resultUuid, ResultEntity.BasicFields.class)
+                .map(ResultEntity.BasicFields::getStatus)
+                .orElse(null);
     }
 }

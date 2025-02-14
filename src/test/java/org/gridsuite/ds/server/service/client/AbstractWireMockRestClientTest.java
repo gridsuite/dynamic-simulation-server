@@ -9,21 +9,18 @@ package org.gridsuite.ds.server.service.client;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import org.gridsuite.ds.server.DynamicSimulationApplication;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest
 @ContextHierarchy({@ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class})})
 public abstract class AbstractWireMockRestClientTest {
@@ -43,24 +40,23 @@ public abstract class AbstractWireMockRestClientTest {
         wireMockServer = server;
 
         wireMockServer.start();
-        getLogger().info("Mock server started at port = " + wireMockServer.port());
+        getLogger().info("Mock server started at port = {}", wireMockServer.port());
 
         // get base URL
-        String baseUrl = wireMockServer.baseUrl();
-        return baseUrl;
+        return wireMockServer.baseUrl();
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         try {
             wireMockServer.shutdown();
         } catch (Exception e) {
-            getLogger().info("Can not shutdown the mock server " + this.getClass().getSimpleName());
+            getLogger().info("Can not shutdown the mock server {}", this.getClass().getSimpleName());
         }
     }
 }

@@ -26,7 +26,6 @@ import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
-import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +33,6 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.messaging.Message;
 import org.springframework.test.web.servlet.MockMvc;
@@ -74,18 +72,13 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     @Autowired
     private OutputDestination output;
 
-    @Autowired
-    private InputDestination input;
-
     @SpyBean
     private NotificationService notificationService;
 
     private static final String MAPPING_NAME = "IEEE14";
     private static final String NETWORK_UUID_STRING = "11111111-0000-0000-0000-000000000000";
-    private static final String NETWORK_UUID_NOT_FOUND_STRING = "22222222-0000-0000-0000-000000000000";
     private static final String VARIANT_1_ID = "variant_1";
     private static final String TEST_FILE = "IEEE14.iidm";
-    private static final String TEST_EXCEPTION_MESSAGE = "Test exception";
 
     @Override
     public OutputDestination getOutputDestination() {
@@ -108,7 +101,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 "");
         given(dynamicMappingClient.exportParameters(MAPPING_NAME)).willReturn(parameterFile);
 
-        given(dynamicMappingClient.getMapping(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(null);
+        given(dynamicMappingClient.getMapping(MAPPING_NAME)).willReturn(null);
     }
 
     @Override
@@ -215,10 +208,12 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         //depending on the execution speed it can be both
         assertThat(status).isIn(DynamicSimulationStatus.CONVERGED, DynamicSimulationStatus.RUNNING);
 
-        //get the status of a non-existing simulation and expect a not found
-        mockMvc.perform(
+        //get the status of a non-existing simulation and expect ok but result is empty
+        result = mockMvc.perform(
                 get("/v1/results/{resultUuid}/status", UUID.randomUUID()))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isOk())
+            .andReturn();
+        assertThat(result.getResponse().getContentAsString()).isEmpty();
 
         //get the time-series uuid of a non-existing simulation and expect a not found
         mockMvc.perform(
@@ -375,10 +370,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         .when(notificationService).sendRunMessage(any());
     }
 
-    private void assertNotFoundResult(UUID runUuid) throws Exception {
-        assertResultStatus(runUuid, status().isNotFound());
-    }
-
     private void assertResultStatus(UUID runUuid, ResultMatcher resultMatcher) throws Exception {
         mockMvc.perform(
                         get("/v1/results/{resultUuid}/status", runUuid))
@@ -449,9 +440,12 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         assertThat(message.getHeaders())
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
                 .containsEntry(HEADER_MESSAGE, getCancelMessage(COMPUTATION_TYPE));
-        // result has been deleted by cancel so not found
-        assertNotFoundResult(runUuid);
-
+        // result has been deleted by cancel so empty
+        MvcResult mvcResult = mockMvc.perform(
+                        get("/v1/results/{resultUuid}/status", runUuid))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(mvcResult.getResponse().getContentAsString()).isEmpty();
     }
 
     @Test

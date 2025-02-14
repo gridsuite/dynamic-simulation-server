@@ -25,7 +25,7 @@ import java.util.UUID;
 @Entity
 public class ResultEntity implements Serializable {
 
-    public interface WithoutOutputState {
+    public interface BasicFields {
         DynamicSimulationStatus getStatus();
 
         UUID getTimeSeriesId();
@@ -33,16 +33,26 @@ public class ResultEntity implements Serializable {
         UUID getTimeLineId();
     }
 
-    public interface OutputStateOnly {
+    public interface OutputState {
         byte[] getOutputState();
     }
 
-    public ResultEntity(UUID id, UUID timeSeriesId, UUID timeLineId, DynamicSimulationStatus status, byte[] outputState) {
+    public interface Parameters {
+        byte[] getParameters();
+    }
+
+    public interface DynamicModel {
+        byte[] getDynamicModel();
+    }
+
+    public ResultEntity(UUID id, UUID timeSeriesId, UUID timeLineId, DynamicSimulationStatus status, byte[] outputState, byte[] parameters, byte[] dynamicModel) {
         this.id = id;
         this.timeSeriesId = timeSeriesId;
         this.timeLineId = timeLineId;
         this.status = status;
         this.outputState = outputState;
+        this.parameters = parameters;
+        this.dynamicModel = dynamicModel;
     }
 
     @Id
@@ -61,5 +71,11 @@ public class ResultEntity implements Serializable {
 
     @Column(name = "outputState")
     private byte[] outputState;
+
+    @Column(name = "parameters")
+    private byte[] parameters;
+
+    @Column(name = "dynamicModel")
+    private byte[] dynamicModel;
 
 }

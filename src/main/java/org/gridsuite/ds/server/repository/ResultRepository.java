@@ -32,8 +32,10 @@ public interface ResultRepository extends JpaRepository<ResultEntity, UUID> {
     int updateStatus(@Param("resultUuids") List<UUID> resultUuids, @Param("status") DynamicSimulationStatus status);
 
     @Modifying
-    @Query("UPDATE ResultEntity r SET r.status = :status, r.timeSeriesId = :timeSeriesId, r.timeLineId = :timeLineId, r.outputState = :outputState" +
+    @Query("UPDATE ResultEntity r SET r.status = :status, r.timeSeriesId = :timeSeriesId, r.timeLineId = :timeLineId," +
+           " r.outputState = :outputState, r.parameters = :parameters, r.dynamicModel = :dynamicModel" +
            " WHERE r.id = :resultUuid")
     int updateResult(@Param("resultUuid") UUID resultUuid, @Param("timeSeriesId") UUID timeSeriesId, @Param("timeLineId") UUID timeLineId,
-                      @Param("status") DynamicSimulationStatus status, @Param("outputState") byte[] outputState);
+                     @Param("status") DynamicSimulationStatus status, @Param("outputState") byte[] outputState,
+                     @Param("parameters") byte[] parameters, @Param("dynamicModel") byte[] dynamicModel);
 }
