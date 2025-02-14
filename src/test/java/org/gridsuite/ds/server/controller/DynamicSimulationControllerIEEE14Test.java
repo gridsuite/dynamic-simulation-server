@@ -23,6 +23,7 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.timeseries.TimeSeries;
 import com.powsybl.timeseries.TimeSeriesDataType;
 import com.powsybl.timeseries.TimeSeriesMetadata;
+import com.powsybl.ws.commons.utils.GZipUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.ds.server.controller.utils.FileUtils;
 import org.gridsuite.ds.server.controller.utils.ParameterUtils;
@@ -33,7 +34,6 @@ import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
-import org.gridsuite.ds.server.utils.Utils;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -257,7 +257,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         FileUtils.writeBytesToFile(this, outputDir + RESOURCE_PATH_DELIMITER + "outputState.dmp.gz", zippedOutputState);
         File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource(".")).getFile() +
                              outputDir + RESOURCE_PATH_DELIMITER + "outputState.dmp");
-        Utils.unzip(zippedOutputState, file.toPath());
+        GZipUtils.unzip(zippedOutputState, file.toPath());
 
         // check dynamic model persisted in result in gzip format not empty
         result = mockMvc.perform(
@@ -272,13 +272,13 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         logger.info("Size of zipped dynamic model = {} B ", zippedDynamicModel.length);
 
         // export dynamic model in json and dump files to manual check
-        List<DynamicModelConfig> dynamicModel = Utils.unzip(zippedDynamicModel, objectMapper, new TypeReference<>() { });
+        List<DynamicModelConfig> dynamicModel = GZipUtils.unzip(zippedDynamicModel, objectMapper, new TypeReference<>() { });
         String jsonDynamicModel = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(dynamicModel);
         FileUtils.writeBytesToFile(this, outputDir + RESOURCE_PATH_DELIMITER + "dynamicModel.json", jsonDynamicModel.getBytes());
 
         file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource(".")).getFile() +
                  outputDir + RESOURCE_PATH_DELIMITER + "dynamicModel.dmp");
-        Utils.unzip(zippedDynamicModel, file.toPath());
+        GZipUtils.unzip(zippedDynamicModel, file.toPath());
 
         // check parameters persisted in result in gzip format not empty
         result = mockMvc.perform(
@@ -293,13 +293,13 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         logger.info("Size of zipped parameters = {} KB ", zippedDynamicSimulationParameters.length / 1024);
 
         // export dynamic model in json and dump files to manual check
-        DynamicSimulationParameters dynamicSimulationParameters = Utils.unzip(zippedDynamicSimulationParameters, objectMapper, DynamicSimulationParameters.class);
+        DynamicSimulationParameters dynamicSimulationParameters = GZipUtils.unzip(zippedDynamicSimulationParameters, objectMapper, DynamicSimulationParameters.class);
         String jsonDynamicSimulationParameters = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(dynamicSimulationParameters);
         FileUtils.writeBytesToFile(this, outputDir + RESOURCE_PATH_DELIMITER + "dynamicSimulationParameters.json", jsonDynamicSimulationParameters.getBytes());
 
         file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource(".")).getFile() +
                         outputDir + RESOURCE_PATH_DELIMITER + "dynamicSimulationParameters.dmp");
-        Utils.unzip(zippedDynamicSimulationParameters, file.toPath());
+        GZipUtils.unzip(zippedDynamicSimulationParameters, file.toPath());
 
     }
 }

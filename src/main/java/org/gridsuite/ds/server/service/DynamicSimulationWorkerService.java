@@ -29,6 +29,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.TimeSeries;
 import com.powsybl.ws.commons.computation.service.*;
+import com.powsybl.ws.commons.utils.GZipUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
@@ -39,7 +40,6 @@ import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClien
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
-import org.gridsuite.ds.server.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -277,7 +277,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
             Path dumpFile = files.findFirst().orElse(null);
             if (dumpFile != null) {
                 // ZIP output state
-                outputState = Utils.zip(dumpFile);
+                outputState = GZipUtils.zip(dumpFile);
             }
 
         } catch (IOException e) {
@@ -291,7 +291,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         byte[] zippedJsonParameters;
         try {
             String jsonParameters = objectMapper.writeValueAsString(parameters);
-            zippedJsonParameters = Utils.zip(jsonParameters);
+            zippedJsonParameters = GZipUtils.zip(jsonParameters);
         } catch (IOException e) {
             throw new DynamicSimulationException(DYNAMIC_SIMULATION_PARAMETERS_ERROR, "Error occurred while zipping the dynamic simulation parameters");
         }
@@ -302,7 +302,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         byte[] zippedJsonDynamicModelContent;
         try {
             String jsonDynamicModelContent = objectMapper.writeValueAsString(dynamicModelContent);
-            zippedJsonDynamicModelContent = Utils.zip(jsonDynamicModelContent);
+            zippedJsonDynamicModelContent = GZipUtils.zip(jsonDynamicModelContent);
         } catch (IOException e) {
             throw new DynamicSimulationException(DYNAMIC_MODEL_ERROR, "Error occurred while zipping the dynamic model");
         }
