@@ -110,6 +110,10 @@ public class ParametersServiceImpl implements ParametersService {
                 dynawoSimulationParameters.setModelsParameters(modelsParameters);
                 parameters.addExtension(DynawoSimulationParameters.class, dynawoSimulationParameters);
 
+                // TODO : a bug in powsybl-dynawo while deserializing in dynamic security analysis server, TO REMOVE
+                Set<DynawoSimulationParameters.SpecificLog> specificLogs = EnumSet.of(DynawoSimulationParameters.SpecificLog.NETWORK);
+                dynawoSimulationParameters.setSpecificLogs(specificLogs);
+
                 // --- SOLVER PAR --- //
                 // solver from input parameter
                 SolverInfos inputSolver = inputParameters.getSolvers().stream().filter(elem -> elem.getId().equals(inputParameters.getSolverId())).findFirst().orElse(null);
@@ -153,11 +157,9 @@ public class ParametersServiceImpl implements ParametersService {
         // set provider for run context
         String providerToUse = provider;
         if (providerToUse == null) {
-            providerToUse = runContext.getParameters().getProvider();
+            providerToUse = Optional.ofNullable(runContext.getParameters().getProvider()).orElse(defaultProvider);
         }
-        if (providerToUse == null) {
-            providerToUse = defaultProvider;
-        }
+
         runContext.setProvider(providerToUse);
 
         // check provider

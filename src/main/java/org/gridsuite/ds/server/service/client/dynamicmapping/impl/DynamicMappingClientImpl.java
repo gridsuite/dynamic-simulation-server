@@ -7,6 +7,7 @@
 package org.gridsuite.ds.server.service.client.dynamicmapping.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.NonNull;
 import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
@@ -20,8 +21,6 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
-
-import java.util.Objects;
 
 import static org.gridsuite.ds.server.DynamicSimulationException.Type.*;
 import static org.gridsuite.ds.server.service.client.utils.ExceptionUtils.handleHttpError;
@@ -39,9 +38,7 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
     }
 
     @Override
-    public ParameterFile exportParameters(String mappingName) {
-        Objects.requireNonNull(mappingName);
-
+    public ParameterFile exportParameters(@NonNull String mappingName) {
         String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_PARAMETERS_EXPORT_ENDPOINT);
 
         UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl);
@@ -61,9 +58,7 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
     }
 
     @Override
-    public InputMapping getMapping(String mappingName) {
-        Objects.requireNonNull(mappingName);
-
+    public InputMapping getMapping(@NonNull String mappingName) {
         String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_MAPPINGS_BASE_ENDPOINT);
 
         UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl + URL_DELIMITER + "{mappingName}");
