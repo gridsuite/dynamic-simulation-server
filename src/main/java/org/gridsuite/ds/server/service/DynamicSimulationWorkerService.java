@@ -131,18 +131,19 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     @Override
     protected void saveResult(Network network, AbstractResultContext<DynamicSimulationRunContext> resultContext, DynamicSimulationResult result) {
         // read dump file
-        DynamicSimulationParameters parameters = resultContext.getRunContext().getDynamicSimulationParameters();
-        Path dumpDir = getDumpDir(parameters);
+        DynamicSimulationParameters t0Parameters = resultContext.getRunContext().getT0DynamicSimulationParameters();
+        Path dumpDir = getDumpDir(t0Parameters);
         byte[] outputState = null;
         if (dumpDir != null) {
             outputState = zipDumpFile(dumpDir);
         }
 
-        // serialize parameters to reuse in dynamic security analysis
-        byte[] zippedJsonParameters = zipParameters(parameters);
+        // serialize T1 parameters to use in dynamic security analysis
+        DynamicSimulationParameters t1Parameters = resultContext.getRunContext().getT1DynamicSimulationParameters();
+        byte[] zippedJsonParameters = zipParameters(t1Parameters);
 
-        // serialize dynamic model to reuse in dynamic security analysis
-        byte[] zippedJsonDynamicModel = zipDynamicModel(resultContext.getRunContext().getDynamicModelContent());
+        // serialize T1 dynamic model to use in dynamic security analysis
+        byte[] zippedJsonDynamicModel = zipDynamicModel(resultContext.getRunContext().getT1DynamicModelContent());
 
         updateResult(resultContext.getResultUuid(), result, outputState, zippedJsonParameters, zippedJsonDynamicModel);
     }
@@ -163,24 +164,34 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
 
         // get all dynamic simulation parameters
         String parameterFileContent = parameterFile.fileContent();
-        DynamicSimulationParameters parameters = parametersService.getDynamicSimulationParameters(
+        // at the moment T0 and T1 share the same parameters infos, same mapping
+        DynamicSimulationParameters t0Parameters = parametersService.getDynamicSimulationParameters(
+                parameterFileContent.getBytes(StandardCharsets.UTF_8), runContext.getProvider(), parametersInfos);
+        DynamicSimulationParameters t1Parameters = parametersService.getDynamicSimulationParameters(
                 parameterFileContent.getBytes(StandardCharsets.UTF_8), runContext.getProvider(), parametersInfos);
 
         // get mapping then generate dynamic model configs
         InputMapping inputMapping = dynamicMappingClient.getMapping(runContext.getMapping());
-        List<DynamicModelConfig> dynamicModel = parametersService.getDynamicModel(inputMapping, runContext.getNetwork());
+        // at the moment T0 and T1 share the same dynamic model
+        List<DynamicModelConfig> t0DynamicModel = parametersService.getDynamicModel(inputMapping, runContext.getNetwork());
+        List<DynamicModelConfig> t1DynamicModel = parametersService.getDynamicModel(inputMapping, runContext.getNetwork());
         List<EventModelConfig > eventModel = parametersService.getEventModel(parametersInfos.getEvents());
 
         // set start and stop times
-        parameters.setStartTime(parametersInfos.getStartTime());
-        parameters.setStopTime(parametersInfos.getStopTime());
+        t0Parameters.setStartTime(parametersInfos.getStartTime());
+        t0Parameters.setStopTime(parametersInfos.getStopTime());
+        t1Parameters.setStartTime(parametersInfos.getStartTime());
+        t1Parameters.setStopTime(parametersInfos.getStopTime());
 
         // groovy scripts
         String curveModel = parametersService.getCurveModel(parametersInfos.getCurves());
 
         // enrich runContext
-        runContext.setDynamicSimulationParameters(parameters);
-        runContext.setDynamicModelContent(dynamicModel);
+        runContext.setT0DynamicSimulationParameters(t0Parameters);
+        runContext.setT1DynamicSimulationParameters(t1Parameters);
+
+        runContext.setT0DynamicModelContent(t0DynamicModel);
+        runContext.setT1DynamicModelContent(t1DynamicModel);
         runContext.setEventModelContent(eventModel);
         runContext.setCurveContent(curveModel);
 
@@ -190,13 +201,13 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         runContext.setWorkDir(workDir);
 
         // enrich dump parameters
-        setupDumpParameters(workDir, parameters);
+        setupDumpParameters(workDir, t0Parameters);
     }
 
     @Override
     public CompletableFuture<DynamicSimulationResult> getCompletableFuture(DynamicSimulationRunContext runContext, String provider, UUID resultUuid) {
 
-        DynamicModelsSupplier dynamicModelsSupplier = new DynawoModelsSupplier(runContext.getDynamicModelContent());
+        DynamicModelsSupplier dynamicModelsSupplier = new DynawoModelsSupplier(runContext.getT0DynamicModelContent());
 
         EventModelsSupplier eventModelsSupplier = new DynawoEventModelsSupplier(runContext.getEventModelContent());
 
@@ -204,7 +215,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
             new ByteArrayInputStream(runContext.getCurveContent().getBytes()),
             GroovyExtension.find(OutputVariableGroovyExtension.class, DynawoSimulationProvider.NAME));
 
-        DynamicSimulationParameters parameters = runContext.getDynamicSimulationParameters();
+        DynamicSimulationParameters parameters = runContext.getT0DynamicSimulationParameters();
         LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {},",
                 runContext.getNetworkUuid(), parameters.getStartTime(), parameters.getStopTime());
 
