@@ -13,13 +13,13 @@
     <parent>
         <groupId>com.powsybl</groupId>
         <artifactId>powsybl-parent-ws</artifactId>
-        <version>19</version>
+        <version>21</version>
         <relativePath/>
     </parent>
 
     <groupId>org.gridsuite</groupId>
     <artifactId>gridsuite-dynamic-simulation-server</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>2.8.0-SNAPSHOT</version>
 
     <packaging>jar</packaging>
     <name>Dynamic Simulation Server</name>
@@ -42,8 +42,8 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>32</gridsuite-dependencies.version>
-        <jib.from.image>powsybl/java-dynawo:2.1.0</jib.from.image>
+        <gridsuite-dependencies.version>38.0.0</gridsuite-dependencies.version>
+        <jib.from.image>powsybl/java-dynawo:3.0.0</jib.from.image>
 
         <h2database.version>1.4.200</h2database.version>
         <liquibase-hibernate-package>org.gridsuite.ds.server</liquibase-hibernate-package>
@@ -87,7 +87,6 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
-
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
@@ -139,17 +138,15 @@
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-dynawaltz</artifactId>
+            <artifactId>powsybl-dynawo-simulation</artifactId>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-dynawaltz-dsl</artifactId>
+            <artifactId>powsybl-dynawo-dsl</artifactId>
         </dependency>
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-filter</artifactId>
-            <!-- FIXME: gridsuite-filter modules' version is overloaded in the dependencies section. The overloads and this property below have to be removed at next gridsuite-dependencies.version upgrade -->
-            <version>1.0.13</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
@@ -254,7 +251,7 @@
         </dependency>
         <dependency>
             <groupId>org.wiremock</groupId>
-            <artifactId>wiremock</artifactId>
+            <artifactId>wiremock-jetty12</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

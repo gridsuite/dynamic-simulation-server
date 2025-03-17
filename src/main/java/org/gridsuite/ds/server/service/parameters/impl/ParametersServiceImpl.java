@@ -9,15 +9,15 @@ package org.gridsuite.ds.server.service.parameters.impl;
 import com.powsybl.commons.exceptions.UncheckedXmlStreamException;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
-import com.powsybl.dynawaltz.DynaWaltzParameters;
-import com.powsybl.dynawaltz.DynaWaltzProvider;
-import com.powsybl.dynawaltz.parameters.ParametersSet;
-import com.powsybl.dynawaltz.suppliers.PropertyBuilder;
-import com.powsybl.dynawaltz.suppliers.PropertyType;
-import com.powsybl.dynawaltz.suppliers.SetGroupType;
-import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
-import com.powsybl.dynawaltz.suppliers.events.EventModelConfig;
-import com.powsybl.dynawaltz.xml.ParametersXml;
+import com.powsybl.dynawo.DynawoSimulationParameters;
+import com.powsybl.dynawo.DynawoSimulationProvider;
+import com.powsybl.dynawo.parameters.ParametersSet;
+import com.powsybl.dynawo.suppliers.PropertyBuilder;
+import com.powsybl.dynawo.suppliers.PropertyType;
+import com.powsybl.dynawo.suppliers.SetGroupType;
+import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawo.suppliers.events.EventModelConfig;
+import com.powsybl.dynawo.xml.ParametersXml;
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
@@ -101,14 +101,18 @@ public class ParametersServiceImpl implements ParametersService {
         try {
             DynamicSimulationParameters parameters = new DynamicSimulationParameters();
 
-            // TODO: Powsybl side - create an explicit dependency to DynaWaltz class and keep dynamic simulation abstraction all over this micro service
-            if (DynaWaltzProvider.NAME.equals(provider)) {
+            // TODO: Powsybl side - create an explicit dependency to Dynawo class and keep dynamic simulation abstraction all over this micro service
+            if (DynawoSimulationProvider.NAME.equals(provider)) {
                 // --- MODEL PAR --- //
                 List<ParametersSet> modelsParameters = !ArrayUtils.isEmpty(dynamicParams) ? ParametersXml.load(new ByteArrayInputStream(dynamicParams)) : List.of();
 
-                DynaWaltzParameters dynaWaltzParameters = new DynaWaltzParameters();
-                dynaWaltzParameters.setModelsParameters(modelsParameters);
-                parameters.addExtension(DynaWaltzParameters.class, dynaWaltzParameters);
+                DynawoSimulationParameters dynawoSimulationParameters = new DynawoSimulationParameters();
+                dynawoSimulationParameters.setModelsParameters(modelsParameters);
+                parameters.addExtension(DynawoSimulationParameters.class, dynawoSimulationParameters);
+
+                // TODO : a bug in powsybl-dynawo while deserializing in dynamic security analysis server, TO REMOVE
+                Set<DynawoSimulationParameters.SpecificLog> specificLogs = EnumSet.of(DynawoSimulationParameters.SpecificLog.NETWORK);
+                dynawoSimulationParameters.setSpecificLogs(specificLogs);
 
                 // --- SOLVER PAR --- //
                 // solver from input parameter
@@ -117,8 +121,8 @@ public class ParametersServiceImpl implements ParametersService {
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
                     XmlSerializableParameter.writeParameter(os, XmlSerializableParameter.PARAMETER_SET, inputSolver);
                     ParametersSet solverParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), inputSolver.getId());
-                    dynaWaltzParameters.setSolverType(inputSolver.getType().toSolverType());
-                    dynaWaltzParameters.setSolverParameters(solverParameters);
+                    dynawoSimulationParameters.setSolverType(inputSolver.getType().toSolverType());
+                    dynawoSimulationParameters.setSolverParameters(solverParameters);
                 }
 
                 // --- NETWORK PAR --- //
@@ -128,7 +132,7 @@ public class ParametersServiceImpl implements ParametersService {
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
                     XmlSerializableParameter.writeParameter(os, XmlSerializableParameter.PARAMETER_SET, network);
                     ParametersSet networkParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), network.getId());
-                    dynaWaltzParameters.setNetworkParameters(networkParameters);
+                    dynawoSimulationParameters.setNetworkParameters(networkParameters);
                 }
             }
 
@@ -153,11 +157,9 @@ public class ParametersServiceImpl implements ParametersService {
         // set provider for run context
         String providerToUse = provider;
         if (providerToUse == null) {
-            providerToUse = runContext.getParameters().getProvider();
+            providerToUse = Optional.ofNullable(runContext.getParameters().getProvider()).orElse(defaultProvider);
         }
-        if (providerToUse == null) {
-            providerToUse = defaultProvider;
-        }
+
         runContext.setProvider(providerToUse);
 
         // check provider

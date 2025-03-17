@@ -37,7 +37,10 @@ public class RestResponseEntityExceptionHandler {
                     GET_DYNAMIC_MAPPING_ERROR,
                     EXPORT_PARAMETERS_ERROR,
                     CREATE_TIME_SERIES_ERROR,
-                    DELETE_TIME_SERIES_ERROR
+                    DELETE_TIME_SERIES_ERROR,
+                    DUMP_FILE_ERROR,
+                    DYNAMIC_SIMULATION_PARAMETERS_ERROR,
+                    DYNAMIC_MODEL_ERROR
                     -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exception.getMessage());
             case MAPPING_NOT_PROVIDED,
                     MAPPING_NOT_LAST_RULE_WITH_EMPTY_FILTER_ERROR

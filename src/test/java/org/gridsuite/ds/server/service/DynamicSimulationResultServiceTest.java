@@ -43,7 +43,7 @@ import static org.mockito.Mockito.when;
 @SpringBootTest
 public class DynamicSimulationResultServiceTest {
 
-    static Logger LOGGER = LoggerFactory.getLogger(DynamicSimulationResultServiceTest.class);
+    static final Logger LOGGER = LoggerFactory.getLogger(DynamicSimulationResultServiceTest.class);
 
     @Autowired
     ResultRepository resultRepository;
@@ -102,7 +102,10 @@ public class DynamicSimulationResultServiceTest {
                 entityUuid,
                 List.of(mock(StoredDoubleTimeSeries.class)),
                 List.of(mock(StringTimeSeries.class)),
-                DynamicSimulationStatus.CONVERGED
+                DynamicSimulationStatus.CONVERGED,
+                null,
+                null,
+                null
         );
 
         // new uuids time-series and timeline must be inserted
@@ -115,7 +118,10 @@ public class DynamicSimulationResultServiceTest {
                 entityUuid,
                 null,
                 null,
-                DynamicSimulationStatus.CONVERGED
+                DynamicSimulationStatus.CONVERGED,
+                null,
+                null,
+                null
         );
         // no uuids time-series and timeline
         updatedResultEntityOpt = resultRepository.findById(entityUuid);
@@ -130,8 +136,8 @@ public class DynamicSimulationResultServiceTest {
 
         // --- delete all --- //
         resultRepository.saveAllAndFlush(List.of(
-                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING),
-                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING)
+                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING, null, null, null),
+                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING, null, null, null)
         )).stream().map(ResultEntity::getId).toList();
 
         dynamicSimulationResultService.deleteAll();

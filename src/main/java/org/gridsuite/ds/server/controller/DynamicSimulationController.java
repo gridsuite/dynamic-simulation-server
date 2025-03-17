@@ -6,13 +6,13 @@
  */
 package org.gridsuite.ds.server.controller;
 
+import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.collections4.CollectionUtils;
-import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.DynamicSimulationResultService;
@@ -26,8 +26,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-import static org.gridsuite.ds.server.DynamicSimulationApi.API_VERSION;
 import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_USER_ID;
+import static org.gridsuite.ds.server.DynamicSimulationApi.API_VERSION;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
@@ -108,7 +108,39 @@ public class DynamicSimulationController {
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
     public ResponseEntity<DynamicSimulationStatus> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         DynamicSimulationStatus result = dynamicSimulationResultService.findStatus(resultUuid);
-        return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result) :
+        return ResponseEntity.ok().body(result);
+    }
+
+    @GetMapping(value = "/results/{resultUuid}/output-state", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @Operation(summary = "Get the dynamic simulation output state in gzip format from the database")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation output state"),
+        @ApiResponse(responseCode = "204", description = "Dynamic simulation output state is empty"),
+        @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
+    public ResponseEntity<byte[]> getOutputState(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        byte[] result = dynamicSimulationResultService.getOutputState(resultUuid);
+        return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(result) :
+                ResponseEntity.noContent().build();
+    }
+
+    @GetMapping(value = "/results/{resultUuid}/dynamic-model", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @Operation(summary = "Get the dynamic simulation dynamic model in gzip format from the database")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation dynamic model"),
+        @ApiResponse(responseCode = "204", description = "Dynamic simulation dynamic model is empty"),
+        @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
+    public ResponseEntity<byte[]> getDynamicModel(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        byte[] result = dynamicSimulationResultService.getDynamicModel(resultUuid);
+        return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(result) :
+                ResponseEntity.noContent().build();
+    }
+
+    @GetMapping(value = "/results/{resultUuid}/parameters", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @Operation(summary = "Get the dynamic simulation parameters in gzip format from the database")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation parameters"),
+        @ApiResponse(responseCode = "204", description = "Dynamic simulation parameters is empty"),
+        @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
+    public ResponseEntity<byte[]> getParameters(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        byte[] result = dynamicSimulationResultService.getParameters(resultUuid);
+        return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(result) :
                 ResponseEntity.noContent().build();
     }
 

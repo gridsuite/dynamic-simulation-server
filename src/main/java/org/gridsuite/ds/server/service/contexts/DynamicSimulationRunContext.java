@@ -7,8 +7,8 @@
 package org.gridsuite.ds.server.service.contexts;
 
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
-import com.powsybl.dynawaltz.suppliers.dynamicmodels.DynamicModelConfig;
-import com.powsybl.dynawaltz.suppliers.events.EventModelConfig;
+import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawo.suppliers.events.EventModelConfig;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import com.powsybl.ws.commons.computation.service.AbstractComputationRunContext;
 import lombok.Builder;
@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,14 +29,19 @@ public class DynamicSimulationRunContext extends AbstractComputationRunContext<D
 
     private String mapping;
 
-    // fields which are enriched in worker service
-    private List<DynamicModelConfig> dynamicModelContent;
+    // --- Fields which are enriched in worker service --- //
+
+    private Path workDir;
+
+    private List<DynamicModelConfig> t0DynamicModelContent;
+    private List<DynamicModelConfig> t1DynamicModelContent;
 
     private List<EventModelConfig> eventModelContent;
 
     private String curveContent;
 
-    private DynamicSimulationParameters dynamicSimulationParameters;
+    private DynamicSimulationParameters t0DynamicSimulationParameters;
+    private DynamicSimulationParameters t1DynamicSimulationParameters;
 
     @Builder
     public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
