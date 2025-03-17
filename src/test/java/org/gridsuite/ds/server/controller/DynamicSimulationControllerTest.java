@@ -306,7 +306,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         //delete a result
         mockMvc.perform(
-                delete("/v1/results/{resultUuid}", runUuid))
+                delete("/v1/results").queryParam("resultsUuids", runUuid.toString()))
             .andExpect(status().isOk());
 
         //try to get the removed result and except a not found
@@ -316,7 +316,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         //delete a none existing result
         mockMvc.perform(
-                        delete("/v1/results/{resultUuid}", UUID.randomUUID()))
+                        delete("/v1/results").queryParam("resultsUuids", UUID.randomUUID().toString()))
                 .andExpect(status().isOk());
 
         //delete all results and except ok
