@@ -30,13 +30,15 @@ public class DynamicSimulationRunContext extends AbstractComputationRunContext<D
 
     // --- Fields which are enriched in worker service --- //
 
-    private List<DynamicModelConfig> dynamicModelContent;
+    private List<DynamicModelConfig> t0DynamicModelContent;
+    private List<DynamicModelConfig> t1DynamicModelContent;
 
     private List<EventModelConfig> eventModelContent;
 
     private String curveContent;
 
-    private DynamicSimulationParameters dynamicSimulationParameters;
+    private DynamicSimulationParameters t0DynamicSimulationParameters;
+    private DynamicSimulationParameters t1DynamicSimulationParameters;
 
     @Builder
     public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,

@@ -43,7 +43,7 @@ import static org.mockito.Mockito.when;
 @SpringBootTest
 public class DynamicSimulationResultServiceTest {
 
-    static Logger LOGGER = LoggerFactory.getLogger(DynamicSimulationResultServiceTest.class);
+    static final Logger LOGGER = LoggerFactory.getLogger(DynamicSimulationResultServiceTest.class);
 
     @Autowired
     ResultRepository resultRepository;
@@ -103,6 +103,8 @@ public class DynamicSimulationResultServiceTest {
                 List.of(mock(StoredDoubleTimeSeries.class)),
                 List.of(mock(StringTimeSeries.class)),
                 DynamicSimulationStatus.CONVERGED,
+                null,
+                null,
                 null
         );
 
@@ -117,6 +119,8 @@ public class DynamicSimulationResultServiceTest {
                 null,
                 null,
                 DynamicSimulationStatus.CONVERGED,
+                null,
+                null,
                 null
         );
         // no uuids time-series and timeline
@@ -132,8 +136,8 @@ public class DynamicSimulationResultServiceTest {
 
         // --- delete all --- //
         resultRepository.saveAllAndFlush(List.of(
-                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING, null),
-                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING, null)
+                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING, null, null, null),
+                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING, null, null, null)
         )).stream().map(ResultEntity::getId).toList();
 
         dynamicSimulationResultService.deleteAll();

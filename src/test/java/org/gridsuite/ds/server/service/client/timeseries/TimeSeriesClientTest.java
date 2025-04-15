@@ -18,7 +18,8 @@ import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.AbstractWireMockRestClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.impl.TimeSeriesClientImpl;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.client.RestTemplate;
 
@@ -32,7 +33,6 @@ import static org.gridsuite.ds.server.DynamicSimulationException.Type.DELETE_TIM
 import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.API_VERSION;
 import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.TIME_SERIES_END_POINT;
 import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
-import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 /**
@@ -64,6 +64,7 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
     }
 
     @Override
+    @BeforeEach
     public void setup() {
         super.setup();
         timeSeriesClient = new TimeSeriesClientImpl(
@@ -74,8 +75,7 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
     }
 
     @Test
-    public void testSendTimeSeries() throws JsonProcessingException {
-
+    void testSendTimeSeries() throws JsonProcessingException {
         // prepare time series
         List<TimeSeries<?, ?>> timeSeries = createTimeSeriesList();
 
@@ -92,12 +92,11 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
         UUID timeSeriesUuid = timeSeriesClient.sendTimeSeries(timeSeries).getId();
 
         // check result
-        assertEquals(TIME_SERIES_UUID, timeSeriesUuid);
-
+        assertThat(timeSeriesUuid).isEqualTo(TIME_SERIES_UUID);
     }
 
     @Test
-    public void testSendTimeSeriesGivenException() {
+    void testSendTimeSeriesGivenException() {
         // prepare time series
         List<TimeSeries<?, ?>> timeSeries = createTimeSeriesList();
 
@@ -118,11 +117,10 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
                 .isEqualTo(CREATE_TIME_SERIES_ERROR);
         assertThat(dynamicSimulationException.getMessage())
                 .isEqualTo(ERROR_MESSAGE);
-
     }
 
     @Test
-    public void testSendTimeSeriesGivenEmpty() {
+    void testSendTimeSeriesGivenEmpty() {
         // prepare time series
         List<TimeSeries<?, ?>> timeSeries = new ArrayList<>();
 
@@ -130,12 +128,11 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
         TimeSeriesGroupInfos timeSeriesGroupInfos = timeSeriesClient.sendTimeSeries(timeSeries);
 
         // check result
-        assertEquals(null, timeSeriesGroupInfos);
-
+        assertThat(timeSeriesGroupInfos).isNull();
     }
 
     @Test
-    public void testDeleteTimeSeriesGroup() {
+    void testDeleteTimeSeriesGroup() {
 
         // mock response for test case DELETE with url - /timeseries-group
         String baseUrl = getEndpointUrl();
@@ -147,8 +144,7 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
     }
 
     @Test
-    public void testDeleteTimeSeriesGroupGivenException() {
-
+    void testDeleteTimeSeriesGroupGivenException() {
         // mock response for test case DELETE with url - /timeseries-group
         String baseUrl = getEndpointUrl();
         wireMockServer.stubFor(WireMock.delete(WireMock.urlMatching(baseUrl + ".*"))
@@ -168,8 +164,7 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
     }
 
     @Test
-    public void testDeleteTimeSeriesGroupGivenEmpty() {
-
+    void testDeleteTimeSeriesGroupGivenEmpty() {
         // test service
         assertDoesNotThrow(() -> timeSeriesClient.deleteTimeSeriesGroup(null));
     }

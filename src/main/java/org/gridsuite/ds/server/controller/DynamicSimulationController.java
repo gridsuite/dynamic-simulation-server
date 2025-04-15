@@ -110,7 +110,39 @@ public class DynamicSimulationController {
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
     public ResponseEntity<DynamicSimulationStatus> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         DynamicSimulationStatus result = dynamicSimulationResultService.findStatus(resultUuid);
-        return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result) :
+        return ResponseEntity.ok().body(result);
+    }
+
+    @GetMapping(value = "/results/{resultUuid}/output-state", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @Operation(summary = "Get the dynamic simulation output state in gzip format from the database")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation output state"),
+        @ApiResponse(responseCode = "204", description = "Dynamic simulation output state is empty"),
+        @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
+    public ResponseEntity<byte[]> getOutputState(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        byte[] result = dynamicSimulationResultService.getOutputState(resultUuid);
+        return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(result) :
+                ResponseEntity.noContent().build();
+    }
+
+    @GetMapping(value = "/results/{resultUuid}/dynamic-model", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @Operation(summary = "Get the dynamic simulation dynamic model in gzip format from the database")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation dynamic model"),
+        @ApiResponse(responseCode = "204", description = "Dynamic simulation dynamic model is empty"),
+        @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
+    public ResponseEntity<byte[]> getDynamicModel(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        byte[] result = dynamicSimulationResultService.getDynamicModel(resultUuid);
+        return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(result) :
+                ResponseEntity.noContent().build();
+    }
+
+    @GetMapping(value = "/results/{resultUuid}/parameters", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @Operation(summary = "Get the dynamic simulation parameters in gzip format from the database")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation parameters"),
+        @ApiResponse(responseCode = "204", description = "Dynamic simulation parameters is empty"),
+        @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
+    public ResponseEntity<byte[]> getParameters(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        byte[] result = dynamicSimulationResultService.getParameters(resultUuid);
+        return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(result) :
                 ResponseEntity.noContent().build();
     }
 
@@ -124,19 +156,11 @@ public class DynamicSimulationController {
                 ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result);
     }
 
-    @DeleteMapping(value = "/results/{resultUuid}")
-    @Operation(summary = "Delete a dynamic simulation result from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result has been deleted")})
-    public ResponseEntity<Void> deleteResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        dynamicSimulationResultService.delete(resultUuid);
-        return ResponseEntity.ok().build();
-    }
-
     @DeleteMapping(value = "/results", produces = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Delete all dynamic simulation results from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All dynamic simulation results have been deleted")})
-    public ResponseEntity<Void> deleteResults() {
-        dynamicSimulationResultService.deleteAll();
+    @Operation(summary = "Delete dynamic simulation results from the database")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Dynamic simulation results have been deleted")})
+    public ResponseEntity<Void> deleteResults(@Parameter(description = "Results UUID") @RequestParam(value = "resultsUuids", required = false) List<UUID> resultsUuids) {
+        dynamicSimulationService.deleteResults(resultsUuids);
         return ResponseEntity.ok().build();
     }
 

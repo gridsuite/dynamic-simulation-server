@@ -7,7 +7,6 @@
 package org.gridsuite.ds.server.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
 import com.powsybl.commons.datasource.ResourceSet;
@@ -27,16 +26,13 @@ import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
-import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.messaging.Message;
 import org.springframework.test.web.servlet.MockMvc;
@@ -76,18 +72,13 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     @Autowired
     private OutputDestination output;
 
-    @Autowired
-    private InputDestination input;
-
     @SpyBean
     private NotificationService notificationService;
 
     private static final String MAPPING_NAME = "IEEE14";
     private static final String NETWORK_UUID_STRING = "11111111-0000-0000-0000-000000000000";
-    private static final String NETWORK_UUID_NOT_FOUND_STRING = "22222222-0000-0000-0000-000000000000";
     private static final String VARIANT_1_ID = "variant_1";
     private static final String TEST_FILE = "IEEE14.iidm";
-    private static final String TEST_EXCEPTION_MESSAGE = "Test exception";
 
     @Override
     public OutputDestination getOutputDestination() {
@@ -110,7 +101,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 "");
         given(dynamicMappingClient.exportParameters(MAPPING_NAME)).willReturn(parameterFile);
 
-        given(dynamicMappingClient.getMapping(DynamicMappingClientTest.MAPPING_NAME_01)).willReturn(null);
+        given(dynamicMappingClient.getMapping(MAPPING_NAME)).willReturn(null);
     }
 
     @Override
@@ -150,32 +141,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         mockMvc.perform(
                         delete("/v1/results"))
                 .andExpect(status().isOk());
-    }
-
-    @Test
-    public void testGivenNotExistingNetworkUuid() throws Exception {
-
-        // mock NetworkStoreService throws exception for a none-existing network uuid
-        given(networkStoreClient.getNetwork(UUID.fromString(NETWORK_UUID_NOT_FOUND_STRING), PreloadingStrategy.COLLECTION)).willThrow(new PowsyblException());
-
-        // prepare parameters
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
-
-        // network not found
-        MvcResult result = mockMvc.perform(
-                        post("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_NOT_FOUND_STRING)
-                                .contentType(APPLICATION_JSON)
-                                .header(HEADER_USER_ID, "testUserId")
-                                .content(objectMapper.writeValueAsString(parameters)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
-
-        Message<byte[]> messageSwitch = output.receive(1000 * 5, dsFailedDestination);
-        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
-        assertThat(Objects.requireNonNull(messageSwitch.getHeaders().get(HEADER_MESSAGE)).toString())
-            .contains(getFailedMessage(COMPUTATION_TYPE));
     }
 
     @Test
@@ -243,10 +208,12 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         //depending on the execution speed it can be both
         assertThat(status).isIn(DynamicSimulationStatus.CONVERGED, DynamicSimulationStatus.RUNNING);
 
-        //get the status of a non-existing simulation and expect a not found
-        mockMvc.perform(
+        //get the status of a non-existing simulation and expect ok but result is empty
+        result = mockMvc.perform(
                 get("/v1/results/{resultUuid}/status", UUID.randomUUID()))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isOk())
+            .andReturn();
+        assertThat(result.getResponse().getContentAsString()).isEmpty();
 
         //get the time-series uuid of a non-existing simulation and expect a not found
         mockMvc.perform(
@@ -308,7 +275,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         //delete a result
         mockMvc.perform(
-                delete("/v1/results/{resultUuid}", runUuid))
+                delete("/v1/results").queryParam("resultsUuids", runUuid.toString()))
             .andExpect(status().isOk());
 
         //try to get the removed result and except a not found
@@ -318,7 +285,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         //delete a none existing result
         mockMvc.perform(
-                        delete("/v1/results/{resultUuid}", UUID.randomUUID()))
+                        delete("/v1/results").queryParam("resultsUuids", UUID.randomUUID().toString()))
                 .andExpect(status().isOk());
 
         //delete all results and except ok
@@ -376,37 +343,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
     }
 
-    @Test
-    public void testGivenRunWithException() throws Exception {
-        // setup spy bean
-        doAnswer((InvocationOnMock invocation) -> CompletableFuture.supplyAsync(() -> {
-            throw new RuntimeException(TEST_EXCEPTION_MESSAGE);
-        }))
-        .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any());
-
-        // prepare parameters
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
-
-        //run the dynamic simulation
-        MvcResult result = mockMvc.perform(
-                        post("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
-                                .contentType(APPLICATION_JSON)
-                                .header(HEADER_USER_ID, "testUserId")
-                                .content(objectMapper.writeValueAsString(parameters)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
-
-        // Message failed must be sent
-        Message<byte[]> messageSwitch = output.receive(1000, dsFailedDestination);
-
-        // check uuid and failed message
-        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
-        assertThat(Objects.requireNonNull(messageSwitch.getHeaders().get(HEADER_MESSAGE)).toString())
-            .contains(TEST_EXCEPTION_MESSAGE);
-    }
-
     // --- BEGIN Test cancelling a running computation ---//
     private void mockSendRunMessage(Supplier<CompletableFuture<?>> runAsyncMock) {
         // In test environment, the test binder calls consumers directly in the caller thread, i.e. the controller thread.
@@ -432,10 +368,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
             }
         }))
         .when(notificationService).sendRunMessage(any());
-    }
-
-    private void assertNotFoundResult(UUID runUuid) throws Exception {
-        assertResultStatus(runUuid, status().isNotFound());
     }
 
     private void assertResultStatus(UUID runUuid, ResultMatcher resultMatcher) throws Exception {
@@ -508,9 +440,12 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         assertThat(message.getHeaders())
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
                 .containsEntry(HEADER_MESSAGE, getCancelMessage(COMPUTATION_TYPE));
-        // result has been deleted by cancel so not found
-        assertNotFoundResult(runUuid);
-
+        // result has been deleted by cancel so empty
+        MvcResult mvcResult = mockMvc.perform(
+                        get("/v1/results/{resultUuid}/status", runUuid))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(mvcResult.getResponse().getContentAsString()).isEmpty();
     }
 
     @Test

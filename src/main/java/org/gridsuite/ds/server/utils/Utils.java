@@ -7,6 +7,8 @@
 
 package org.gridsuite.ds.server.utils;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.dynawo.suppliers.Property;
 import com.powsybl.dynawo.suppliers.PropertyBuilder;
 import com.powsybl.dynawo.suppliers.PropertyType;
@@ -36,9 +38,7 @@ public final class Utils {
     }
 
     public static List<String> convertStringToList(String stringArray) {
-        List<String> converted = new ArrayList<>();
-        converted.addAll(Arrays.asList(stringArray.split(",")));
-        return converted;
+        return new ArrayList<>(Arrays.asList(stringArray.split(",")));
     }
 
     public static Property convertProperty(EventPropertyInfos property) {
@@ -90,9 +90,8 @@ public final class Utils {
         return propertyBuilder.build();
     }
 
-    public static byte[] zip(Path filePath) {
-        try (InputStream is = Files.newInputStream(filePath);
-             ByteArrayOutputStream os = new ByteArrayOutputStream();
+    private static byte[] zip(InputStream is) throws IOException {
+        try (ByteArrayOutputStream os = new ByteArrayOutputStream();
              GZIPOutputStream zipOs = new GZIPOutputStream(os)) {
             byte[] buffer = new byte[1024];
             int length;
@@ -101,22 +100,52 @@ public final class Utils {
             }
             zipOs.finish();
             return os.toByteArray();
+        }
+    }
+
+    public static byte[] zip(String content) throws IOException {
+        try (InputStream is = new ByteArrayInputStream(content.getBytes())) {
+            return zip(is);
+        }
+    }
+
+    public static byte[] zip(Path filePath) {
+        try (InputStream is = Files.newInputStream(filePath)) {
+            return zip(is);
         } catch (IOException e) {
             throw new UncheckedIOException("Error occurred while zipping the file " + filePath.toAbsolutePath(), e);
         }
     }
 
-    public static void unzip(byte[] zippedBytes, Path filePath) {
+    private static void unzipToStream(byte[] zippedBytes, OutputStream outputStream) throws IOException {
         try (ByteArrayInputStream is = new ByteArrayInputStream(zippedBytes);
-             FileOutputStream fos = new FileOutputStream(new File(filePath.toUri()));
-             GZIPInputStream zipIs = new GZIPInputStream(is)) {
+             GZIPInputStream zipIs = new GZIPInputStream(is);
+             BufferedOutputStream bufferedOut = new BufferedOutputStream(outputStream)) {
             byte[] buffer = new byte[1024];
             int length;
             while ((length = zipIs.read(buffer)) > 0) {
-                fos.write(buffer, 0, length);
+                bufferedOut.write(buffer, 0, length);
             }
-        } catch (IOException e) {
-            throw new UncheckedIOException("Error occurred while unzipping a zipped content to the file " + filePath.toAbsolutePath(), e);
+        }
+    }
+
+    public static void unzip(byte[] zippedBytes, Path filePath) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(new File(filePath.toUri()))) {
+            unzipToStream(zippedBytes, fos);
+        }
+    }
+
+    public static <T> T unzip(byte[] zippedBytes, ObjectMapper objectMapper, TypeReference<T> valueTypeRef) throws IOException {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            unzipToStream(zippedBytes, bos);
+            return objectMapper.readValue(bos.toByteArray(), valueTypeRef);
+        }
+    }
+
+    public static <T> T unzip(byte[] zippedBytes, ObjectMapper objectMapper, Class<T> valueType) throws IOException {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            unzipToStream(zippedBytes, bos);
+            return objectMapper.readValue(bos.toByteArray(), valueType);
         }
     }
 }
