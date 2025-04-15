@@ -62,6 +62,7 @@ public class DynamicSimulationController {
                                           @RequestParam(name = "reporterId", required = false) String reportName,
                                           @RequestParam(name = "reportType", required = false, defaultValue = "DynamicSimulation") String reportType,
                                           @RequestParam(name = "provider", required = false) String provider,
+                                          @RequestParam(name = "debug", required = false) Boolean debug,
                                           @RequestBody DynamicSimulationParametersInfos parameters,
                                           @RequestHeader(HEADER_USER_ID) String userId) {
 
@@ -73,7 +74,8 @@ public class DynamicSimulationController {
             mappingName,
             ReportInfos.builder().reportUuid(reportId).reporterId(reportName).computationType(reportType).build(),
             userId,
-            parameters);
+            parameters,
+            debug);
 
         UUID resultUuid = dynamicSimulationService.runAndSaveResult(dynamicSimulationRunContext);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);

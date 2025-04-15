@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.io.FileUtil;
 import com.powsybl.commons.report.ReportNode;
-import com.powsybl.computation.ComputationManager;
 import com.powsybl.dynamicsimulation.*;
 import com.powsybl.dynamicsimulation.groovy.GroovyExtension;
 import com.powsybl.dynamicsimulation.groovy.GroovyOutputVariablesSupplier;
@@ -86,15 +85,6 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         super(networkStoreService, notificationService, reportService, dynamicSimulationResultService, executionService, observer, objectMapper);
         this.dynamicMappingClient = Objects.requireNonNull(dynamicMappingClient);
         this.parametersService = Objects.requireNonNull(parametersService);
-    }
-
-    /**
-     * Use this method to mock with DockerLocalComputationManager in case of integration tests with test container
-     *
-     * @return a computation manager
-     */
-    public ComputationManager getComputationManager() {
-        return executionService.getComputationManager();
     }
 
     @Override
@@ -195,12 +185,8 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         runContext.setEventModelContent(eventModel);
         runContext.setCurveContent(curveModel);
 
-        // create a working folder for this run
-        Path workDir;
-        workDir = createWorkingDirectory();
-        runContext.setWorkDir(workDir);
-
         // enrich dump parameters
+        Path workDir = runContext.getComputationManager().getLocalDir();
         setupDumpParameters(workDir, t0Parameters);
     }
 
@@ -225,7 +211,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 eventModelsSupplier,
                 outputVariablesSupplier,
                 runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
-                getComputationManager(),
+                runContext.getComputationManager(),
                 parameters,
                 runContext.getReportNode());
     }
@@ -258,9 +244,11 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     @Override
     protected void clean(AbstractResultContext<DynamicSimulationRunContext> resultContext) {
         super.clean(resultContext);
-        // clean working directory
-        Path workDir = resultContext.getRunContext().getWorkDir();
-        removeWorkingDirectory(workDir);
+        if (!resultContext.getRunContext().isDebug()) {
+            // clean dump directory
+            Path dumpDir = getDumpDir(resultContext.getRunContext().getT0DynamicSimulationParameters());
+            removeDirectory(dumpDir);
+        }
     }
 
     // --- Dump file related methods --- //
@@ -320,27 +308,15 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         return zippedJsonDynamicModelContent;
     }
 
-    private Path createWorkingDirectory() {
-        Path workDir;
-        Path localDir = getComputationManager().getLocalDir();
-        try {
-            workDir = Files.createTempDirectory(localDir, "dynamic_simulation_");
-        } catch (IOException e) {
-            throw new DynamicSimulationException(DUMP_FILE_ERROR, String.format("Error occurred while creating a working directory inside the local directory %s",
-                    localDir.toAbsolutePath()));
-        }
-        return workDir;
-    }
-
-    private void removeWorkingDirectory(Path workDir) {
-        if (workDir != null) {
+    private void removeDirectory(Path dir) {
+        if (dir != null) {
             try {
-                FileUtil.removeDir(workDir);
+                FileUtil.removeDir(dir);
             } catch (IOException e) {
-                LOGGER.error(String.format("%s: Error occurred while cleaning working directory at %s", getComputationType(), workDir.toAbsolutePath()), e);
+                LOGGER.error(String.format("%s: Error occurred while cleaning directory at %s", getComputationType(), dir.toAbsolutePath()), e);
             }
         } else {
-            LOGGER.info("{}: No working directory to clean", getComputationType());
+            LOGGER.info("{}: No directory to clean", getComputationType());
         }
     }
 }
