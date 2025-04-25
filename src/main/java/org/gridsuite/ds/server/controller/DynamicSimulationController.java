@@ -13,18 +13,24 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.DynamicSimulationResultService;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_USER_ID;
 import static org.gridsuite.ds.server.DynamicSimulationApi.API_VERSION;
@@ -186,5 +192,26 @@ public class DynamicSimulationController {
     @ApiResponses(@ApiResponse(responseCode = "200", description = "The dynamic simulation default provider has been found"))
     public ResponseEntity<String> getDefaultProvider() {
         return ResponseEntity.ok().body(dynamicSimulationService.getDefaultProvider());
+    }
+
+    @GetMapping(value = "/results/{resultUuid}/debug-file", produces = "application/json")
+    @Operation(summary = "Get the dynamic simulation debug file stream")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation debug file stream"),
+        @ApiResponse(responseCode = "204", description = "Dynamic simulation debug file stream is empty"),
+        @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
+    public ResponseEntity<StreamingResponseBody> getDebugFileStream(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        try {
+            Pair<Consumer<OutputStream>, String> fileStreamerWithName = dynamicSimulationService.getDebugFileStreamer(resultUuid);
+            StreamingResponseBody streamer = outputStream -> fileStreamerWithName.getLeft().accept(outputStream);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("filename", fileStreamerWithName.getRight());
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(streamer);
+        } catch (IOException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

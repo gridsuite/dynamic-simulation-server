@@ -100,6 +100,12 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
 
     @Override
     @Transactional
+    public void updateDebugFileLocation(UUID resultUuid, String debugFilePath) {
+        resultRepository.updateDebugFileLocation(resultUuid, debugFilePath);
+    }
+
+    @Override
+    @Transactional
     public void delete(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         ResultEntity.BasicFields resultEntity = resultRepository.findById(resultUuid, ResultEntity.BasicFields.class).orElse(null);
@@ -134,6 +140,14 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid, ResultEntity.BasicFields.class)
                 .map(ResultEntity.BasicFields::getStatus)
+                .orElse(null);
+    }
+
+    @Override
+    public String findDebugFileLocation(UUID resultUuid) {
+        Objects.requireNonNull(resultUuid);
+        return resultRepository.findById(resultUuid, ResultEntity.BasicFields.class)
+                .map(ResultEntity.BasicFields::getDebugFileLocation)
                 .orElse(null);
     }
 }

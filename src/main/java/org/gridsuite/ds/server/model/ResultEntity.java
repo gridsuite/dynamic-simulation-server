@@ -31,6 +31,8 @@ public class ResultEntity implements Serializable {
         UUID getTimeSeriesId();
 
         UUID getTimeLineId();
+
+        String getDebugFileLocation();
     }
 
     public interface OutputState {
@@ -68,6 +70,9 @@ public class ResultEntity implements Serializable {
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private DynamicSimulationStatus status;
+
+    @Column(name = "debugFileLocation", columnDefinition = "CLOB")
+    private String debugFileLocation;
 
     @Column(name = "outputState")
     private byte[] outputState;
