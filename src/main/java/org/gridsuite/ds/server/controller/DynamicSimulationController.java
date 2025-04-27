@@ -194,7 +194,7 @@ public class DynamicSimulationController {
         return ResponseEntity.ok().body(dynamicSimulationService.getDefaultProvider());
     }
 
-    @GetMapping(value = "/results/{resultUuid}/debug-file", produces = "application/json")
+    @GetMapping(value = "/results/{resultUuid}/download/debug-file", produces = "application/json")
     @Operation(summary = "Get the dynamic simulation debug file stream")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation debug file stream"),
         @ApiResponse(responseCode = "204", description = "Dynamic simulation debug file stream is empty"),
@@ -204,7 +204,7 @@ public class DynamicSimulationController {
             Pair<Consumer<OutputStream>, String> fileStreamerWithName = dynamicSimulationService.getDebugFileStreamer(resultUuid);
             StreamingResponseBody streamer = outputStream -> fileStreamerWithName.getLeft().accept(outputStream);
             HttpHeaders headers = new HttpHeaders();
-            headers.add("filename", fileStreamerWithName.getRight());
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileStreamerWithName.getRight() + "\"");
 
             return ResponseEntity.ok()
                     .headers(headers)
