@@ -6,6 +6,7 @@
  */
 package org.gridsuite.ds.server.controller;
 
+import com.powsybl.ws.commons.computation.dto.DebugInfos;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -69,6 +70,7 @@ public class DynamicSimulationController {
                                           @RequestParam(name = "reportType", required = false, defaultValue = "DynamicSimulation") String reportType,
                                           @RequestParam(name = "provider", required = false) String provider,
                                           @RequestParam(name = "debug", required = false) Boolean debug,
+                                          @RequestParam(name = "browserTabUuid", required = false) UUID browserTabUuid,
                                           @RequestBody DynamicSimulationParametersInfos parameters,
                                           @RequestHeader(HEADER_USER_ID) String userId) {
 
@@ -81,7 +83,7 @@ public class DynamicSimulationController {
             ReportInfos.builder().reportUuid(reportId).reporterId(reportName).computationType(reportType).build(),
             userId,
             parameters,
-            debug);
+            debug != null && debug ? DebugInfos.builder().debug(debug).browserTabUuid(browserTabUuid).build() : null);
 
         UUID resultUuid = dynamicSimulationService.runAndSaveResult(dynamicSimulationRunContext);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);

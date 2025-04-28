@@ -8,6 +8,7 @@ package org.gridsuite.ds.server.service.contexts;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.powsybl.ws.commons.computation.dto.DebugInfos;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import com.powsybl.ws.commons.computation.service.AbstractResultContext;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
@@ -17,7 +18,6 @@ import org.springframework.messaging.MessageHeaders;
 import java.io.UncheckedIOException;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
 import static com.powsybl.ws.commons.computation.service.NotificationService.*;
@@ -57,6 +57,8 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
         String reportType = (String) headers.get(REPORT_TYPE_HEADER);
         String userId = (String) headers.get(HEADER_USER_ID);
         Boolean debug = (Boolean) headers.get(DEBUG_HEADER);
+        String browserTabUuidStr = (String) headers.get(BROWSER_TAB_UUID_HEADER);
+        UUID browserTabUuid = browserTabUuidStr != null ? UUID.fromString(browserTabUuidStr) : null;
 
         DynamicSimulationRunContext runContext = DynamicSimulationRunContext.builder()
             .networkUuid(networkUuid)
@@ -66,7 +68,7 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
             .reportInfos(ReportInfos.builder().reportUuid(reportUuid).reporterId(reporterId).computationType(reportType).build())
             .userId(userId)
             .parameters(parametersInfos)
-            .debug(Optional.ofNullable(debug).orElse(false))
+            .debugInfos(debug != null ? DebugInfos.builder().debug(debug).browserTabUuid(browserTabUuid).build() : null)
             .build();
 
         // specific headers for dynamic simulation

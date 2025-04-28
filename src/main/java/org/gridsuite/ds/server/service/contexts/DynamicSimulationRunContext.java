@@ -9,6 +9,7 @@ package org.gridsuite.ds.server.service.contexts;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.dynawo.suppliers.events.EventModelConfig;
+import com.powsybl.ws.commons.computation.dto.DebugInfos;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import com.powsybl.ws.commons.computation.service.AbstractComputationRunContext;
 import lombok.Builder;
@@ -42,8 +43,8 @@ public class DynamicSimulationRunContext extends AbstractComputationRunContext<D
 
     @Builder
     public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
-                                       ReportInfos reportInfos, String userId, DynamicSimulationParametersInfos parameters, boolean debug) {
-        super(networkUuid, variantId, receiver, reportInfos, userId, provider, parameters, debug);
+                                       ReportInfos reportInfos, String userId, DynamicSimulationParametersInfos parameters, DebugInfos debugInfos) {
+        super(networkUuid, variantId, receiver, reportInfos, userId, provider, parameters, debugInfos);
         this.mapping = mapping;
     }
 }
