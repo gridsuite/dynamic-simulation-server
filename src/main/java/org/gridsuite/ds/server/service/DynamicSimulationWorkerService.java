@@ -80,9 +80,10 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                                           DynamicSimulationObserver observer,
                                           ObjectMapper objectMapper,
                                           DynamicSimulationResultService dynamicSimulationResultService,
+                                          S3Service s3Service,
                                           DynamicMappingClient dynamicMappingClient,
                                           ParametersService parametersService) {
-        super(networkStoreService, notificationService, reportService, dynamicSimulationResultService, executionService, observer, objectMapper);
+        super(networkStoreService, notificationService, reportService, dynamicSimulationResultService, s3Service, executionService, observer, objectMapper);
         this.dynamicMappingClient = Objects.requireNonNull(dynamicMappingClient);
         this.parametersService = Objects.requireNonNull(parametersService);
     }

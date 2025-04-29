@@ -37,7 +37,19 @@ spring:
               quorum:
                 enabled: true
                 delivery-limit: 2
-
+    aws:
+      s3:
+        path-style-access-enabled: true
+      # classic minio port, useful default for exploring
+      endpoint: http://s3-storage:9000
+      region:
+        profile:
+          name: default
+        static: test
+      bucket: my-bucket
+      credentials:
+        access-key: minioadmin
+        secret-key: minioadmin
 powsybl:
   services:
     network-store-server:
@@ -46,6 +58,9 @@ powsybl:
 powsybl-ws:
   database:
     name: ds
+
+s3:
+  enabled: true
 
 # default values for dynamic simulation providers is "Dynawo"
 dynamic-simulation:
