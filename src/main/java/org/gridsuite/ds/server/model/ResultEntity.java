@@ -47,11 +47,12 @@ public class ResultEntity implements Serializable {
         byte[] getDynamicModel();
     }
 
-    public ResultEntity(UUID id, UUID timeSeriesId, UUID timeLineId, DynamicSimulationStatus status, byte[] outputState, byte[] parameters, byte[] dynamicModel) {
+    public ResultEntity(UUID id, UUID timeSeriesId, UUID timeLineId, DynamicSimulationStatus status, String debugFileLocation, byte[] outputState, byte[] parameters, byte[] dynamicModel) {
         this.id = id;
         this.timeSeriesId = timeSeriesId;
         this.timeLineId = timeLineId;
         this.status = status;
+        this.debugFileLocation = debugFileLocation;
         this.outputState = outputState;
         this.parameters = parameters;
         this.dynamicModel = dynamicModel;

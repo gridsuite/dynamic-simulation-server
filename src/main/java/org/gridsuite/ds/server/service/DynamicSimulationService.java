@@ -20,6 +20,7 @@ import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -34,7 +35,7 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
             ObjectMapper objectMapper,
             UuidGeneratorService uuidGeneratorService,
             DynamicSimulationResultService dynamicSimulationResultService,
-            S3Service s3Service,
+            Optional<S3Service> s3Service,
             @Value("${dynamic-simulation.default-provider}") String defaultProvider) {
         super(notificationService, dynamicSimulationResultService, s3Service, objectMapper, uuidGeneratorService, defaultProvider);
     }

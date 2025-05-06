@@ -57,8 +57,6 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
         String reportType = (String) headers.get(REPORT_TYPE_HEADER);
         String userId = (String) headers.get(HEADER_USER_ID);
         Boolean debug = (Boolean) headers.get(DEBUG_HEADER);
-        String browserTabUuidStr = (String) headers.get(BROWSER_TAB_UUID_HEADER);
-        UUID browserTabUuid = browserTabUuidStr != null ? UUID.fromString(browserTabUuidStr) : null;
 
         DynamicSimulationRunContext runContext = DynamicSimulationRunContext.builder()
             .networkUuid(networkUuid)
@@ -68,7 +66,7 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
             .reportInfos(ReportInfos.builder().reportUuid(reportUuid).reporterId(reporterId).computationType(reportType).build())
             .userId(userId)
             .parameters(parametersInfos)
-            .debugInfos(debug != null ? DebugInfos.builder().debug(debug).browserTabUuid(browserTabUuid).build() : null)
+            .debugInfos(debug != null ? DebugInfos.builder().debug(debug).build() : null)
             .build();
 
         // specific headers for dynamic simulation

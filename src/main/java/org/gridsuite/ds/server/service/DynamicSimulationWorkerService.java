@@ -80,7 +80,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                                           DynamicSimulationObserver observer,
                                           ObjectMapper objectMapper,
                                           DynamicSimulationResultService dynamicSimulationResultService,
-                                          S3Service s3Service,
+                                          Optional<S3Service> s3Service,
                                           DynamicMappingClient dynamicMappingClient,
                                           ParametersService parametersService) {
         super(networkStoreService, notificationService, reportService, dynamicSimulationResultService, s3Service, executionService, observer, objectMapper);
@@ -121,8 +121,6 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
 
     @Override
     protected void saveResult(Network network, AbstractResultContext<DynamicSimulationRunContext> resultContext, DynamicSimulationResult result) {
-        super.saveResult(network, resultContext, result);
-
         // read dump file
         DynamicSimulationParameters t0Parameters = resultContext.getRunContext().getT0DynamicSimulationParameters();
         Path dumpDir = getDumpDir(t0Parameters);
@@ -209,7 +207,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 runContext.getNetworkUuid(), parameters.getStartTime(), parameters.getStopTime());
 
         DynamicSimulation.Runner runner = DynamicSimulation.find(provider);
-        return runner.runAsync(runContext.getNetwork(),
+        CompletableFuture<DynamicSimulationResult> dynamicSimulationResultCompletableFuture = runner.runAsync(runContext.getNetwork(),
                 dynamicModelsSupplier,
                 eventModelsSupplier,
                 outputVariablesSupplier,
@@ -217,6 +215,10 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 runContext.getComputationManager(),
                 parameters,
                 runContext.getReportNode());
+        return dynamicSimulationResultCompletableFuture.thenCompose(result -> CompletableFuture.supplyAsync(() -> {
+            // throw new RuntimeException("Simulation failed");
+            return result;
+        }));
     }
 
     @Override
