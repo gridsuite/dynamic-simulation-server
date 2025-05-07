@@ -20,7 +20,6 @@ import com.powsybl.dynawo.suppliers.events.EventModelConfig;
 import com.powsybl.dynawo.xml.ParametersXml;
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.ws.commons.computation.dto.DebugInfos;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -145,7 +144,7 @@ public class ParametersServiceImpl implements ParametersService {
 
     @Override
     public DynamicSimulationRunContext createRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
-                                                        ReportInfos reportInfos, String userId, DynamicSimulationParametersInfos parameters, DebugInfos debugInfo) {
+                                                        ReportInfos reportInfos, String userId, DynamicSimulationParametersInfos parameters, boolean debug) {
         DynamicSimulationRunContext runContext = DynamicSimulationRunContext.builder()
                 .networkUuid(networkUuid)
                 .variantId(variantId)
@@ -153,7 +152,7 @@ public class ParametersServiceImpl implements ParametersService {
                 .reportInfos(reportInfos)
                 .userId(userId)
                 .parameters(parameters)
-                .debugInfos(Optional.ofNullable(debugInfo).orElse(null))
+                .debug(debug)
                 .build();
 
         // set provider for run context

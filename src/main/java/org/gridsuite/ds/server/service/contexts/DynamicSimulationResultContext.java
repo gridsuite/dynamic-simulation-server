@@ -8,7 +8,6 @@ package org.gridsuite.ds.server.service.contexts;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.ws.commons.computation.dto.DebugInfos;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import com.powsybl.ws.commons.computation.service.AbstractResultContext;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
@@ -66,7 +65,7 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
             .reportInfos(ReportInfos.builder().reportUuid(reportUuid).reporterId(reporterId).computationType(reportType).build())
             .userId(userId)
             .parameters(parametersInfos)
-            .debugInfos(debug != null ? DebugInfos.builder().debug(debug).build() : null)
+            .debug(debug)
             .build();
 
         // specific headers for dynamic simulation

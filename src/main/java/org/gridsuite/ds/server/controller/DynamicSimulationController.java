@@ -6,21 +6,21 @@
  */
 package org.gridsuite.ds.server.controller;
 
-import com.powsybl.ws.commons.computation.dto.DebugInfos;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
+import com.powsybl.ws.commons.computation.utils.StreamerWithInfos;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.DynamicSimulationResultService;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,10 +28,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_USER_ID;
 import static org.gridsuite.ds.server.DynamicSimulationApi.API_VERSION;
@@ -69,7 +67,7 @@ public class DynamicSimulationController {
                                           @RequestParam(name = "reporterId", required = false) String reportName,
                                           @RequestParam(name = "reportType", required = false, defaultValue = "DynamicSimulation") String reportType,
                                           @RequestParam(name = "provider", required = false) String provider,
-                                          @RequestParam(name = "debug", required = false) Boolean debug,
+                                          @RequestParam(name = "debug", required = false, defaultValue = "false") boolean debug,
                                           @RequestBody DynamicSimulationParametersInfos parameters,
                                           @RequestHeader(HEADER_USER_ID) String userId) {
 
@@ -82,7 +80,7 @@ public class DynamicSimulationController {
             ReportInfos.builder().reportUuid(reportId).reporterId(reportName).computationType(reportType).build(),
             userId,
             parameters,
-            debug != null && debug ? DebugInfos.builder().debug(debug).build() : null);
+            debug);
 
         UUID resultUuid = dynamicSimulationService.runAndSaveResult(dynamicSimulationRunContext);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
@@ -198,14 +196,15 @@ public class DynamicSimulationController {
     @GetMapping(value = "/results/{resultUuid}/download/debug-file", produces = "application/json")
     @Operation(summary = "Get the dynamic simulation debug file stream")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation debug file stream"),
-        @ApiResponse(responseCode = "204", description = "Dynamic simulation debug file stream is empty"),
+        @ApiResponse(responseCode = "204", description = "Dynamic simulation debug file is empty"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
     public ResponseEntity<StreamingResponseBody> getDebugFileStream(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         try {
-            Pair<Consumer<OutputStream>, String> fileStreamerWithName = dynamicSimulationService.getDebugFileStreamer(resultUuid);
-            StreamingResponseBody streamer = outputStream -> fileStreamerWithName.getLeft().accept(outputStream);
+            StreamerWithInfos fileStreamerWithInfos = dynamicSimulationService.getDebugFileStreamer(resultUuid);
+            StreamingResponseBody streamer = outputStream -> fileStreamerWithInfos.getStreamer().accept(outputStream);
             HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileStreamerWithName.getRight() + "\"");
+            headers.setContentDisposition(ContentDisposition.builder("attachment").filename(fileStreamerWithInfos.getFileName()).build());
+            headers.setContentLength(fileStreamerWithInfos.getFileLength());
 
             return ResponseEntity.ok()
                     .headers(headers)
