@@ -7,7 +7,6 @@
 package org.gridsuite.ds.server.controller;
 
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
-import com.powsybl.ws.commons.computation.utils.StreamerWithInfos;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -20,12 +19,10 @@ import org.gridsuite.ds.server.service.DynamicSimulationResultService;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.IOException;
 import java.util.List;
@@ -194,22 +191,13 @@ public class DynamicSimulationController {
     }
 
     @GetMapping(value = "/results/{resultUuid}/download/debug-file", produces = "application/json")
-    @Operation(summary = "Get the dynamic simulation debug file stream")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation debug file stream"),
+    @Operation(summary = "Download a dynamic simulation debug file")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Dynamic simulation debug file"),
         @ApiResponse(responseCode = "204", description = "Dynamic simulation debug file is empty"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
-    public ResponseEntity<StreamingResponseBody> getDebugFileStream(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+    public ResponseEntity<Resource> downloadDebugFile(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         try {
-            StreamerWithInfos fileStreamerWithInfos = dynamicSimulationService.getDebugFileStreamer(resultUuid);
-            StreamingResponseBody streamer = outputStream -> fileStreamerWithInfos.getStreamer().accept(outputStream);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentDisposition(ContentDisposition.builder("attachment").filename(fileStreamerWithInfos.getFileName()).build());
-            headers.setContentLength(fileStreamerWithInfos.getFileLength());
-
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .body(streamer);
+            return dynamicSimulationService.downloadDebugFile(resultUuid);
         } catch (IOException e) {
             return ResponseEntity.notFound().build();
         }

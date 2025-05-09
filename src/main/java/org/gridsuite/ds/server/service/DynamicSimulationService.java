@@ -8,9 +8,9 @@ package org.gridsuite.ds.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
+import com.powsybl.ws.commons.computation.s3.S3Service;
 import com.powsybl.ws.commons.computation.service.AbstractComputationService;
 import com.powsybl.ws.commons.computation.service.NotificationService;
-import com.powsybl.ws.commons.computation.service.S3Service;
 import com.powsybl.ws.commons.computation.service.UuidGeneratorService;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;

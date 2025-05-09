@@ -72,7 +72,7 @@ public class ResultEntity implements Serializable {
     @Enumerated(EnumType.STRING)
     private DynamicSimulationStatus status;
 
-    @Column(name = "debugFileLocation", columnDefinition = "CLOB")
+    @Column(name = "debugFileLocation")
     private String debugFileLocation;
 
     @Column(name = "outputState")
