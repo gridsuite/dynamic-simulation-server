@@ -19,10 +19,12 @@ import org.gridsuite.ds.server.service.DynamicSimulationResultService;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -62,6 +64,7 @@ public class DynamicSimulationController {
                                           @RequestParam(name = "reporterId", required = false) String reportName,
                                           @RequestParam(name = "reportType", required = false, defaultValue = "DynamicSimulation") String reportType,
                                           @RequestParam(name = "provider", required = false) String provider,
+                                          @RequestParam(name = "debug", required = false, defaultValue = "false") boolean debug,
                                           @RequestBody DynamicSimulationParametersInfos parameters,
                                           @RequestHeader(HEADER_USER_ID) String userId) {
 
@@ -73,7 +76,8 @@ public class DynamicSimulationController {
             mappingName,
             ReportInfos.builder().reportUuid(reportId).reporterId(reportName).computationType(reportType).build(),
             userId,
-            parameters);
+            parameters,
+            debug);
 
         UUID resultUuid = dynamicSimulationService.runAndSaveResult(dynamicSimulationRunContext);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
@@ -184,5 +188,18 @@ public class DynamicSimulationController {
     @ApiResponses(@ApiResponse(responseCode = "200", description = "The dynamic simulation default provider has been found"))
     public ResponseEntity<String> getDefaultProvider() {
         return ResponseEntity.ok().body(dynamicSimulationService.getDefaultProvider());
+    }
+
+    @GetMapping(value = "/results/{resultUuid}/download/debug-file", produces = "application/json")
+    @Operation(summary = "Download a dynamic simulation debug file")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Dynamic simulation debug file"),
+        @ApiResponse(responseCode = "204", description = "Dynamic simulation debug file is empty"),
+        @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
+    public ResponseEntity<Resource> downloadDebugFile(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        try {
+            return dynamicSimulationService.downloadDebugFile(resultUuid);
+        } catch (IOException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
