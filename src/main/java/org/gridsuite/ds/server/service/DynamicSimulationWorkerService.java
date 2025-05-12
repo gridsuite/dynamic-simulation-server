@@ -27,7 +27,6 @@ import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.TimeSeries;
-import com.powsybl.ws.commons.computation.s3.S3Service;
 import com.powsybl.ws.commons.computation.service.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.ds.server.DynamicSimulationException;
@@ -81,10 +80,9 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                                           DynamicSimulationObserver observer,
                                           ObjectMapper objectMapper,
                                           DynamicSimulationResultService dynamicSimulationResultService,
-                                          Optional<S3Service> s3Service,
                                           DynamicMappingClient dynamicMappingClient,
                                           ParametersService parametersService) {
-        super(networkStoreService, notificationService, reportService, dynamicSimulationResultService, s3Service, executionService, observer, objectMapper);
+        super(networkStoreService, notificationService, reportService, dynamicSimulationResultService, executionService, observer, objectMapper);
         this.dynamicMappingClient = Objects.requireNonNull(dynamicMappingClient);
         this.parametersService = Objects.requireNonNull(parametersService);
     }

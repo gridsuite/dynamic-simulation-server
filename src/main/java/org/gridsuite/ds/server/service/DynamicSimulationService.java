@@ -8,7 +8,6 @@ package org.gridsuite.ds.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
-import com.powsybl.ws.commons.computation.s3.S3Service;
 import com.powsybl.ws.commons.computation.service.AbstractComputationService;
 import com.powsybl.ws.commons.computation.service.NotificationService;
 import com.powsybl.ws.commons.computation.service.UuidGeneratorService;
@@ -20,7 +19,6 @@ import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -35,9 +33,8 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
             ObjectMapper objectMapper,
             UuidGeneratorService uuidGeneratorService,
             DynamicSimulationResultService dynamicSimulationResultService,
-            Optional<S3Service> s3Service,
             @Value("${dynamic-simulation.default-provider}") String defaultProvider) {
-        super(notificationService, dynamicSimulationResultService, s3Service, objectMapper, uuidGeneratorService, defaultProvider);
+        super(notificationService, dynamicSimulationResultService, objectMapper, uuidGeneratorService, defaultProvider);
     }
 
     @Override
