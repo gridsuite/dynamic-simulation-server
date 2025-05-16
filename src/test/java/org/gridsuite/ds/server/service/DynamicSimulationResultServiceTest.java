@@ -136,8 +136,8 @@ public class DynamicSimulationResultServiceTest {
 
         // --- delete all --- //
         resultRepository.saveAllAndFlush(List.of(
-                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING, null, null, null),
-                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING, null, null, null)
+                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING, null, null, null, null),
+                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING, null, null, null, null)
         )).stream().map(ResultEntity::getId).toList();
 
         dynamicSimulationResultService.deleteAll();
