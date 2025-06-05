@@ -95,7 +95,16 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     public void insertStatus(List<UUID> resultUuids, DynamicSimulationStatus status) {
         Objects.requireNonNull(resultUuids);
         resultRepository.saveAll(resultUuids.stream()
-                .map(uuid -> new ResultEntity(uuid, null, null, status, null, null, null)).toList());
+                .map(uuid -> new ResultEntity(uuid, null, null, status, null, null, null, null)).toList());
+    }
+
+    @Override
+    @Transactional
+    public void updateDebugFileLocation(UUID resultUuid, String debugFilePath) {
+        resultRepository.findById(resultUuid, ResultEntity.BasicFields.class).ifPresentOrElse(
+                (var resultEntity) -> resultRepository.updateDebugFileLocation(resultUuid, debugFilePath),
+                () -> resultRepository.save(new ResultEntity(resultUuid, null, null, DynamicSimulationStatus.NOT_DONE, debugFilePath, null, null, null))
+        );
     }
 
     @Override
@@ -134,6 +143,14 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid, ResultEntity.BasicFields.class)
                 .map(ResultEntity.BasicFields::getStatus)
+                .orElse(null);
+    }
+
+    @Override
+    public String findDebugFileLocation(UUID resultUuid) {
+        Objects.requireNonNull(resultUuid);
+        return resultRepository.findById(resultUuid, ResultEntity.BasicFields.class)
+                .map(ResultEntity.BasicFields::getDebugFileLocation)
                 .orElse(null);
     }
 }
