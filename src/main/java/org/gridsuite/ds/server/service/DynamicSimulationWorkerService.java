@@ -276,7 +276,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     protected void processDebug(AbstractResultContext<DynamicSimulationRunContext> resultContext) {
         // copy all content in working directory into debug directory
         DynamicSimulationRunContext runContext = resultContext.getRunContext();
-        if (runContext.getDebugDir() != null) {
+        if (runContext.getWorkDir() != null && runContext.getDebugDir() != null) {
             try {
                 FileUtil.copyDir(runContext.getWorkDir(), runContext.getDebugDir());
             } catch (IOException e) {

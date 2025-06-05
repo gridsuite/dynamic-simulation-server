@@ -90,6 +90,21 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-computation-local</artifactId>
+                <version>6.8.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-computation</artifactId>
+                <version>6.8.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-iidm-api</artifactId>
+                <version>6.8.0-SNAPSHOT</version>
+            </dependency>
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
@@ -105,10 +120,6 @@
 
     <dependencies>
         <!-- Compilation dependencies -->
-        <dependency>
-            <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-iidm-api</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>ST4</artifactId>
@@ -139,18 +150,22 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynamic-simulation-api</artifactId>
+            <version>6.8.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynamic-simulation-dsl</artifactId>
+            <version>6.8.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawo-simulation</artifactId>
+            <version>2.9.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawo-dsl</artifactId>
+            <version>2.9.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.gridsuite</groupId>
@@ -163,7 +178,7 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-ws-commons</artifactId>
-            <version>1.25.0-SNAPSHOT</version>
+            <version>1.26.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.liquibase</groupId>
