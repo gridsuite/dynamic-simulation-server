@@ -51,6 +51,9 @@ spring:
       credentials:
         access-key: minioadmin
         secret-key: minioadmin
+
+debug-subpath: debug
+
 powsybl:
   services:
     network-store-server:
