@@ -11,6 +11,7 @@ import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
 import com.powsybl.ws.commons.computation.service.AbstractComputationService;
 import com.powsybl.ws.commons.computation.service.NotificationService;
 import com.powsybl.ws.commons.computation.service.UuidGeneratorService;
+import com.powsybl.ws.commons.s3.S3Service;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationResultContext;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
@@ -33,8 +34,9 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
             ObjectMapper objectMapper,
             UuidGeneratorService uuidGeneratorService,
             DynamicSimulationResultService dynamicSimulationResultService,
+            S3Service s3Service,
             @Value("${dynamic-simulation.default-provider}") String defaultProvider) {
-        super(notificationService, dynamicSimulationResultService, objectMapper, uuidGeneratorService, defaultProvider);
+        super(notificationService, dynamicSimulationResultService, s3Service, objectMapper, uuidGeneratorService, defaultProvider);
     }
 
     @Override
