@@ -225,7 +225,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 runContext.getNetworkUuid(), parameters.getStartTime(), parameters.getStopTime());
 
         DynamicSimulation.Runner runner = DynamicSimulation.find(provider);
-        CompletableFuture<DynamicSimulationResult> dynamicSimulationResultCompletableFuture = runner.runAsync(runContext.getNetwork(),
+        return runner.runAsync(runContext.getNetwork(),
                 dynamicModelsSupplier,
                 eventModelsSupplier,
                 outputVariablesSupplier,
@@ -233,10 +233,6 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 getComputationManager(),
                 parameters,
                 runContext.getReportNode());
-        return dynamicSimulationResultCompletableFuture.thenCompose(result -> CompletableFuture.supplyAsync(() -> {
-            // throw new RuntimeException("Simulation failed");
-            return result;
-        }));
     }
 
     @Override
@@ -274,7 +270,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
 
     @Override
     protected void processDebug(AbstractResultContext<DynamicSimulationRunContext> resultContext) {
-        // copy all content in working directory into debug directory
+        // copy all content from working directory into debug directory
         DynamicSimulationRunContext runContext = resultContext.getRunContext();
         if (runContext.getWorkDir() != null && runContext.getDebugDir() != null) {
             try {
