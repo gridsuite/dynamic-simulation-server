@@ -189,7 +189,7 @@ public class DynamicSimulationController {
         return ResponseEntity.ok().body(dynamicSimulationService.getDefaultProvider());
     }
 
-    @GetMapping(value = "/results/{resultUuid}/download/debug-file", produces = "application/json")
+    @GetMapping(value = "/results/{resultUuid}/download-debug-file", produces = "application/json")
     @Operation(summary = "Download a dynamic simulation debug file")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Dynamic simulation debug file"),
         @ApiResponse(responseCode = "404", description = "Dynamic simulation debug file has not been found")})
