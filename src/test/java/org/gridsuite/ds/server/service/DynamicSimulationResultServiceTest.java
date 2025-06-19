@@ -130,7 +130,7 @@ public class DynamicSimulationResultServiceTest {
         assertThat(updatedResultEntityOpt.get().getTimeLineId()).isNull();
 
         // --- update the result with debugFileLocation
-        dynamicSimulationResultService.updateDebugFileLocation(entityUuid, "/debug/s3key");
+        dynamicSimulationResultService.saveDebugFileLocation(entityUuid, "/debug/s3key");
 
         // new debugFileLocation must be inserted
         updatedResultEntityOpt = resultRepository.findById(entityUuid);
@@ -138,7 +138,7 @@ public class DynamicSimulationResultServiceTest {
 
         // --- update the result with debugFileLocation, if entity uuid does not exist, inject a new one
         UUID noneExistEntityUuid = uuidGeneratorService.generate();
-        dynamicSimulationResultService.updateDebugFileLocation(noneExistEntityUuid, "/debug/s3key2");
+        dynamicSimulationResultService.saveDebugFileLocation(noneExistEntityUuid, "/debug/s3key2");
 
         // new debugFileLocation must be inserted
         updatedResultEntityOpt = resultRepository.findById(noneExistEntityUuid);
