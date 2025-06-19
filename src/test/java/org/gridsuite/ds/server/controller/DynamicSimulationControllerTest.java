@@ -215,7 +215,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 .containsEntry(HEADER_DEBUG, true);
 
         // download debug zip file is ok
-        mockMvc.perform(get("/v1/results/{resultUuid}/download/debug-file", runUuid))
+        mockMvc.perform(get("/v1/results/{resultUuid}/download-debug-file", runUuid))
                 .andExpect(status().isOk());
 
         // check interaction with s3 client
