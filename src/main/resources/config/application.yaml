@@ -39,18 +39,7 @@ spring:
                 delivery-limit: 2
     aws:
       s3:
-        path-style-access-enabled: true
         enabled: true
-      # classic minio port, useful default for exploring
-      endpoint: http://s3-storage:9000
-      region:
-        profile:
-          name: default
-        static: test
-      bucket: bucket-gridsuite
-      credentials:
-        access-key: minioadmin
-        secret-key: minioadmin
 
 debug-subpath: debug
 

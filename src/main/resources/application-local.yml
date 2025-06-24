@@ -7,7 +7,6 @@ spring:
   cloud:
     aws:
       endpoint: http://localhost:19000
-      bucket: bucket-gridsuite
 
 powsybl-ws:
   database:
