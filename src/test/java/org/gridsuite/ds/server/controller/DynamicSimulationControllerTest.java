@@ -209,10 +209,9 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
 
         // check notification of debug
-        messageSwitch = output.receive(1000 * 10, dsResultDestination);
+        messageSwitch = output.receive(1000 * 10, dsDebugDestination);
         assertThat(messageSwitch.getHeaders())
-                .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
-                .containsEntry(HEADER_DEBUG, true);
+                .containsEntry(HEADER_RESULT_UUID, runUuid.toString());
 
         // download debug zip file is ok
         mockMvc.perform(get("/v1/results/{resultUuid}/download-debug-file", runUuid))

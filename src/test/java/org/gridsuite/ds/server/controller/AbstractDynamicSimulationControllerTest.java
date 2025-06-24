@@ -44,6 +44,7 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    protected final String dsDebugDestination = "ds.debug.destination";
     protected final String dsResultDestination = "ds.result.destination";
     protected final String dsStoppedDestination = "ds.stopped.destination";
     protected final String dsCancelFailedDestination = "ds.cancelfailed.destination";
@@ -84,7 +85,7 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
         super.tearDown();
 
         OutputDestination output = getOutputDestination();
-        List<String> destinations = List.of(dsResultDestination, dsStoppedDestination, dsCancelFailedDestination);
+        List<String> destinations = List.of(dsDebugDestination, dsResultDestination, dsStoppedDestination, dsCancelFailedDestination);
 
         try {
             TestUtils.assertQueuesEmptyThenClear(destinations, output);
