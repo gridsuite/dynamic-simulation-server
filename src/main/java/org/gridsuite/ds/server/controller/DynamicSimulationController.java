@@ -68,8 +68,7 @@ public class DynamicSimulationController {
     @GetMapping(value = "/networks/{networkUuid}/export-dynamic-model", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     @Operation(summary = "Get the dynamic simulation dynamic model")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation dynamic model"),
-        @ApiResponse(responseCode = "204", description = "Dynamic simulation dynamic model is empty"),
-        @ApiResponse(responseCode = "404", description = "Dynamic simulation result uuid has not been found")})
+        @ApiResponse(responseCode = "204", description = "Dynamic simulation dynamic model is empty")})
     public ResponseEntity<List<DynamicModelConfig>> exportDynamicModel(@PathVariable("networkUuid") UUID networkUuid,
                                                                        @RequestParam(name = "variantId", required = false) String variantId,
                                                                        @RequestParam(name = "mappingName") String mappingName) {
