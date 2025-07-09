@@ -7,10 +7,6 @@
 package org.gridsuite.ds.server.controller;
 
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.VariantManagerConstants;
-import com.powsybl.network.store.client.NetworkStoreService;
-import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -18,13 +14,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
-import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 import org.gridsuite.ds.server.service.DynamicSimulationResultService;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
-import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.springframework.http.MediaType;
@@ -50,37 +43,13 @@ public class DynamicSimulationController {
     private final DynamicSimulationService dynamicSimulationService;
     private final DynamicSimulationResultService dynamicSimulationResultService;
     private final ParametersService parametersService;
-    private final DynamicMappingClient dynamicMappingClient;
-    private final NetworkStoreService networkStoreService;
 
     public DynamicSimulationController(DynamicSimulationService dynamicSimulationService,
                                        DynamicSimulationResultService dynamicSimulationResultService,
-                                       ParametersService parametersService,
-                                       DynamicMappingClient dynamicMappingClient,
-                                       NetworkStoreService networkStoreService) {
+                                       ParametersService parametersService) {
         this.dynamicSimulationService = dynamicSimulationService;
         this.dynamicSimulationResultService = dynamicSimulationResultService;
         this.parametersService = parametersService;
-        this.dynamicMappingClient = dynamicMappingClient;
-        this.networkStoreService = networkStoreService;
-    }
-
-    @GetMapping(value = "/networks/{networkUuid}/export-dynamic-model", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    @Operation(summary = "Get the dynamic simulation dynamic model")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation dynamic model"),
-        @ApiResponse(responseCode = "204", description = "Dynamic simulation dynamic model is empty")})
-    public ResponseEntity<List<DynamicModelConfig>> exportDynamicModel(@PathVariable("networkUuid") UUID networkUuid,
-                                                                       @RequestParam(name = "variantId", required = false) String variantId,
-                                                                       @RequestParam(name = "mappingName") String mappingName) {
-
-        InputMapping inputMapping = dynamicMappingClient.getMapping(mappingName);
-        Network network = networkStoreService.getNetwork(networkUuid, PreloadingStrategy.COLLECTION);
-        String variant = StringUtils.isBlank(variantId) ? VariantManagerConstants.INITIAL_VARIANT_ID : variantId;
-        network.getVariantManager().setWorkingVariant(variant);
-
-        List<DynamicModelConfig> dynamicModelConfigList = parametersService.getDynamicModel(inputMapping, network);
-        return CollectionUtils.isNotEmpty(dynamicModelConfigList) ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(dynamicModelConfigList) :
-                ResponseEntity.noContent().build();
     }
 
     @PostMapping(value = "/networks/{networkUuid}/run", produces = "application/json")
@@ -217,4 +186,18 @@ public class DynamicSimulationController {
     public ResponseEntity<String> getDefaultProvider() {
         return ResponseEntity.ok().body(dynamicSimulationService.getDefaultProvider());
     }
+
+    @GetMapping(value = "/networks/{networkUuid}/export-dynamic-model", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @Operation(summary = "Get the dynamic simulation dynamic model")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation dynamic model"),
+        @ApiResponse(responseCode = "204", description = "Dynamic simulation dynamic model is empty")})
+    public ResponseEntity<List<DynamicModelConfig>> exportDynamicModel(@PathVariable("networkUuid") UUID networkUuid,
+                                                                       @RequestParam(name = "variantId", required = false) String variantId,
+                                                                       @RequestParam(name = "mappingName") String mappingName) {
+        List<DynamicModelConfig> dynamicModelConfigList = dynamicSimulationService.exportDynamicModel(networkUuid, variantId, mappingName);
+        return CollectionUtils.isNotEmpty(dynamicModelConfigList) ?
+                ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(dynamicModelConfigList) :
+                ResponseEntity.noContent().build();
+    }
+
 }
