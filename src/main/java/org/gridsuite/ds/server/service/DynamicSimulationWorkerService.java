@@ -216,8 +216,8 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
             GroovyExtension.find(OutputVariableGroovyExtension.class, DynawoSimulationProvider.NAME));
 
         DynamicSimulationParameters parameters = runContext.getT0DynamicSimulationParameters();
-        LOGGER.info("Run dynamic simulation on network {}, startTime {}, stopTime {},",
-                runContext.getNetworkUuid(), parameters.getStartTime(), parameters.getStopTime());
+        LOGGER.info("Run dynamic simulation on network {} and variant {} with mapping {}, startTime {}, stopTime {},",
+                runContext.getNetworkUuid(), runContext.getVariantId(), runContext.getMapping(), parameters.getStartTime(), parameters.getStopTime());
 
         DynamicSimulation.Runner runner = DynamicSimulation.find(provider);
         return runner.runAsync(runContext.getNetwork(),

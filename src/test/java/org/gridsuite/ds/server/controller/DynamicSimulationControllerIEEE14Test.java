@@ -302,4 +302,16 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         Utils.unzip(zippedDynamicSimulationParameters, file.toPath());
 
     }
+
+    @Test
+    public void testExportDynamicModel() throws Exception {
+        //export the dynamic model on a specific variant
+        MvcResult result = mockMvc.perform(
+                        get("/v1/networks/{networkUuid}/export-dynamic-model?variantId=" +
+                            VARIANT_1_ID + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING))
+                .andExpect(status().isOk())
+                .andReturn();
+        List<DynamicModelConfig> dynamicModelConfigList = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertThat(dynamicModelConfigList).hasSize(21);
+    }
 }
