@@ -6,6 +6,7 @@
  */
 package org.gridsuite.ds.server.controller;
 
+import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -196,4 +197,18 @@ public class DynamicSimulationController {
     public ResponseEntity<Resource> downloadDebugFile(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         return dynamicSimulationService.downloadDebugFile(resultUuid);
     }
+
+    @GetMapping(value = "/networks/{networkUuid}/export-dynamic-model", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @Operation(summary = "Get the dynamic simulation dynamic model")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation dynamic model"),
+        @ApiResponse(responseCode = "204", description = "Dynamic simulation dynamic model is empty")})
+    public ResponseEntity<List<DynamicModelConfig>> exportDynamicModel(@PathVariable("networkUuid") UUID networkUuid,
+                                                                       @RequestParam(name = "variantId", required = false) String variantId,
+                                                                       @RequestParam(name = "mappingName") String mappingName) {
+        List<DynamicModelConfig> dynamicModelConfigList = dynamicSimulationService.exportDynamicModel(networkUuid, variantId, mappingName);
+        return CollectionUtils.isNotEmpty(dynamicModelConfigList) ?
+                ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(dynamicModelConfigList) :
+                ResponseEntity.noContent().build();
+    }
+
 }
