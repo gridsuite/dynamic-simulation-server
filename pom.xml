@@ -51,6 +51,7 @@
         <liquibase-hibernate-package>org.gridsuite.ds.server</liquibase-hibernate-package>
         <string-template.version>4.3.1</string-template.version>
         <sonar.organization>gridsuite</sonar.organization>
+        <spring-cloud-aws.version>3.2.0</spring-cloud-aws.version>
         <sonar.projectKey>org.gridsuite:dynamic-simulation-server</sonar.projectKey>
     </properties>
 
@@ -109,6 +110,21 @@
                 <artifactId>powsybl-network-store-client</artifactId>
                 <version>${powsybl-network-store.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-computation-local</artifactId>
+                <version>6.8.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-computation</artifactId>
+                <version>6.8.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-iidm-api</artifactId>
+                <version>6.8.0</version>
+            </dependency>
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
@@ -125,10 +141,6 @@
     <dependencies>
         <!-- Compilation dependencies -->
         <dependency>
-            <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-iidm-api</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>ST4</artifactId>
             <version>${string-template.version}</version>
@@ -142,6 +154,11 @@
             <artifactId>spring-cloud-stream</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.awspring.cloud</groupId>
+            <artifactId>spring-cloud-aws-starter-s3</artifactId>
+            <version>${spring-cloud-aws.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
@@ -153,18 +170,22 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynamic-simulation-api</artifactId>
+            <version>6.8.0</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynamic-simulation-dsl</artifactId>
+            <version>6.8.0</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawo-simulation</artifactId>
+            <version>2.9.0</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawo-dsl</artifactId>
+            <version>2.9.0</version>
         </dependency>
         <dependency>
             <groupId>org.gridsuite</groupId>
@@ -177,6 +198,7 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-ws-commons</artifactId>
+            <version>1.27.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.liquibase</groupId>

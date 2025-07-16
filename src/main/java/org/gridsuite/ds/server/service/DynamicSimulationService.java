@@ -16,6 +16,7 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.ws.commons.computation.service.AbstractComputationService;
 import com.powsybl.ws.commons.computation.service.NotificationService;
 import com.powsybl.ws.commons.computation.service.UuidGeneratorService;
+import com.powsybl.ws.commons.s3.S3Service;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
@@ -46,11 +47,12 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
             ObjectMapper objectMapper,
             UuidGeneratorService uuidGeneratorService,
             DynamicSimulationResultService dynamicSimulationResultService,
+            S3Service s3Service,
             @Value("${dynamic-simulation.default-provider}") String defaultProvider,
             ParametersService parametersService,
             DynamicMappingClient dynamicMappingClient,
             NetworkStoreService networkStoreService) {
-        super(notificationService, dynamicSimulationResultService, objectMapper, uuidGeneratorService, defaultProvider);
+        super(notificationService, dynamicSimulationResultService, s3Service, objectMapper, uuidGeneratorService, defaultProvider);
         this.parametersService = parametersService;
         this.dynamicMappingClient = dynamicMappingClient;
         this.networkStoreService = networkStoreService;

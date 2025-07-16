@@ -192,7 +192,8 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
 
         //run the dynamic simulation (on a specific variant with variantId=" + VARIANT_1_ID + ")
         MvcResult result = mockMvc.perform(
-                post("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING)
+                post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
+                        .param("mappingName", MAPPING_NAME_01)
                         .contentType(APPLICATION_JSON)
                         .header(HEADER_USER_ID, "testUserId")
                         .content(objectMapper.writeValueAsString(parameters)))
