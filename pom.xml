@@ -43,6 +43,11 @@
 
     <properties>
         <gridsuite-dependencies.version>42.0.0</gridsuite-dependencies.version>
+        <!-- FIXME to remove at next upgrade of gridsuite-dependencies -->
+        <gridsuite-computation.version>1.0.0</gridsuite-computation.version>
+        <!-- FIXME to remove at next upgrade of powsybl-ws-dependencies -->
+        <powsybl-ws-commons.version>1.28.0</powsybl-ws-commons.version>
+
         <jib.from.image>powsybl/java-dynawo:3.0.0</jib.from.image>
 
         <h2database.version>1.4.200</h2database.version>
@@ -106,6 +111,15 @@
     <dependencies>
         <!-- Compilation dependencies -->
         <dependency>
+            <groupId>org.gridsuite</groupId>
+            <artifactId>gridsuite-computation</artifactId>
+            <version>${gridsuite-computation.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.gridsuite</groupId>
+            <artifactId>gridsuite-filter</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-iidm-api</artifactId>
         </dependency>
@@ -148,16 +162,13 @@
             <artifactId>powsybl-dynawo-dsl</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.gridsuite</groupId>
-            <artifactId>gridsuite-filter</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-network-store-client</artifactId>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-ws-commons</artifactId>
+            <version>${powsybl-ws-commons.version}</version>
         </dependency>
         <dependency>
             <groupId>org.liquibase</groupId>
