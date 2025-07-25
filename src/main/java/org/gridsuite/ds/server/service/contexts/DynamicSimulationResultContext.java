@@ -19,8 +19,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-import static com.powsybl.ws.commons.computation.service.NotificationService.*;
-import static com.powsybl.ws.commons.computation.utils.MessageUtils.getNonNullHeader;
+import static org.gridsuite.computation.service.NotificationService.*;
+import static org.gridsuite.computation.utils.MessageUtils.getNonNullHeader;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>

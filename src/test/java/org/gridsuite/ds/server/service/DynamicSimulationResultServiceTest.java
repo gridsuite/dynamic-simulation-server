@@ -10,7 +10,7 @@ package org.gridsuite.ds.server.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.timeseries.StoredDoubleTimeSeries;
 import com.powsybl.timeseries.StringTimeSeries;
-import com.powsybl.ws.commons.computation.service.UuidGeneratorService;
+import org.gridsuite.computation.service.UuidGeneratorService;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.model.ResultEntity;
