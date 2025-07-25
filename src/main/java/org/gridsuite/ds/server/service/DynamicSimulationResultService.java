@@ -1,7 +1,7 @@
 package org.gridsuite.ds.server.service;
 
 import com.powsybl.timeseries.TimeSeries;
-import com.powsybl.ws.commons.computation.service.AbstractComputationResultService;
+import org.gridsuite.computation.service.AbstractComputationResultService;
 import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;

@@ -42,9 +42,7 @@
     </developers>
 
     <properties>
-        <!-- FIXME to remove at next upgrade of powsybl-ws-dependencies -->
-        <powsybl-network-store.version>1.28.0</powsybl-network-store.version>
-        <gridsuite-dependencies.version>41.0.0</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>42.0.0</gridsuite-dependencies.version>
         <jib.from.image>powsybl/java-dynawo:3.0.0</jib.from.image>
 
         <h2database.version>1.4.200</h2database.version>
@@ -92,39 +90,7 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
-            <!-- FIXME to remove at next upgrade of powsybl-ws-dependencies -->
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-network-store-model</artifactId>
-                <version>${powsybl-network-store.version}</version>
-            </dependency>
-            <!-- FIXME to remove at next upgrade of powsybl-ws-dependencies -->
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-network-store-iidm-impl</artifactId>
-                <version>${powsybl-network-store.version}</version>
-            </dependency>
-            <!-- FIXME to remove at next upgrade of powsybl-ws-dependencies -->
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-network-store-client</artifactId>
-                <version>${powsybl-network-store.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-computation-local</artifactId>
-                <version>6.8.0</version>
-            </dependency>
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-computation</artifactId>
-                <version>6.8.0</version>
-            </dependency>
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-iidm-api</artifactId>
-                <version>6.8.0</version>
-            </dependency>
+
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
@@ -170,26 +136,27 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynamic-simulation-api</artifactId>
-            <version>6.8.0</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynamic-simulation-dsl</artifactId>
-            <version>6.8.0</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawo-simulation</artifactId>
-            <version>2.9.0</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawo-dsl</artifactId>
-            <version>2.9.0</version>
         </dependency>
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-filter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.gridsuite</groupId>
+            <artifactId>gridsuite-computation</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>

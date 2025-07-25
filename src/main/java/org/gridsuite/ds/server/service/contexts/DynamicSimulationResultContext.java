@@ -8,8 +8,8 @@ package org.gridsuite.ds.server.service.contexts;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.ws.commons.computation.dto.ReportInfos;
-import com.powsybl.ws.commons.computation.service.AbstractResultContext;
+import org.gridsuite.computation.dto.ReportInfos;
+import org.gridsuite.computation.service.AbstractResultContext;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
