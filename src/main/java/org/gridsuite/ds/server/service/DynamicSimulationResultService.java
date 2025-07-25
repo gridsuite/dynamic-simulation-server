@@ -31,6 +31,7 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
         this.timeSeriesClient = timeSeriesClient;
     }
 
+    @Transactional(readOnly = true)
     public UUID getTimeSeriesId(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid, ResultEntity.BasicFields.class)
@@ -38,6 +39,7 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
                 .getTimeSeriesId();
     }
 
+    @Transactional(readOnly = true)
     public UUID getTimeLineId(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid, ResultEntity.BasicFields.class)
@@ -45,6 +47,7 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
                 .getTimeLineId();
     }
 
+    @Transactional(readOnly = true)
     public byte[] getOutputState(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid, ResultEntity.OutputState.class)
@@ -52,6 +55,7 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
                 .getOutputState();
     }
 
+    @Transactional(readOnly = true)
     public byte[] getParameters(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid, ResultEntity.Parameters.class)
@@ -59,6 +63,7 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
                 .getParameters();
     }
 
+    @Transactional(readOnly = true)
     public byte[] getDynamicModel(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid, ResultEntity.DynamicModel.class)
@@ -95,7 +100,16 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     public void insertStatus(List<UUID> resultUuids, DynamicSimulationStatus status) {
         Objects.requireNonNull(resultUuids);
         resultRepository.saveAll(resultUuids.stream()
-                .map(uuid -> new ResultEntity(uuid, null, null, status, null, null, null)).toList());
+                .map(uuid -> new ResultEntity(uuid, null, null, status, null, null, null, null)).toList());
+    }
+
+    @Override
+    @Transactional
+    public void saveDebugFileLocation(UUID resultUuid, String debugFilePath) {
+        resultRepository.findById(resultUuid, ResultEntity.BasicFields.class).ifPresentOrElse(
+                (var resultEntity) -> resultRepository.updateDebugFileLocation(resultUuid, debugFilePath),
+                () -> resultRepository.save(new ResultEntity(resultUuid, null, null, DynamicSimulationStatus.NOT_DONE, debugFilePath, null, null, null))
+        );
     }
 
     @Override
@@ -130,10 +144,20 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DynamicSimulationStatus findStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid, ResultEntity.BasicFields.class)
                 .map(ResultEntity.BasicFields::getStatus)
+                .orElse(null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String findDebugFileLocation(UUID resultUuid) {
+        Objects.requireNonNull(resultUuid);
+        return resultRepository.findById(resultUuid, ResultEntity.BasicFields.class)
+                .map(ResultEntity.BasicFields::getDebugFileLocation)
                 .orElse(null);
     }
 }

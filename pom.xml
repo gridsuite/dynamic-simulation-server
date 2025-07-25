@@ -54,6 +54,7 @@
         <liquibase-hibernate-package>org.gridsuite.ds.server</liquibase-hibernate-package>
         <string-template.version>4.3.1</string-template.version>
         <sonar.organization>gridsuite</sonar.organization>
+        <spring-cloud-aws.version>3.2.0</spring-cloud-aws.version>
         <sonar.projectKey>org.gridsuite:dynamic-simulation-server</sonar.projectKey>
     </properties>
 
@@ -120,10 +121,6 @@
             <artifactId>gridsuite-filter</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-iidm-api</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>ST4</artifactId>
             <version>${string-template.version}</version>
@@ -135,6 +132,11 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-stream</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.awspring.cloud</groupId>
+            <artifactId>spring-cloud-aws-starter-s3</artifactId>
+            <version>${spring-cloud-aws.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
@@ -160,6 +162,11 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-dynawo-dsl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.gridsuite</groupId>
+            <artifactId>gridsuite-computation</artifactId>
+            <version>1.1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>

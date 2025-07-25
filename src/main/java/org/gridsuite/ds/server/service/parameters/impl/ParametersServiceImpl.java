@@ -144,7 +144,7 @@ public class ParametersServiceImpl implements ParametersService {
 
     @Override
     public DynamicSimulationRunContext createRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
-                                                        ReportInfos reportInfos, String userId, DynamicSimulationParametersInfos parameters) {
+                                                        ReportInfos reportInfos, String userId, DynamicSimulationParametersInfos parameters, boolean debug) {
         DynamicSimulationRunContext runContext = DynamicSimulationRunContext.builder()
                 .networkUuid(networkUuid)
                 .variantId(variantId)
@@ -152,6 +152,7 @@ public class ParametersServiceImpl implements ParametersService {
                 .reportInfos(reportInfos)
                 .userId(userId)
                 .parameters(parameters)
+                .debug(debug)
                 .build();
 
         // set provider for run context

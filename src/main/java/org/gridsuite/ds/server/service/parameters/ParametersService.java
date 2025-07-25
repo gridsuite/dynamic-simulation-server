@@ -32,7 +32,7 @@ public interface ParametersService {
     DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams, String provider, DynamicSimulationParametersInfos inputParameters);
 
     DynamicSimulationRunContext createRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
-                                                 ReportInfos reportContext, String userId, DynamicSimulationParametersInfos parameters);
+                                                 ReportInfos reportContext, String userId, DynamicSimulationParametersInfos parameters, boolean debug);
 
     List<DynamicModelConfig> getDynamicModel(InputMapping inputMapping, Network network);
 }
