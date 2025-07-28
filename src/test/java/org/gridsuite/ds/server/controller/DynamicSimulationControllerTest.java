@@ -57,7 +57,7 @@ import java.util.function.Supplier;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.gridsuite.computation.s3.S3Service.METADATA_FILE_NAME;
+import static org.gridsuite.computation.s3.ComputationS3Service.METADATA_FILE_NAME;
 import static org.gridsuite.computation.service.NotificationService.*;
 import static org.gridsuite.ds.server.controller.utils.TestUtils.assertType;
 import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATION_TYPE;
