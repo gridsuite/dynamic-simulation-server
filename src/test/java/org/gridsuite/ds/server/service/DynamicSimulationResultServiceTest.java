@@ -123,10 +123,27 @@ public class DynamicSimulationResultServiceTest {
                 null,
                 null
         );
+
         // no uuids time-series and timeline
         updatedResultEntityOpt = resultRepository.findById(entityUuid);
         assertThat(updatedResultEntityOpt.get().getTimeSeriesId()).isNull();
         assertThat(updatedResultEntityOpt.get().getTimeLineId()).isNull();
+
+        // --- update the result with debugFileLocation
+        dynamicSimulationResultService.saveDebugFileLocation(entityUuid, "/debug/s3key");
+
+        // new debugFileLocation must be inserted
+        updatedResultEntityOpt = resultRepository.findById(entityUuid);
+        assertThat(updatedResultEntityOpt.get().getDebugFileLocation()).isSameAs("/debug/s3key");
+
+        // --- update the result with debugFileLocation, if entity uuid does not exist, inject a new one
+        UUID noneExistEntityUuid = uuidGeneratorService.generate();
+        dynamicSimulationResultService.saveDebugFileLocation(noneExistEntityUuid, "/debug/s3key2");
+
+        // new debugFileLocation must be inserted
+        updatedResultEntityOpt = resultRepository.findById(noneExistEntityUuid);
+        assertThat(updatedResultEntityOpt.get().getStatus()).isSameAs(DynamicSimulationStatus.NOT_DONE);
+        assertThat(updatedResultEntityOpt.get().getDebugFileLocation()).isSameAs("/debug/s3key2");
 
         // --- delete result --- //
         dynamicSimulationResultService.delete(entityUuid);
@@ -136,8 +153,8 @@ public class DynamicSimulationResultServiceTest {
 
         // --- delete all --- //
         resultRepository.saveAllAndFlush(List.of(
-                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING, null, null, null),
-                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING, null, null, null)
+                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING, null, null, null, null),
+                new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING, null, null, null, null)
         )).stream().map(ResultEntity::getId).toList();
 
         dynamicSimulationResultService.deleteAll();

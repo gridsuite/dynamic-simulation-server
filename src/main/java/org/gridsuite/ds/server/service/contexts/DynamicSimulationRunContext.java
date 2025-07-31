@@ -45,8 +45,8 @@ public class DynamicSimulationRunContext extends AbstractComputationRunContext<D
 
     @Builder
     public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
-                                       ReportInfos reportInfos, String userId, DynamicSimulationParametersInfos parameters) {
-        super(networkUuid, variantId, receiver, reportInfos, userId, provider, parameters);
+                                       ReportInfos reportInfos, String userId, DynamicSimulationParametersInfos parameters, Boolean debug) {
+        super(networkUuid, variantId, receiver, reportInfos, userId, provider, parameters, debug);
         this.mapping = mapping;
     }
 }

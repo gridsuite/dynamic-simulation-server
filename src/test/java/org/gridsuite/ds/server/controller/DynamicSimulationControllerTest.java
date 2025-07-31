@@ -38,7 +38,16 @@ import org.springframework.messaging.Message;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultMatcher;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.http.AbortableInputStream;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -48,6 +57,7 @@ import java.util.function.Supplier;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.gridsuite.computation.s3.ComputationS3Service.METADATA_FILE_NAME;
 import static org.gridsuite.computation.service.NotificationService.*;
 import static org.gridsuite.ds.server.controller.utils.TestUtils.assertType;
 import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATION_TYPE;
@@ -74,6 +84,9 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
     @SpyBean
     private NotificationService notificationService;
+
+    @SpyBean
+    private S3Client s3Client;
 
     private static final String MAPPING_NAME = "IEEE14";
     private static final String NETWORK_UUID_STRING = "11111111-0000-0000-0000-000000000000";
@@ -166,31 +179,57 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, finalStateValues, timeLine)))
                 .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), isNull());
 
+        // mock s3 client for run with debug
+        doReturn(PutObjectResponse.builder().build()).when(s3Client).putObject(eq(PutObjectRequest.builder().build()), any(RequestBody.class));
+        doReturn(new ResponseInputStream<>(
+                GetObjectResponse.builder()
+                    .metadata(Map.of(METADATA_FILE_NAME, "debugFile"))
+                    .contentLength(100L).build(),
+                AbortableInputStream.create(new ByteArrayInputStream("s3 debug file content".getBytes()))
+        )).when(s3Client).getObject(any(GetObjectRequest.class));
+
         // prepare parameters
         DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
 
-        //run the dynamic simulation on a specific variant
+        //run the dynamic simulation on a specific variant with debug
         MvcResult result = mockMvc.perform(
-                post("/v1/networks/{networkUuid}/run?variantId=" +
-                     VARIANT_1_ID + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
-                    .contentType(APPLICATION_JSON)
-                    .header(HEADER_USER_ID, "testUserId")
-                    .content(objectMapper.writeValueAsString(parameters)))
-            .andExpect(status().isOk())
-            .andReturn();
+                post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
+                .param("variantId", VARIANT_1_ID)
+                .param("mappingName", MAPPING_NAME)
+                .param(HEADER_DEBUG, "true")
+                .contentType(APPLICATION_JSON)
+                .header(HEADER_USER_ID, "testUserId")
+                .content(objectMapper.writeValueAsString(parameters)))
+                .andExpect(status().isOk())
+                .andReturn();
         UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
+        // check notification of result
         Message<byte[]> messageSwitch = output.receive(1000 * 10, dsResultDestination);
         assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
 
+        // check notification of debug
+        messageSwitch = output.receive(1000 * 10, dsDebugDestination);
+        assertThat(messageSwitch.getHeaders())
+                .containsEntry(HEADER_RESULT_UUID, runUuid.toString());
+
+        // download debug zip file is ok
+        mockMvc.perform(get("/v1/results/{resultUuid}/download-debug-file", runUuid))
+                .andExpect(status().isOk());
+
+        // check interaction with s3 client
+        verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+        verify(s3Client, times(1)).getObject(any(GetObjectRequest.class));
+
         //run the dynamic simulation on the implicit default variant
         result = mockMvc.perform(
-                post("/v1/networks/{networkUuid}/run?" + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
-                    .contentType(APPLICATION_JSON)
-                    .header(HEADER_USER_ID, "testUserId")
-                    .content(objectMapper.writeValueAsString(parameters)))
-            .andExpect(status().isOk())
-            .andReturn();
+                post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
+                .param("mappingName", MAPPING_NAME)
+                .contentType(APPLICATION_JSON)
+                .header(HEADER_USER_ID, "testUserId")
+                .content(objectMapper.writeValueAsString(parameters)))
+                .andExpect(status().isOk())
+                .andReturn();
 
         runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
@@ -200,8 +239,8 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         //get the calculation status
         result = mockMvc.perform(
                 get("/v1/results/{resultUuid}/status", runUuid))
-            .andExpect(status().isOk())
-            .andReturn();
+                .andExpect(status().isOk())
+                .andReturn();
 
         DynamicSimulationStatus status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
 
@@ -211,14 +250,14 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         //get the status of a non-existing simulation and expect ok but result is empty
         result = mockMvc.perform(
                 get("/v1/results/{resultUuid}/status", UUID.randomUUID()))
-            .andExpect(status().isOk())
-            .andReturn();
+                .andExpect(status().isOk())
+                .andReturn();
         assertThat(result.getResponse().getContentAsString()).isEmpty();
 
         //get the time-series uuid of a non-existing simulation and expect a not found
         mockMvc.perform(
                 get("/v1/results/{resultUuid}/timeseries", UUID.randomUUID()))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
 
         //get the timeline uuid of a non-existing simulation and expect a not found
         mockMvc.perform(
@@ -228,8 +267,8 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         //get the result time-series uuid of the calculation
         result = mockMvc.perform(
                 get("/v1/results/{resultUuid}/timeseries", runUuid))
-            .andExpect(status().isOk())
-            .andReturn();
+                .andExpect(status().isOk())
+                .andReturn();
 
         // the return content must be a UUID class
         assertType(result.getResponse().getContentAsString(), UUID.class, objectMapper);
@@ -237,8 +276,8 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         //get the result timeline uuid of the calculation
         result = mockMvc.perform(
                 get("/v1/results/{resultUuid}/timeline", runUuid))
-            .andExpect(status().isOk())
-            .andReturn();
+                .andExpect(status().isOk())
+                .andReturn();
 
         // the return content must be a UUID class
         assertType(result.getResponse().getContentAsString(), UUID.class, objectMapper);
@@ -246,8 +285,8 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         // get the ending status of the calculation which must be is converged
         result = mockMvc.perform(
                 get("/v1/results/{resultUuid}/status", runUuid))
-            .andExpect(status().isOk())
-            .andReturn();
+                .andExpect(status().isOk())
+                .andReturn();
 
         status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
 
@@ -256,32 +295,34 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         // test invalidate status => i.e. set NOT_DONE
         // set NOT_DONE
         mockMvc.perform(
-                put("/v1/results/invalidate-status?resultUuid=" + runUuid))
-            .andExpect(status().isOk());
+                put("/v1/results/invalidate-status?resultUuid=" + runUuid)
+                .param("resultUuid", runUuid.toString()))
+                .andExpect(status().isOk());
 
         // check whether NOT_DONE is persisted
         result = mockMvc.perform(
                 get("/v1/results/{resultUuid}/status", runUuid))
-            .andExpect(status().isOk())
-            .andReturn();
+                .andExpect(status().isOk())
+                .andReturn();
         DynamicSimulationStatus statusAfterInvalidate = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
 
         assertThat(statusAfterInvalidate).isSameAs(DynamicSimulationStatus.NOT_DONE);
 
         // set NOT_DONE for none existing result
         mockMvc.perform(
-                        put("/v1/results/invalidate-status?resultUuid=" + UUID.randomUUID()))
+                put("/v1/results/invalidate-status")
+                .param("resultUuid", UUID.randomUUID().toString()))
                 .andExpect(status().isNotFound());
 
         //delete a result
         mockMvc.perform(
                 delete("/v1/results").queryParam("resultsUuids", runUuid.toString()))
-            .andExpect(status().isOk());
+                .andExpect(status().isOk());
 
         //try to get the removed result and except a not found
         mockMvc.perform(
                 get("/v1/results/{resultUuid}/timeseries", runUuid))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
 
         //delete a none existing result
         mockMvc.perform(
@@ -291,7 +332,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         //delete all results and except ok
         mockMvc.perform(
                 delete("/v1/results"))
-            .andExpect(status().isOk());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -309,8 +350,9 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         //run the dynamic simulation on a specific variant
         MvcResult result = mockMvc.perform(
-                        post("/v1/networks/{networkUuid}/run?variantId=" +
-                             VARIANT_1_ID + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
+                        post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
+                                .param("variantId", VARIANT_1_ID)
+                                .param("mappingName", MAPPING_NAME)
                                 .contentType(APPLICATION_JSON)
                                 .header(HEADER_USER_ID, "testUserId")
                                 .content(objectMapper.writeValueAsString(parameters)))
@@ -394,8 +436,9 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         //run the dynamic simulation on a specific variant
         MvcResult result = mockMvc.perform(
-                        post("/v1/networks/{networkUuid}/run?variantId=" +
-                             VARIANT_1_ID + "&mappingName=" + MAPPING_NAME, NETWORK_UUID_STRING)
+                        post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
+                                .param("variantId", VARIANT_1_ID)
+                                .param("mappingName", MAPPING_NAME)
                                 .contentType(APPLICATION_JSON)
                                 .header(HEADER_USER_ID, "testUserId")
                                 .content(objectMapper.writeValueAsString(parameters)))

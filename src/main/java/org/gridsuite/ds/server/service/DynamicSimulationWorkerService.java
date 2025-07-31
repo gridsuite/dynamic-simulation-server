@@ -29,6 +29,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.TimeSeries;
 import org.apache.commons.collections4.CollectionUtils;
+import org.gridsuite.computation.s3.ComputationS3Service;
 import org.gridsuite.computation.service.*;
 import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
@@ -81,9 +82,10 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                                           DynamicSimulationObserver observer,
                                           ObjectMapper objectMapper,
                                           DynamicSimulationResultService dynamicSimulationResultService,
+                                          ComputationS3Service computationS3Service,
                                           DynamicMappingClient dynamicMappingClient,
                                           ParametersService parametersService) {
-        super(networkStoreService, notificationService, reportService, dynamicSimulationResultService, executionService, observer, objectMapper);
+        super(networkStoreService, notificationService, reportService, dynamicSimulationResultService, computationS3Service, executionService, observer, objectMapper);
         this.dynamicMappingClient = Objects.requireNonNull(dynamicMappingClient);
         this.parametersService = Objects.requireNonNull(parametersService);
     }
@@ -180,6 +182,9 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         // set start and stop times
         t0Parameters.setStartTime(parametersInfos.getStartTime());
         t0Parameters.setStopTime(parametersInfos.getStopTime());
+        if (runContext.getDebugDir() != null) {
+            t0Parameters.setDebugDir(runContext.getDebugDir().toString());
+        }
         t1Parameters.setStartTime(parametersInfos.getStartTime());
         t1Parameters.setStopTime(parametersInfos.getStopTime());
 
@@ -260,16 +265,29 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         super.clean(resultContext);
         // clean working directory
         Path workDir = resultContext.getRunContext().getWorkDir();
-        removeWorkingDirectory(workDir);
+        removeDirectory(workDir);
+    }
+
+    @Override
+    protected void processDebug(AbstractResultContext<DynamicSimulationRunContext> resultContext) {
+        // copy all content from working directory into debug directory
+        DynamicSimulationRunContext runContext = resultContext.getRunContext();
+        if (runContext.getWorkDir() != null && runContext.getDebugDir() != null) {
+            try {
+                FileUtil.copyDir(runContext.getWorkDir(), runContext.getDebugDir());
+            } catch (IOException e) {
+                LOGGER.error("{}: Error occurred while copying directory {} to directory {} => {}",
+                        getComputationType(), runContext.getWorkDir().toAbsolutePath(), runContext.getDebugDir().toAbsolutePath(), e.getMessage());
+            }
+        }
+        super.processDebug(resultContext);
     }
 
     // --- Dump file related methods --- //
 
     private void setupDumpParameters(Path workDir, DynamicSimulationParameters parameters) {
-        Path dumpDir = workDir.resolve("dump");
-        FileUtil.createDirectory(dumpDir);
         DynawoSimulationParameters dynawoSimulationParameters = parameters.getExtension(DynawoSimulationParameters.class);
-        dynawoSimulationParameters.setDumpFileParameters(DumpFileParameters.createExportDumpFileParameters(dumpDir));
+        dynawoSimulationParameters.setDumpFileParameters(DumpFileParameters.createExportDumpFileParameters(workDir));
     }
 
     @Nullable
@@ -324,7 +342,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         Path workDir;
         Path localDir = getComputationManager().getLocalDir();
         try {
-            workDir = Files.createTempDirectory(localDir, "dynamic_simulation_");
+            workDir = Files.createTempDirectory(localDir, buildComputationDirPrefix());
         } catch (IOException e) {
             throw new DynamicSimulationException(DUMP_FILE_ERROR, String.format("Error occurred while creating a working directory inside the local directory %s",
                     localDir.toAbsolutePath()));
@@ -332,15 +350,4 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         return workDir;
     }
 
-    private void removeWorkingDirectory(Path workDir) {
-        if (workDir != null) {
-            try {
-                FileUtil.removeDir(workDir);
-            } catch (IOException e) {
-                LOGGER.error(String.format("%s: Error occurred while cleaning working directory at %s", getComputationType(), workDir.toAbsolutePath()), e);
-            }
-        } else {
-            LOGGER.info("{}: No working directory to clean", getComputationType());
-        }
-    }
 }
