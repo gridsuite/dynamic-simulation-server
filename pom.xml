@@ -42,13 +42,7 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>42.0.0</gridsuite-dependencies.version>
-        <!-- FIXME to remove at next upgrade of gridsuite-dependencies -->
-        <gridsuite-computation.version>1.1.0</gridsuite-computation.version>
-        <!-- FIXME to remove at next upgrade of powsybl-ws-dependencies -->
-        <powsybl-ws-commons.version>1.28.1</powsybl-ws-commons.version>
-        <!-- FIXME to remove at next upgrade of powsybl-ws-dependencies -->
-        <gridsuite-filter.version>1.7.0</gridsuite-filter.version>
+        <gridsuite-dependencies.version>43.0.0</gridsuite-dependencies.version>
 
         <jib.from.image>powsybl/java-dynawo:3.0.0</jib.from.image>
 
@@ -115,12 +109,10 @@
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-computation</artifactId>
-            <version>${gridsuite-computation.version}</version>
         </dependency>
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-filter</artifactId>
-            <version>${gridsuite-filter.version}</version>
         </dependency>
         <dependency>
             <groupId>org.antlr</groupId>
@@ -167,7 +159,6 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-ws-commons</artifactId>
-            <version>${powsybl-ws-commons.version}</version>
         </dependency>
         <dependency>
             <groupId>org.liquibase</groupId>
