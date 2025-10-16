@@ -32,9 +32,9 @@ import org.junit.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.messaging.Message;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -82,10 +82,10 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     @Autowired
     private OutputDestination output;
 
-    @SpyBean
+    @MockitoSpyBean
     private NotificationService notificationService;
 
-    @SpyBean
+    @MockitoSpyBean
     private S3Client s3Client;
 
     private static final String MAPPING_NAME = "IEEE14";
