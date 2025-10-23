@@ -56,13 +56,18 @@ public interface XmlSerializableParameter {
         Objects.requireNonNull(rootElementName);
         Objects.requireNonNull(objects);
 
-        XMLStreamWriter xmlWriter = XmlStreamWriterFactory.newInstance(os);
-        writeParameter(xmlWriter, rootElementName, objects);
+        // Create OutputStreamWriter with explicit UTF-8 encoding to ensure consistency
+        try (OutputStreamWriter writer = new OutputStreamWriter(os, StandardCharsets.UTF_8)) {
+            XMLStreamWriter xmlWriter = XmlStreamWriterFactory.newInstance(writer);
+            writeParameter(xmlWriter, rootElementName, objects);
+        } catch (IOException e) {
+            throw new XMLStreamException("Failed to write XML parameters", e);
+        }
     }
 
     private static void writeParameter(XMLStreamWriter xmlWriter, String rootElementName, XmlSerializableParameter... objects) throws XMLStreamException {
         try {
-            xmlWriter.writeStartDocument(StandardCharsets.UTF_8.toString(), "1.0");
+            xmlWriter.writeStartDocument(StandardCharsets.UTF_8.toString(), "1.1");
             xmlWriter.setPrefix("", DYN_BASE_URI);
             xmlWriter.writeStartElement(DYN_BASE_URI, rootElementName);
             xmlWriter.writeNamespace("", DYN_BASE_URI);
