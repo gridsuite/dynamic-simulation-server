@@ -20,11 +20,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
@@ -49,16 +49,16 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
     protected final String dsStoppedDestination = "ds.stopped.destination";
     protected final String dsCancelFailedDestination = "ds.cancelfailed.destination";
 
-    @MockBean
+    @MockitoBean
     protected DynamicMappingClient dynamicMappingClient;
 
-    @MockBean
+    @MockitoBean
     protected TimeSeriesClient timeSeriesClient;
 
-    @MockBean
+    @MockitoBean
     protected NetworkStoreService networkStoreClient;
 
-    @SpyBean
+    @MockitoSpyBean
     protected DynamicSimulationWorkerService dynamicSimulationWorkerService;
 
     @Before
