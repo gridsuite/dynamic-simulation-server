@@ -11,7 +11,10 @@ import com.powsybl.dynawo.xml.XmlStreamWriterFactory;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,13 +59,18 @@ public interface XmlSerializableParameter {
         Objects.requireNonNull(rootElementName);
         Objects.requireNonNull(objects);
 
-        XMLStreamWriter xmlWriter = XmlStreamWriterFactory.newInstance(os);
-        writeParameter(xmlWriter, rootElementName, objects);
+        // Create OutputStreamWriter with explicit UTF-8 encoding to ensure consistency
+        try (OutputStreamWriter writer = new OutputStreamWriter(os, StandardCharsets.UTF_8)) {
+            XMLStreamWriter xmlWriter = XmlStreamWriterFactory.newInstance(writer);
+            writeParameter(xmlWriter, rootElementName, objects);
+        } catch (IOException e) {
+            throw new XMLStreamException(e.getMessage(), e);
+        }
     }
 
     private static void writeParameter(XMLStreamWriter xmlWriter, String rootElementName, XmlSerializableParameter... objects) throws XMLStreamException {
         try {
-            xmlWriter.writeStartDocument(StandardCharsets.UTF_8.toString(), "1.0");
+            xmlWriter.writeStartDocument(StandardCharsets.UTF_8.toString(), "1.1");
             xmlWriter.setPrefix("", DYN_BASE_URI);
             xmlWriter.writeStartElement(DYN_BASE_URI, rootElementName);
             xmlWriter.writeNamespace("", DYN_BASE_URI);
