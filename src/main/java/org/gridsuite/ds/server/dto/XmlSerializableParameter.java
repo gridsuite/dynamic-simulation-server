@@ -11,7 +11,10 @@ import com.powsybl.dynawo.xml.XmlStreamWriterFactory;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -61,7 +64,7 @@ public interface XmlSerializableParameter {
             XMLStreamWriter xmlWriter = XmlStreamWriterFactory.newInstance(writer);
             writeParameter(xmlWriter, rootElementName, objects);
         } catch (IOException e) {
-            throw new XMLStreamException("Failed to write XML parameters", e);
+            throw new XMLStreamException(e.getMessage(), e);
         }
     }
 
