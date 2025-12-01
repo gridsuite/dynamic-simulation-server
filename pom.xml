@@ -42,8 +42,7 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>44.1.0-SNAPSHOT</gridsuite-dependencies.version>
-
+        <gridsuite-dependencies.version>45.0.0-SNAPSHOT</gridsuite-dependencies.version>
         <jib.from.image>powsybl/java-dynawo:3.0.0</jib.from.image>
 
         <h2database.version>1.4.200</h2database.version>
