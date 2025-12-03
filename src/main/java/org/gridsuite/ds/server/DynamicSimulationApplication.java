@@ -6,6 +6,7 @@
  */
 package org.gridsuite.ds.server;
 
+import org.gridsuite.computation.error.ComputationExceptionHandler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -14,7 +15,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 
 @SuppressWarnings("checkstyle:HideUtilityClassConstructor")
-@SpringBootApplication
+@SpringBootApplication(scanBasePackageClasses = { DynamicSimulationApplication.class, ComputationExceptionHandler.class})
 public class DynamicSimulationApplication {
 
     public static void main(String[] args) {

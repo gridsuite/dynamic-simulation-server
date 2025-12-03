@@ -23,7 +23,7 @@ import com.powsybl.iidm.network.Network;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gridsuite.computation.dto.ReportInfos;
-import org.gridsuite.ds.server.DynamicSimulationException;
+import org.gridsuite.ds.server.error.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.XmlSerializableParameter;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
@@ -54,7 +54,9 @@ import java.io.ByteArrayOutputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.*;
+import static org.gridsuite.ds.server.error.DynamicSimulationBusinessErrorCode.MAPPING_NOT_LAST_RULE_WITH_EMPTY_FILTER_ERROR;
+import static org.gridsuite.ds.server.error.DynamicSimulationBusinessErrorCode.MAPPING_NOT_PROVIDED;
+import static org.gridsuite.ds.server.error.DynamicSimulationBusinessErrorCode.PROVIDER_NOT_FOUND;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
