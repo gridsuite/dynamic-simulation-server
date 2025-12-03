@@ -50,6 +50,9 @@
         <string-template.version>4.3.1</string-template.version>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:dynamic-simulation-server</sonar.projectKey>
+        <!-- To remove after when using gridsuite dependencies release and computation version containing merged PR: https://github.com/gridsuite/computation/pull/19 -->
+        <gridsuite-computation.version>1.7.0</gridsuite-computation.version>
+        <powsybl-ws-commons.version>1.34.0</powsybl-ws-commons.version>
     </properties>
 
     <build>
@@ -89,6 +92,17 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-ws-commons</artifactId>
+                <version>${powsybl-ws-commons.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.gridsuite</groupId>
+                <artifactId>gridsuite-computation</artifactId>
+                <version>${gridsuite-computation.version}</version>
+            </dependency>
 
             <!-- imports -->
             <dependency>
