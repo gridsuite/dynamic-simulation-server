@@ -20,6 +20,7 @@ import org.gridsuite.ds.server.service.client.timeseries.impl.TimeSeriesClientIm
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
@@ -65,10 +66,10 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
     public void setup() {
         super.setup();
         timeSeriesClient = new TimeSeriesClientImpl(
-            // use new WireMockServer(TIME_SERIES_PORT) to test with local server if needed
-            initMockWebServer(new WireMockServer(wireMockConfig().dynamicPort())),
-            restTemplate,
-            objectMapper);
+                // use new WireMockServer(TIME_SERIES_PORT) to test with local server if needed
+                initMockWebServer(new WireMockServer(wireMockConfig().dynamicPort())),
+                restTemplate,
+                objectMapper);
     }
 
     @Test
@@ -105,9 +106,7 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
                         .withBody(ERROR_MESSAGE_JSON)));
 
         // test service
-        Exception dynamicSimulationException = catchThrowableOfType(
-                () -> timeSeriesClient.sendTimeSeries(timeSeries),
-                Exception.class);
+        HttpServerErrorException dynamicSimulationException = catchThrowableOfType(HttpServerErrorException.class, () -> timeSeriesClient.sendTimeSeries(timeSeries));
 
         // check result
         assertThat(dynamicSimulationException.getMessage())
@@ -147,9 +146,7 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
                         .withBody(ERROR_MESSAGE)));
 
         // test service
-        Exception dynamicSimulationException = catchThrowableOfType(
-                () -> timeSeriesClient.deleteTimeSeriesGroup(TIME_LINE_UUID),
-                Exception.class);
+        HttpServerErrorException dynamicSimulationException = catchThrowableOfType(HttpServerErrorException.class, () -> timeSeriesClient.deleteTimeSeriesGroup(TIME_LINE_UUID));
 
         // check result
         assertThat(dynamicSimulationException.getMessage())
