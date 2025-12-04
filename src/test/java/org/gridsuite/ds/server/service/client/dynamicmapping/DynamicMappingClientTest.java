@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import org.assertj.core.api.Assertions;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.service.client.AbstractWireMockRestClientTest;
@@ -19,6 +20,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StreamUtils;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
@@ -84,8 +87,8 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         String mappingName = MAPPING_NAME;
 
         String inputDir = DATA_IEEE14_BASE_DIR +
-                          RESOURCE_PATH_DELIMITER + mappingName +
-                          RESOURCE_PATH_DELIMITER + INPUT;
+                RESOURCE_PATH_DELIMITER + mappingName +
+                RESOURCE_PATH_DELIMITER + INPUT;
 
         // load models.par
         String parametersFilePath = inputDir + RESOURCE_PATH_DELIMITER + MODELS_PAR;
@@ -105,7 +108,7 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         String baseUrl = getExportParametersBaseUrl();
 
         wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl))
-                        .withQueryParam("mappingName", equalTo(mappingName))
+                .withQueryParam("mappingName", equalTo(mappingName))
                 .willReturn(WireMock.ok()
                         .withBody(parameterFileJson)
                         .withHeader("Content-Type", "application/json; charset=utf-8")
@@ -129,8 +132,9 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
                 ));
 
         // test service
-        catchThrowableOfType(() -> dynamicMappingClient.exportParameters(MAPPING_NAME),
-                Exception.class);
+        HttpClientErrorException dynamicSimulationException = catchThrowableOfType(HttpClientErrorException.class, () -> dynamicMappingClient.exportParameters(MAPPING_NAME));
+        // check result
+        Assertions.assertThat(dynamicSimulationException.getMessage()).contains(NOT_FOUND_ERROR_MESSAGE);
     }
 
     @Test
@@ -145,12 +149,9 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
                 ));
 
         // test service
-        Exception dynamicSimulationException = catchThrowableOfType(() -> dynamicMappingClient.exportParameters(MAPPING_NAME),
-                Exception.class);
-
+        HttpServerErrorException dynamicSimulationException = catchThrowableOfType(HttpServerErrorException.class, () -> dynamicMappingClient.exportParameters(MAPPING_NAME));
         // check result
-        assertThat(dynamicSimulationException.getMessage())
-                .contains(ERROR_MESSAGE);
+        assertThat(dynamicSimulationException.getMessage()).contains(ERROR_MESSAGE);
     }
 
     @Test
@@ -158,8 +159,8 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         String mappingName = MAPPING_NAME;
 
         String inputDir = DATA_IEEE14_BASE_DIR +
-                          RESOURCE_PATH_DELIMITER + mappingName +
-                          RESOURCE_PATH_DELIMITER + INPUT;
+                RESOURCE_PATH_DELIMITER + mappingName +
+                RESOURCE_PATH_DELIMITER + INPUT;
 
         // load mapping.json to a string
         String mappingFilePath = inputDir + RESOURCE_PATH_DELIMITER + MAPPING_JSON;
@@ -195,9 +196,8 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
                 ));
 
         // test service
-        catchThrowableOfType(() -> dynamicMappingClient.getMapping(MAPPING_NAME),
-                Exception.class);
-
+        HttpClientErrorException httpClientErrorException = catchThrowableOfType(HttpClientErrorException.class, () -> dynamicMappingClient.getMapping(MAPPING_NAME));
+        Assertions.assertThat(httpClientErrorException.getMessage()).contains(NOT_FOUND_ERROR_MESSAGE);
     }
 
     @Test
@@ -211,11 +211,8 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
                 ));
 
         // test service
-        Exception dynamicSimulationException = catchThrowableOfType(() -> dynamicMappingClient.getMapping(MAPPING_NAME),
-                Exception.class);
-
+        HttpServerErrorException dynamicSimulationException = catchThrowableOfType(HttpServerErrorException.class, () -> dynamicMappingClient.getMapping(MAPPING_NAME));
         // check result
-        assertThat(dynamicSimulationException.getMessage())
-                .contains(ERROR_MESSAGE);
+        assertThat(dynamicSimulationException.getMessage()).contains(ERROR_MESSAGE);
     }
 }
