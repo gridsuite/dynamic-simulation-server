@@ -7,8 +7,11 @@
 package org.gridsuite.ds.server.error;
 
 import com.powsybl.ws.commons.error.AbstractBusinessException;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NonNull;
+
+import java.util.Map;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -17,6 +20,7 @@ import lombok.NonNull;
 public class DynamicSimulationException extends AbstractBusinessException {
 
     private final DynamicSimulationBusinessErrorCode errorCode;
+    private final transient Map<String, Object> businessErrorValues;
 
     @NonNull
     @Override
@@ -24,8 +28,21 @@ public class DynamicSimulationException extends AbstractBusinessException {
         return errorCode;
     }
 
+    @NotNull
+    @Override
+    public Map<String, Object> getBusinessErrorValues() {
+        return businessErrorValues;
+    }
+
     public DynamicSimulationException(DynamicSimulationBusinessErrorCode errorCode, String message) {
         super(message);
         this.errorCode = errorCode;
+        this.businessErrorValues = Map.of();
+    }
+
+    public DynamicSimulationException(DynamicSimulationBusinessErrorCode errorCode, String message, Map<String, Object> businessErrorValues) {
+        super(message);
+        this.errorCode = errorCode;
+        this.businessErrorValues = businessErrorValues != null ? Map.copyOf(businessErrorValues) : Map.of();
     }
 }

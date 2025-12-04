@@ -44,7 +44,7 @@ class DynamicSimulationExceptionHandlerTest {
     @Test
     void mapsMappingNotLastRuleWithEmptyFilterErrorBusinessErrorToStatus() {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/dynamic-simulation/mappings");
-        DynamicSimulationException exception = new DynamicSimulationException(MAPPING_NOT_LAST_RULE_WITH_EMPTY_FILTER_ERROR, "Only last rule can have empty filter: type SUBSTATION rule index 0.");
+        DynamicSimulationException exception = new DynamicSimulationException(MAPPING_NOT_LAST_RULE_WITH_EMPTY_FILTER_ERROR, "Only last rule can have empty filter.");
         ResponseEntity<PowsyblWsProblemDetail> response = handler.handleDynamicSimulationException(exception, request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
