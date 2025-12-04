@@ -7,6 +7,7 @@
 package org.gridsuite.ds.server.error;
 
 import com.powsybl.ws.commons.error.PowsyblWsProblemDetail;
+import org.gridsuite.ds.server.utils.EquipmentType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import java.util.Map;
+import java.util.Objects;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.ds.server.error.DynamicSimulationBusinessErrorCode.MAPPING_NOT_LAST_RULE_WITH_EMPTY_FILTER_ERROR;
 import static org.gridsuite.ds.server.error.DynamicSimulationBusinessErrorCode.MAPPING_NOT_PROVIDED;
 import static org.gridsuite.ds.server.error.DynamicSimulationBusinessErrorCode.PROVIDER_NOT_FOUND;
@@ -44,11 +48,13 @@ class DynamicSimulationExceptionHandlerTest {
     @Test
     void mapsMappingNotLastRuleWithEmptyFilterErrorBusinessErrorToStatus() {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/dynamic-simulation/mappings");
-        DynamicSimulationException exception = new DynamicSimulationException(MAPPING_NOT_LAST_RULE_WITH_EMPTY_FILTER_ERROR, "Only last rule can have empty filter.");
+        DynamicSimulationException exception = new DynamicSimulationException(MAPPING_NOT_LAST_RULE_WITH_EMPTY_FILTER_ERROR, "Only last rule can have empty filter.", Map.of("equipmentType", EquipmentType.LOAD, "index", 0));
         ResponseEntity<PowsyblWsProblemDetail> response = handler.handleDynamicSimulationException(exception, request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).isNotNull();
+        assertThat(Objects.requireNonNull(response.getBody()).getBusinessErrorValues()).containsEntry("equipmentType", EquipmentType.LOAD);
+        assertThat(Objects.requireNonNull(response.getBody()).getBusinessErrorValues()).containsEntry("index", 0);
         Assertions.assertEquals("dynamicSimulation.mappingNotLastRuleWithEmptyFilterError", response.getBody().getBusinessErrorCode());
     }
 
