@@ -40,7 +40,7 @@ public class DynamicSimulationExceptionHandler extends AbstractBusinessException
     }
 
     @ExceptionHandler(DynamicSimulationException.class)
-    public ResponseEntity<PowsyblWsProblemDetail> handleComputationException(DynamicSimulationException exception, HttpServletRequest request) {
+    public ResponseEntity<PowsyblWsProblemDetail> handleDynamicSimulationException(DynamicSimulationException exception, HttpServletRequest request) {
         return super.handleDomainException(exception, request);
     }
 }
