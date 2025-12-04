@@ -35,9 +35,7 @@ public class DynamicSimulationException extends AbstractBusinessException {
     }
 
     public DynamicSimulationException(DynamicSimulationBusinessErrorCode errorCode, String message) {
-        super(message);
-        this.errorCode = errorCode;
-        this.businessErrorValues = Map.of();
+        this(errorCode, message, null);
     }
 
     public DynamicSimulationException(DynamicSimulationBusinessErrorCode errorCode, String message, Map<String, Object> businessErrorValues) {
