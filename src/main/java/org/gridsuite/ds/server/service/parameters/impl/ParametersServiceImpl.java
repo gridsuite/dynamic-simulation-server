@@ -204,7 +204,7 @@ public class ParametersServiceImpl implements ParametersService {
             Rule ruleWithEmptyFilter = rules.stream().filter(rule -> rule.filter() == null).findFirst().orElse(null);
             if (ruleWithEmptyFilter != null && rules.indexOf(ruleWithEmptyFilter) != (rules.size() - 1)) {
                 throw new DynamicSimulationException(MAPPING_NOT_LAST_RULE_WITH_EMPTY_FILTER_ERROR,
-                        "Only last rule can have empty filter", Map.of("equipmentType", equipmentType, "index", (rules.indexOf(ruleWithEmptyFilter) + 1)));
+                        "Only last rule can have empty filter", Map.of("equipmentType", equipmentType, "index", rules.indexOf(ruleWithEmptyFilter) + 1));
             }
         });
 
