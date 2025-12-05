@@ -23,7 +23,7 @@ import com.powsybl.iidm.network.Network;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gridsuite.computation.dto.ReportInfos;
-import org.gridsuite.ds.server.DynamicSimulationException;
+import org.gridsuite.ds.server.error.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.XmlSerializableParameter;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
@@ -54,7 +54,9 @@ import java.io.ByteArrayOutputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.*;
+import static org.gridsuite.ds.server.error.DynamicSimulationBusinessErrorCode.MAPPING_NOT_LAST_RULE_WITH_EMPTY_FILTER_ERROR;
+import static org.gridsuite.ds.server.error.DynamicSimulationBusinessErrorCode.MAPPING_NOT_PROVIDED;
+import static org.gridsuite.ds.server.error.DynamicSimulationBusinessErrorCode.PROVIDER_NOT_FOUND;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -83,10 +85,10 @@ public class ParametersServiceImpl implements ParametersService {
         }
 
         return events.stream().map(event ->
-            new EventModelConfig(
-                event.getEventType(),
-                event.getProperties().stream().map(Utils::convertProperty).filter(Objects::nonNull).toList()))
-            .toList();
+                        new EventModelConfig(
+                                event.getEventType(),
+                                event.getProperties().stream().map(Utils::convertProperty).filter(Objects::nonNull).toList()))
+                .toList();
     }
 
     @Override
@@ -202,7 +204,7 @@ public class ParametersServiceImpl implements ParametersService {
             Rule ruleWithEmptyFilter = rules.stream().filter(rule -> rule.filter() == null).findFirst().orElse(null);
             if (ruleWithEmptyFilter != null && rules.indexOf(ruleWithEmptyFilter) != (rules.size() - 1)) {
                 throw new DynamicSimulationException(MAPPING_NOT_LAST_RULE_WITH_EMPTY_FILTER_ERROR,
-                        "Only last rule can have empty filter: type " + equipmentType + ", rule index " + (rules.indexOf(ruleWithEmptyFilter) + 1));
+                        "Only last rule can have empty filter", Map.of("equipmentType", equipmentType, "index", rules.indexOf(ruleWithEmptyFilter) + 1));
             }
         });
 
@@ -232,24 +234,24 @@ public class ParametersServiceImpl implements ParametersService {
                 matchedEquipmentIdsOfCurrentType.addAll(matchedEquipmentsOfCurrentRule.stream().map(Identifiable::getId).toList());
 
                 return matchedEquipmentsOfCurrentRule.stream().map(equipment -> new DynamicModelConfig(
-                    rule.mappedModel(),
-                    rule.setGroup(),
-                    SetGroupType.valueOf(rule.groupType().name()),
-                    List.of(new PropertyBuilder()
-                        .name(FIELD_STATIC_ID)
-                        .value(equipment.getId())
-                        .type(PropertyType.STRING)
-                        .build())));
+                        rule.mappedModel(),
+                        rule.setGroup(),
+                        SetGroupType.valueOf(rule.groupType().name()),
+                        List.of(new PropertyBuilder()
+                                .name(FIELD_STATIC_ID)
+                                .value(equipment.getId())
+                                .type(PropertyType.STRING)
+                                .build())));
             }).toList());
         });
 
         // transform automatons to DynamicModelConfigs
         List<Automaton> automata = inputMapping.automata();
         dynamicModel.addAll(automata.stream().map(automaton ->
-            new DynamicModelConfig(
-                automaton.model(),
-                automaton.setGroup(),
-                automaton.properties().stream().map(Utils::convertProperty).filter(Objects::nonNull).toList())
+                new DynamicModelConfig(
+                        automaton.model(),
+                        automaton.setGroup(),
+                        automaton.properties().stream().map(Utils::convertProperty).filter(Objects::nonNull).toList())
         ).toList());
 
         return dynamicModel;

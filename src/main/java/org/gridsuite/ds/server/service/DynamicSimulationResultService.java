@@ -1,8 +1,8 @@
 package org.gridsuite.ds.server.service;
 
 import com.powsybl.timeseries.TimeSeries;
+import org.gridsuite.computation.error.ComputationException;
 import org.gridsuite.computation.service.AbstractComputationResultService;
-import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.model.ResultEntity;
@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.RESULT_UUID_NOT_FOUND;
+import static org.gridsuite.computation.error.ComputationBusinessErrorCode.RESULT_NOT_FOUND;
 
 @Service
 public class DynamicSimulationResultService extends AbstractComputationResultService<DynamicSimulationStatus> {
@@ -35,7 +35,7 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     public UUID getTimeSeriesId(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid, ResultEntity.BasicFields.class)
-                .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
+                .orElseThrow(() -> new ComputationException(RESULT_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
                 .getTimeSeriesId();
     }
 
@@ -43,7 +43,7 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     public UUID getTimeLineId(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid, ResultEntity.BasicFields.class)
-                .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
+                .orElseThrow(() -> new ComputationException(RESULT_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
                 .getTimeLineId();
     }
 
@@ -51,7 +51,7 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     public byte[] getOutputState(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid, ResultEntity.OutputState.class)
-                .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
+                .orElseThrow(() -> new ComputationException(RESULT_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
                 .getOutputState();
     }
 
@@ -59,7 +59,7 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     public byte[] getParameters(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid, ResultEntity.Parameters.class)
-                .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
+                .orElseThrow(() -> new ComputationException(RESULT_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
                 .getParameters();
     }
 
@@ -67,7 +67,7 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     public byte[] getDynamicModel(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         return resultRepository.findById(resultUuid, ResultEntity.DynamicModel.class)
-                .orElseThrow(() -> new DynamicSimulationException(RESULT_UUID_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
+                .orElseThrow(() -> new ComputationException(RESULT_NOT_FOUND, MSG_RESULT_UUID_NOT_FOUND + resultUuid))
                 .getDynamicModel();
     }
 

@@ -8,22 +8,17 @@ package org.gridsuite.ds.server.service.client.dynamicmapping.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.NonNull;
-import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.service.client.AbstractRestClient;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.*;
-import static org.gridsuite.ds.server.service.client.utils.ExceptionUtils.handleHttpError;
 import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
 
 /**
@@ -46,15 +41,7 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
         var uriComponents = uriComponentsBuilder.build();
 
         // call dynamic mapping Rest API
-        try {
-            return getRestTemplate().getForObject(uriComponents.toUriString(), ParameterFile.class);
-        } catch (HttpStatusCodeException e) {
-            if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
-                throw new DynamicSimulationException(DYNAMIC_MAPPING_NOT_FOUND, "No mapping has been found with name: " + mappingName);
-            } else {
-                throw handleHttpError(e, EXPORT_PARAMETERS_ERROR, getObjectMapper());
-            }
-        }
+        return getRestTemplate().getForObject(uriComponents.toUriString(), ParameterFile.class);
     }
 
     @Override
@@ -66,15 +53,7 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
         UriComponents uriComponents = uriComponentsBuilder.buildAndExpand(mappingName);
 
         // call dynamic mapping Rest API
-        try {
-            return getRestTemplate().getForObject(uriComponents.toUriString(), InputMapping.class);
-        } catch (HttpStatusCodeException e) {
-            if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
-                throw new DynamicSimulationException(DYNAMIC_MAPPING_NOT_FOUND, "No mapping has been found with name: " + mappingName);
-            } else {
-                throw handleHttpError(e, GET_DYNAMIC_MAPPING_ERROR, getObjectMapper());
-            }
-        }
+        return getRestTemplate().getForObject(uriComponents.toUriString(), InputMapping.class);
     }
 
 }
