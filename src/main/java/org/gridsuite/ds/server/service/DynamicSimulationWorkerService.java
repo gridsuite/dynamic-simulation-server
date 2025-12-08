@@ -31,7 +31,6 @@ import com.powsybl.timeseries.TimeSeries;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.computation.s3.ComputationS3Service;
 import org.gridsuite.computation.service.*;
-import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
@@ -51,6 +50,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -60,7 +60,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.*;
 import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATION_TYPE;
 
 /**
@@ -310,8 +309,8 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
             }
 
         } catch (IOException e) {
-            throw new DynamicSimulationException(DUMP_FILE_ERROR, String.format("Error occurred while reading the dump file in the directory %s",
-                    dumpDir.toAbsolutePath()));
+            throw new UncheckedIOException(String.format("Error occurred while reading the dump file in the directory %s",
+                    dumpDir.toAbsolutePath()), e);
         }
         return outputState;
     }
@@ -322,7 +321,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
             String jsonParameters = objectMapper.writeValueAsString(parameters);
             zippedJsonParameters = Utils.zip(jsonParameters);
         } catch (IOException e) {
-            throw new DynamicSimulationException(DYNAMIC_SIMULATION_PARAMETERS_ERROR, "Error occurred while zipping the dynamic simulation parameters");
+            throw new UncheckedIOException("Error occurred while zipping the dynamic simulation parameters", e);
         }
         return zippedJsonParameters;
     }
@@ -333,7 +332,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
             String jsonDynamicModelContent = objectMapper.writeValueAsString(dynamicModelContent);
             zippedJsonDynamicModelContent = Utils.zip(jsonDynamicModelContent);
         } catch (IOException e) {
-            throw new DynamicSimulationException(DYNAMIC_MODEL_ERROR, "Error occurred while zipping the dynamic model");
+            throw new UncheckedIOException("Error occurred while zipping the dynamic model", e);
         }
         return zippedJsonDynamicModelContent;
     }
@@ -344,8 +343,8 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         try {
             workDir = Files.createTempDirectory(localDir, buildComputationDirPrefix());
         } catch (IOException e) {
-            throw new DynamicSimulationException(DUMP_FILE_ERROR, String.format("Error occurred while creating a working directory inside the local directory %s",
-                    localDir.toAbsolutePath()));
+            throw new UncheckedIOException(String.format("Error occurred while creating a working directory inside the local directory %s",
+                    localDir.toAbsolutePath()), e);
         }
         return workDir;
     }

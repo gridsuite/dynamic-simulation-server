@@ -18,16 +18,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 import java.util.UUID;
 
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.CREATE_TIME_SERIES_ERROR;
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.DELETE_TIME_SERIES_ERROR;
-import static org.gridsuite.ds.server.service.client.utils.ExceptionUtils.handleHttpError;
 import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
 
 /**
@@ -59,11 +55,7 @@ public class TimeSeriesClientImpl extends AbstractRestClient implements TimeSeri
         // call time-series Rest API
         HttpEntity<List<TimeSeries<?, ?>>> httpEntity = new HttpEntity<>(timeSeriesList, headers);
 
-        try {
-            return getRestTemplate().postForObject(uriComponents.toUriString(), httpEntity, TimeSeriesGroupInfos.class);
-        } catch (HttpStatusCodeException e) {
-            throw handleHttpError(e, CREATE_TIME_SERIES_ERROR, getObjectMapper());
-        }
+        return getRestTemplate().postForObject(uriComponents.toUriString(), httpEntity, TimeSeriesGroupInfos.class);
     }
 
     @Override
@@ -78,10 +70,6 @@ public class TimeSeriesClientImpl extends AbstractRestClient implements TimeSeri
         var uriComponents = uriComponentsBuilder.buildAndExpand(groupUuid);
 
         // call time-series Rest API
-        try {
-            getRestTemplate().delete(uriComponents.toUriString());
-        } catch (HttpStatusCodeException e) {
-            throw handleHttpError(e, DELETE_TIME_SERIES_ERROR, getObjectMapper());
-        }
+        getRestTemplate().delete(uriComponents.toUriString());
     }
 }

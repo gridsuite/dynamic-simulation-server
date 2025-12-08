@@ -7,13 +7,12 @@
 
 package org.gridsuite.ds.server.service.client.utils;
 
+import com.powsybl.commons.exceptions.UncheckedUriSyntaxException;
 import org.apache.logging.log4j.util.Strings;
-import org.gridsuite.ds.server.DynamicSimulationException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.URI_SYNTAX;
 import static org.gridsuite.ds.server.service.client.RestClient.URL_DELIMITER;
 
 /**
@@ -45,7 +44,7 @@ public final class UrlUtils {
             // normalize before return
             return new URI(url).normalize().toString();
         } catch (URISyntaxException e) {
-            throw new DynamicSimulationException(URI_SYNTAX, e.getMessage());
+            throw new UncheckedUriSyntaxException(e);
         }
     }
 }

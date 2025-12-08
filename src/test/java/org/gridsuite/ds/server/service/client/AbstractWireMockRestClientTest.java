@@ -26,6 +26,7 @@ import org.springframework.test.context.ContextHierarchy;
 public abstract class AbstractWireMockRestClientTest {
 
     public static final String ERROR_MESSAGE = "Something wrong in remote server";
+    public static final String NOT_FOUND_ERROR_MESSAGE = "Not Found";
     public static final String ERROR_MESSAGE_JSON = """
             {"message": "%s"}
         """.formatted(ERROR_MESSAGE);
