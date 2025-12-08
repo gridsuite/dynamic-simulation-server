@@ -14,13 +14,13 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.powsybl.timeseries.IrregularTimeSeriesIndex;
 import com.powsybl.timeseries.TimeSeries;
 import com.powsybl.timeseries.TimeSeriesIndex;
-import org.gridsuite.ds.server.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.service.client.AbstractWireMockRestClientTest;
 import org.gridsuite.ds.server.service.client.timeseries.impl.TimeSeriesClientImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
@@ -28,8 +28,6 @@ import java.util.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.CREATE_TIME_SERIES_ERROR;
-import static org.gridsuite.ds.server.DynamicSimulationException.Type.DELETE_TIME_SERIES_ERROR;
 import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.API_VERSION;
 import static org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient.TIME_SERIES_END_POINT;
 import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
@@ -68,10 +66,10 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
     public void setup() {
         super.setup();
         timeSeriesClient = new TimeSeriesClientImpl(
-            // use new WireMockServer(TIME_SERIES_PORT) to test with local server if needed
-            initMockWebServer(new WireMockServer(wireMockConfig().dynamicPort())),
-            restTemplate,
-            objectMapper);
+                // use new WireMockServer(TIME_SERIES_PORT) to test with local server if needed
+                initMockWebServer(new WireMockServer(wireMockConfig().dynamicPort())),
+                restTemplate,
+                objectMapper);
     }
 
     @Test
@@ -108,15 +106,11 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
                         .withBody(ERROR_MESSAGE_JSON)));
 
         // test service
-        DynamicSimulationException dynamicSimulationException = catchThrowableOfType(
-                () -> timeSeriesClient.sendTimeSeries(timeSeries),
-                DynamicSimulationException.class);
+        HttpServerErrorException dynamicSimulationException = catchThrowableOfType(HttpServerErrorException.class, () -> timeSeriesClient.sendTimeSeries(timeSeries));
 
         // check result
-        assertThat(dynamicSimulationException.getType())
-                .isEqualTo(CREATE_TIME_SERIES_ERROR);
         assertThat(dynamicSimulationException.getMessage())
-                .isEqualTo(ERROR_MESSAGE);
+                .contains(ERROR_MESSAGE);
     }
 
     @Test
@@ -152,15 +146,11 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
                         .withBody(ERROR_MESSAGE)));
 
         // test service
-        DynamicSimulationException dynamicSimulationException = catchThrowableOfType(
-                () -> timeSeriesClient.deleteTimeSeriesGroup(TIME_LINE_UUID),
-                DynamicSimulationException.class);
+        HttpServerErrorException dynamicSimulationException = catchThrowableOfType(HttpServerErrorException.class, () -> timeSeriesClient.deleteTimeSeriesGroup(TIME_LINE_UUID));
 
         // check result
-        assertThat(dynamicSimulationException.getType())
-                .isEqualTo(DELETE_TIME_SERIES_ERROR);
         assertThat(dynamicSimulationException.getMessage())
-                .isEqualTo(ERROR_MESSAGE);
+                .contains(ERROR_MESSAGE);
     }
 
     @Test
