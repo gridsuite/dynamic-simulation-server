@@ -31,6 +31,7 @@ import com.powsybl.timeseries.TimeSeries;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.computation.s3.ComputationS3Service;
 import org.gridsuite.computation.service.*;
+import org.gridsuite.ds.server.PropertyServerNameProvider;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
@@ -83,8 +84,9 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                                           DynamicSimulationResultService dynamicSimulationResultService,
                                           ComputationS3Service computationS3Service,
                                           DynamicMappingClient dynamicMappingClient,
-                                          ParametersService parametersService) {
-        super(networkStoreService, notificationService, reportService, dynamicSimulationResultService, computationS3Service, executionService, observer, objectMapper);
+                                          ParametersService parametersService,
+                                          PropertyServerNameProvider propertyServerNameProvider) {
+        super(networkStoreService, notificationService, reportService, dynamicSimulationResultService, computationS3Service, executionService, observer, objectMapper, propertyServerNameProvider);
         this.dynamicMappingClient = Objects.requireNonNull(dynamicMappingClient);
         this.parametersService = Objects.requireNonNull(parametersService);
     }
