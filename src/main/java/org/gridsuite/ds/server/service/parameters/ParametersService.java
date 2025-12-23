@@ -12,6 +12,7 @@ import com.powsybl.dynawo.suppliers.events.EventModelConfig;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.computation.dto.ReportInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
+import org.gridsuite.ds.server.dto.DynamicSimulationParametersValues;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 import org.gridsuite.ds.server.dto.event.EventInfos;
@@ -35,4 +36,9 @@ public interface ParametersService {
                                                  ReportInfos reportContext, String userId, DynamicSimulationParametersInfos parameters, boolean debug);
 
     List<DynamicModelConfig> getDynamicModel(InputMapping inputMapping, Network network);
+
+    List<DynamicModelConfig> getDynamicModel(String mappingName, UUID networkUuid, String variantId);
+
+    DynamicSimulationParametersValues getParametersValues(DynamicSimulationParametersInfos parameters, UUID networkUuid, String variantId);
+
 }

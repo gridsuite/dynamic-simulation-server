@@ -6,6 +6,7 @@
  */
 package org.gridsuite.ds.server.service.parameters.impl;
 
+import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.exceptions.UncheckedXmlStreamException;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.DynamicSimulationProvider;
@@ -20,19 +21,27 @@ import com.powsybl.dynawo.suppliers.events.EventModelConfig;
 import com.powsybl.dynawo.xml.ParametersXml;
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.VariantManagerConstants;
+import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.network.store.client.PreloadingStrategy;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.computation.dto.ReportInfos;
-import org.gridsuite.ds.server.error.DynamicSimulationException;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
+import org.gridsuite.ds.server.dto.DynamicSimulationParametersValues;
 import org.gridsuite.ds.server.dto.XmlSerializableParameter;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
+import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.dto.dynamicmapping.Rule;
 import org.gridsuite.ds.server.dto.dynamicmapping.automata.Automaton;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
+import org.gridsuite.ds.server.error.DynamicSimulationException;
+import org.gridsuite.ds.server.service.client.FilterClient;
+import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.parameters.CurveGroovyGeneratorService;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
@@ -46,17 +55,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.ds.server.error.DynamicSimulationBusinessErrorCode.MAPPING_NOT_LAST_RULE_WITH_EMPTY_FILTER_ERROR;
-import static org.gridsuite.ds.server.error.DynamicSimulationBusinessErrorCode.MAPPING_NOT_PROVIDED;
-import static org.gridsuite.ds.server.error.DynamicSimulationBusinessErrorCode.PROVIDER_NOT_FOUND;
+import static org.gridsuite.ds.server.error.DynamicSimulationBusinessErrorCode.*;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -67,14 +77,23 @@ public class ParametersServiceImpl implements ParametersService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ParametersServiceImpl.class);
     public static final String FIELD_STATIC_ID = "staticId";
 
+    private final NetworkStoreService networkStoreService;
     private final CurveGroovyGeneratorService curveGroovyGeneratorService;
+    private final DynamicMappingClient dynamicMappingClient;
+    private final FilterClient filterClient;
 
     private final String defaultProvider;
 
     @Autowired
-    public ParametersServiceImpl(CurveGroovyGeneratorService curveGroovyGeneratorService,
+    public ParametersServiceImpl(NetworkStoreService networkStoreService,
+                                 CurveGroovyGeneratorService curveGroovyGeneratorService,
+                                 DynamicMappingClient dynamicMappingClient,
+                                 FilterClient filterClient,
                                  @Value("${dynamic-simulation.default-provider}") String defaultProvider) {
+        this.networkStoreService = networkStoreService;
         this.curveGroovyGeneratorService = curveGroovyGeneratorService;
+        this.dynamicMappingClient = dynamicMappingClient;
+        this.filterClient = filterClient;
         this.defaultProvider = defaultProvider;
     }
 
@@ -98,50 +117,55 @@ public class ParametersServiceImpl implements ParametersService {
         return generatedGroovyCurves;
     }
 
-    @Override
-    public DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams, String provider, DynamicSimulationParametersInfos inputParameters) {
+    private DynawoSimulationParameters getDynawoSimulationParameters(byte[] dynamicParams, DynamicSimulationParametersInfos inputParameters) {
         try {
-            DynamicSimulationParameters parameters = new DynamicSimulationParameters();
+            DynawoSimulationParameters dynawoSimulationParameters = new DynawoSimulationParameters();
+            // --- MODEL PAR --- //
+            List<ParametersSet> modelsParameters = !ArrayUtils.isEmpty(dynamicParams) ? ParametersXml.load(new ByteArrayInputStream(dynamicParams)) : List.of();
+            dynawoSimulationParameters.setModelsParameters(modelsParameters);
 
-            // TODO: Powsybl side - create an explicit dependency to Dynawo class and keep dynamic simulation abstraction all over this micro service
-            if (DynawoSimulationProvider.NAME.equals(provider)) {
-                // --- MODEL PAR --- //
-                List<ParametersSet> modelsParameters = !ArrayUtils.isEmpty(dynamicParams) ? ParametersXml.load(new ByteArrayInputStream(dynamicParams)) : List.of();
-
-                DynawoSimulationParameters dynawoSimulationParameters = new DynawoSimulationParameters();
-                dynawoSimulationParameters.setModelsParameters(modelsParameters);
-                parameters.addExtension(DynawoSimulationParameters.class, dynawoSimulationParameters);
-
-                // TODO : a bug in powsybl-dynawo while deserializing in dynamic security analysis server, TO REMOVE
-                Set<DynawoSimulationParameters.SpecificLog> specificLogs = EnumSet.of(DynawoSimulationParameters.SpecificLog.NETWORK);
-                dynawoSimulationParameters.setSpecificLogs(specificLogs);
-
-                // --- SOLVER PAR --- //
-                // solver from input parameter
-                SolverInfos inputSolver = inputParameters.getSolvers().stream().filter(elem -> elem.getId().equals(inputParameters.getSolverId())).findFirst().orElse(null);
-                if (inputSolver != null) {
-                    ByteArrayOutputStream os = new ByteArrayOutputStream();
-                    XmlSerializableParameter.writeParameter(os, XmlSerializableParameter.PARAMETER_SET, inputSolver);
-                    ParametersSet solverParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), inputSolver.getId());
-                    dynawoSimulationParameters.setSolverType(inputSolver.getType().toSolverType());
-                    dynawoSimulationParameters.setSolverParameters(solverParameters);
-                }
-
-                // --- NETWORK PAR --- //
-                // network from input parameters
-                NetworkInfos network = inputParameters.getNetwork();
-                if (network != null) {
-                    ByteArrayOutputStream os = new ByteArrayOutputStream();
-                    XmlSerializableParameter.writeParameter(os, XmlSerializableParameter.PARAMETER_SET, network);
-                    ParametersSet networkParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), network.getId());
-                    dynawoSimulationParameters.setNetworkParameters(networkParameters);
-                }
+            // --- SOLVER PAR --- //
+            // solver from input parameter
+            SolverInfos inputSolver = inputParameters.getSolvers().stream().filter(elem -> elem.getId().equals(inputParameters.getSolverId())).findFirst().orElse(null);
+            if (inputSolver != null) {
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                XmlSerializableParameter.writeParameter(os, XmlSerializableParameter.PARAMETER_SET, inputSolver);
+                ParametersSet solverParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), inputSolver.getId());
+                dynawoSimulationParameters.setSolverType(inputSolver.getType().toSolverType());
+                dynawoSimulationParameters.setSolverParameters(solverParameters);
             }
 
-            return parameters;
+            // --- NETWORK PAR --- //
+            // network from input parameters
+            NetworkInfos network = inputParameters.getNetwork();
+            if (network != null) {
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                XmlSerializableParameter.writeParameter(os, XmlSerializableParameter.PARAMETER_SET, network);
+                ParametersSet networkParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), network.getId());
+                dynawoSimulationParameters.setNetworkParameters(networkParameters);
+            }
+
+            return dynawoSimulationParameters;
         } catch (XMLStreamException e) {
             throw new UncheckedXmlStreamException(e);
         }
+    }
+
+    @Override
+    public DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams, String provider, DynamicSimulationParametersInfos inputParameters) {
+        DynamicSimulationParameters parameters = new DynamicSimulationParameters();
+
+        // TODO: Powsybl side - create an explicit dependency to Dynawo class and keep dynamic simulation abstraction all over this micro service
+        if (DynawoSimulationProvider.NAME.equals(provider)) {
+            DynawoSimulationParameters dynawoSimulationParameters = getDynawoSimulationParameters(dynamicParams, inputParameters);
+
+            // TODO : a bug in powsybl-dynawo while deserializing in dynamic security analysis server, TO REMOVE
+            Set<DynawoSimulationParameters.SpecificLog> specificLogs = EnumSet.of(DynawoSimulationParameters.SpecificLog.NETWORK);
+            dynawoSimulationParameters.setSpecificLogs(specificLogs);
+
+            parameters.addExtension(DynawoSimulationParameters.class, dynawoSimulationParameters);
+        }
+        return parameters;
     }
 
     @Override
@@ -224,7 +248,7 @@ public class ParametersServiceImpl implements ParametersService {
                             .build();
                 }
 
-                List<Identifiable<?>> matchedEquipmentsOfCurrentRule = FiltersUtils.getIdentifiables(filter, network, null);
+                List<Identifiable<?>> matchedEquipmentsOfCurrentRule = FiltersUtils.getIdentifiables(filter, network, filterClient::getFilters);
 
                 // eliminate already matched equipments to avoid duplication
                 if (!matchedEquipmentIdsOfCurrentType.isEmpty()) {
@@ -255,5 +279,47 @@ public class ParametersServiceImpl implements ParametersService {
         ).toList());
 
         return dynamicModel;
+    }
+
+    private DynamicSimulationParametersValues getParametersValues(DynamicSimulationParametersInfos parametersInfos, Network network) {
+        // get parameters file from dynamic mapping server
+        ParameterFile parameterFile = dynamicMappingClient.exportParameters(parametersInfos.getMapping());
+
+        // get dynawo simulation parameters
+        String parameterFileContent = parameterFile.fileContent();
+        DynawoSimulationParameters dynawoSimulationParameters = getDynawoSimulationParameters(
+                parameterFileContent.getBytes(StandardCharsets.UTF_8), parametersInfos);
+
+        // get mapping then generate dynamic model configs
+        InputMapping inputMapping = dynamicMappingClient.getMapping(parametersInfos.getMapping());
+        List<DynamicModelConfig> dynamicModel = getDynamicModel(inputMapping, network);
+
+        return new DynamicSimulationParametersValues(dynamicModel, dynawoSimulationParameters);
+    }
+
+    private Network getNetwork(UUID networkUuid, String variantId) {
+        try {
+            Network network = networkStoreService.getNetwork(networkUuid, PreloadingStrategy.COLLECTION);
+            String variant = StringUtils.isBlank(variantId) ? VariantManagerConstants.INITIAL_VARIANT_ID : variantId;
+            network.getVariantManager().setWorkingVariant(variant);
+            return network;
+        } catch (PowsyblException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+    }
+
+    @Override
+    public List<DynamicModelConfig> getDynamicModel(String mappingName, UUID networkUuid, String variantId) {
+        InputMapping inputMapping = dynamicMappingClient.getMapping(mappingName);
+        Network network = getNetwork(networkUuid, variantId);
+
+        return getDynamicModel(inputMapping, network);
+    }
+
+    @Override
+    public DynamicSimulationParametersValues getParametersValues(DynamicSimulationParametersInfos parametersInfos, UUID networkUuid, String variantId) {
+        Network network = getNetwork(networkUuid, variantId);
+
+        return getParametersValues(parametersInfos, network);
     }
 }
