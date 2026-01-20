@@ -448,8 +448,12 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         assertRunningStatus(runUuid);
 
-        // stop dynamic simulation
-        cancelLatch.await();
+        // stop dynamic simulation, need a timeout to avoid test hangs if an exception occurs before latch countdown
+        boolean completed = cancelLatch.await(5, TimeUnit.SECONDS);
+        if (!completed) {
+            throw new AssertionError("Timed out waiting for cancelLatch, something might have crashed before latch countdown happens.");
+        }
+
         // custom additional wait
         await().pollDelay(cancelDelay, TimeUnit.MILLISECONDS).until(() -> true);
 
