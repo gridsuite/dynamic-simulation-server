@@ -36,11 +36,11 @@ public class DynamicSimulationParametersController {
         this.parametersService = parametersService;
     }
 
-    @PostMapping(value = "/values", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @PostMapping(value = "/values", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get the dynamic simulation parameters values")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation parameters values"),
         @ApiResponse(responseCode = "404", description = "The dynamic simulation parameters has not been found")})
-    public ResponseEntity<DynamicSimulationParametersValues> getParametersValues(@RequestParam("networkUuid") UUID networkUuid,
+    public ResponseEntity<DynamicSimulationParametersValues> getParametersValues(@RequestParam(name = "networkUuid") UUID networkUuid,
                                                                                     @RequestParam(name = "variantId", required = false) String variantId,
                                                                                     @RequestBody DynamicSimulationParametersInfos parameters) {
         DynamicSimulationParametersValues parametersValues = parametersService.getParametersValues(parameters, networkUuid, variantId);

@@ -20,6 +20,7 @@ import com.powsybl.dynawo.DumpFileParameters;
 import com.powsybl.dynawo.DynawoSimulationParameters;
 import com.powsybl.dynawo.DynawoSimulationProvider;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfigJsonUtils;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynawoModelsSupplier;
 import com.powsybl.dynawo.suppliers.events.DynawoEventModelsSupplier;
 import com.powsybl.dynawo.suppliers.events.EventModelConfig;
@@ -331,7 +332,8 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     private byte[] zipDynamicModel(List<DynamicModelConfig> dynamicModelContent) {
         byte[] zippedJsonDynamicModelContent;
         try {
-            String jsonDynamicModelContent = objectMapper.writeValueAsString(dynamicModelContent);
+            // cannot use global shared object mapper for List<DynamicModelConfig> because the Deserializer/Serializer write as an object with "models" root
+            String jsonDynamicModelContent = DynamicModelConfigJsonUtils.createObjectMapper().writeValueAsString(dynamicModelContent);
             zippedJsonDynamicModelContent = Utils.zip(jsonDynamicModelContent);
         } catch (IOException e) {
             throw new UncheckedIOException("Error occurred while zipping the dynamic model", e);
