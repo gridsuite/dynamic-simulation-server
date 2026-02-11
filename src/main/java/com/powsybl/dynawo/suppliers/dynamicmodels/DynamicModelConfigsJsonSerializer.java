@@ -33,6 +33,8 @@ import java.util.List;
  *
  * This matches {@link DynamicModelConfigsJsonDeserializer}.
  *
+ * TODO : to remove when available at powsybl-dynawo
+ *
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public class DynamicModelConfigsJsonSerializer extends StdSerializer<List<DynamicModelConfig>> {
