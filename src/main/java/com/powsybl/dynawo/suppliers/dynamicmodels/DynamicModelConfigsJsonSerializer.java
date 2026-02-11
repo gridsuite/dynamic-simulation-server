@@ -107,7 +107,7 @@ public class DynamicModelConfigsJsonSerializer extends StdSerializer<List<Dynami
 
         Object value = property.value();
         if (value instanceof List<?> list) {
-            if (list.isEmpty() || !(list.getFirst() instanceof List<?>)) {
+            if (!list.isEmpty()) {
                 // lists: List<String|int|double|boolean|TwoSides>
                 gen.writeFieldName("values");
                 gen.writeStartArray();
@@ -116,20 +116,20 @@ public class DynamicModelConfigsJsonSerializer extends StdSerializer<List<Dynami
                 }
                 gen.writeEndArray();
                 writeOptionalType(gen, property);
-            } else if (list.getFirst() instanceof List<?>) {
-                // arrays: List<List<String|integer|double|boolean|TwoSides>>
-                gen.writeFieldName("arrays");
+            }
+        } else if (value.getClass().isArray()) {
+            // arrays: List<List<String|integer|double|boolean|TwoSides>>
+            gen.writeFieldName("arrays");
+            gen.writeStartArray();
+            for (List<?> row : (List<?>[]) value) {
                 gen.writeStartArray();
-                for (Object row : list) {
-                    gen.writeStartArray();
-                    for (Object v : (List<?>) row) {
-                        gen.writeString(String.valueOf(v));
-                    }
-                    gen.writeEndArray();
+                for (Object v : row) {
+                    gen.writeString(String.valueOf(v));
                 }
                 gen.writeEndArray();
-                writeOptionalType(gen, property);
             }
+            gen.writeEndArray();
+            writeOptionalType(gen, property);
         } else {
             if (value instanceof TwoSides ts) {
                 gen.writeStringField("value", ts.name());
