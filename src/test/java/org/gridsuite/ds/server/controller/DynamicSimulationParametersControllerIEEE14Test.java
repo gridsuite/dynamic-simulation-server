@@ -43,6 +43,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+import static org.gridsuite.computation.service.AbstractResultContext.VARIANT_ID_HEADER;
 import static org.gridsuite.ds.server.utils.Utils.RESOURCE_PATH_DELIMITER;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
@@ -137,7 +138,7 @@ public class DynamicSimulationParametersControllerIEEE14Test {
         // --- Execute --- //
         MvcResult result = mockMvc.perform(post("/v1/parameters/values")
                 .param("networkUuid", NETWORK_UUID_STRING)
-                .param("variantId", VARIANT_1_ID)
+                .param(VARIANT_ID_HEADER, VARIANT_1_ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(parametersJson))
                     .andExpect(status().isOk())
