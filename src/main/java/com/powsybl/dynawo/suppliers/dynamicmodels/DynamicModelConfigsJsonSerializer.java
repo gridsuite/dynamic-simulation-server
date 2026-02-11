@@ -117,7 +117,7 @@ public class DynamicModelConfigsJsonSerializer extends StdSerializer<List<Dynami
                 gen.writeEndArray();
                 writeOptionalType(gen, property);
             }
-        } else if (value.getClass().isArray()) {
+        } else if (value != null && value.getClass().isArray()) {
             // arrays: List<List<String|integer|double|boolean|TwoSides>>
             gen.writeFieldName("arrays");
             gen.writeStartArray();
