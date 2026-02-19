@@ -16,6 +16,7 @@ import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.DynamicSimulationResult;
 import com.powsybl.dynamicsimulation.json.DynamicSimulationResultDeserializer;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
+import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfigJsonUtils;
 import com.powsybl.iidm.network.Importers;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
@@ -273,8 +274,9 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         logger.info("Size of zipped dynamic model = {} B ", zippedDynamicModel.length);
 
         // export dynamic model in json and dump files to manual check
-        List<DynamicModelConfig> dynamicModel = Utils.unzip(zippedDynamicModel, objectMapper, new TypeReference<>() { });
-        String jsonDynamicModel = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(dynamicModel);
+        ObjectMapper dynamicModelConfigObjectMapper = DynamicModelConfigJsonUtils.createObjectMapper();
+        List<DynamicModelConfig> dynamicModel = Utils.unzip(zippedDynamicModel, dynamicModelConfigObjectMapper, new TypeReference<>() { });
+        String jsonDynamicModel = dynamicModelConfigObjectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(dynamicModel);
         FileUtils.writeBytesToFile(this, outputDir + RESOURCE_PATH_DELIMITER + "dynamicModel.json", jsonDynamicModel.getBytes());
 
         file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource(".")).getFile() +

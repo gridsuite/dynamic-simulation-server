@@ -8,6 +8,7 @@ package org.gridsuite.ds.server.utils.assertions;
 
 import org.assertj.core.util.CheckReturnValue;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
+import org.gridsuite.filter.AbstractFilter;
 
 /**
  *  @author Tristan Chuine <tristan.chuine at rte-france.com>
@@ -16,6 +17,11 @@ import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 public class Assertions extends org.assertj.core.api.Assertions {
     @CheckReturnValue
     public static <T extends InputMapping> DTOAssert<InputMapping> assertThat(T actual) {
+        return new DTOAssert<>(actual);
+    }
+
+    @CheckReturnValue
+    public static <T extends AbstractFilter> DTOAssert<AbstractFilter> assertThat(T actual) {
         return new DTOAssert<>(actual);
     }
 }

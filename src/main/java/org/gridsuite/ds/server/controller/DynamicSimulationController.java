@@ -205,7 +205,7 @@ public class DynamicSimulationController {
     public ResponseEntity<List<DynamicModelConfig>> exportDynamicModel(@PathVariable("networkUuid") UUID networkUuid,
                                                                        @RequestParam(name = "variantId", required = false) String variantId,
                                                                        @RequestParam(name = "mappingName") String mappingName) {
-        List<DynamicModelConfig> dynamicModelConfigList = dynamicSimulationService.exportDynamicModel(networkUuid, variantId, mappingName);
+        List<DynamicModelConfig> dynamicModelConfigList = parametersService.getDynamicModel(mappingName, networkUuid, variantId);
         return CollectionUtils.isNotEmpty(dynamicModelConfigList) ?
                 ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(dynamicModelConfigList) :
                 ResponseEntity.noContent().build();
