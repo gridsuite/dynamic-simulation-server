@@ -31,7 +31,6 @@ import java.util.UUID;
 import static org.gridsuite.computation.service.NotificationService.HEADER_USER_ID;
 import static org.gridsuite.ds.server.DynamicSimulationApi.API_VERSION;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -181,13 +180,6 @@ public class DynamicSimulationController {
     public ResponseEntity<List<String>> getProviders() {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                 .body(dynamicSimulationService.getProviders());
-    }
-
-    @GetMapping(value = "/default-provider", produces = TEXT_PLAIN_VALUE)
-    @Operation(summary = "Get dynamic simulation default provider")
-    @ApiResponses(@ApiResponse(responseCode = "200", description = "The dynamic simulation default provider has been found"))
-    public ResponseEntity<String> getDefaultProvider() {
-        return ResponseEntity.ok().body(dynamicSimulationService.getDefaultProvider());
     }
 
     @GetMapping(value = "/results/{resultUuid}/download-debug-file", produces = "application/json")
