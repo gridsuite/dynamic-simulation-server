@@ -21,12 +21,15 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.timeseries.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.computation.service.NotificationService;
-import org.gridsuite.ds.server.controller.utils.ParameterUtils;
+import org.gridsuite.ds.server.controller.utils.ParameterTestUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
+import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
+import org.gridsuite.ds.server.entities.parameters.DynamicSimulationParametersEntity;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
+import org.gridsuite.ds.server.service.parameters.ParameterUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockedStatic;
@@ -93,6 +96,8 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     private static final String VARIANT_1_ID = "variant_1";
     private static final String TEST_FILE = "IEEE14.iidm";
 
+    private static final UUID PARAMETERS_UUID = UUID.fromString("cff95818-bf3f-418f-8f65-ee12c00e90af");
+
     @Override
     public OutputDestination getOutputDestination() {
         return output;
@@ -140,10 +145,18 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         doNothing().when(timeSeriesClient).deleteTimeSeriesGroup(any(UUID.class));
     }
 
+    private void initParametersRepositoryMock() {
+        DynamicSimulationParametersInfos params = ParameterUtils.getDefaultParametersValues();
+        params.setCurves(List.of());
+        DynamicSimulationParametersEntity entity = new DynamicSimulationParametersEntity(params);
+        given(dynamicSimulationParametersRepository.findById(PARAMETERS_UUID)).willReturn(Optional.of(entity));
+    }
+
     @Before
     @Override
     public void setUp() throws IOException {
         super.setUp();
+        initParametersRepositoryMock();
     }
 
     @Override
@@ -188,18 +201,19 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
                 AbortableInputStream.create(new ByteArrayInputStream("s3 debug file content".getBytes()))
         )).when(s3Client).getObject(any(GetObjectRequest.class));
 
-        // prepare parameters
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
+        // prepare content
+        List<EventInfos> events = List.of(); // test without events
 
         //run the dynamic simulation on a specific variant with debug
         MvcResult result = mockMvc.perform(
                 post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
                 .param("variantId", VARIANT_1_ID)
                 .param("mappingName", MAPPING_NAME)
+                .param("parametersUuid", PARAMETERS_UUID.toString())
                 .param(HEADER_DEBUG, "true")
                 .contentType(APPLICATION_JSON)
                 .header(HEADER_USER_ID, "testUserId")
-                .content(objectMapper.writeValueAsString(parameters)))
+                .content(objectMapper.writeValueAsString(events)))
                 .andExpect(status().isOk())
                 .andReturn();
         UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
@@ -221,13 +235,17 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
         verify(s3Client, times(1)).getObject(any(GetObjectRequest.class));
 
+        // prepare content
+        events = ParameterTestUtils.getEventInfosList(); // test with events
+
         //run the dynamic simulation on the implicit default variant
         result = mockMvc.perform(
                 post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
                 .param("mappingName", MAPPING_NAME)
+                .param("parametersUuid", PARAMETERS_UUID.toString())
                 .contentType(APPLICATION_JSON)
                 .header(HEADER_USER_ID, "testUserId")
-                .content(objectMapper.writeValueAsString(parameters)))
+                .content(objectMapper.writeValueAsString(events)))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -345,17 +363,18 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, finalStateValues, timeLine)))
                 .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any());
 
-        // prepare parameters
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
+        // prepare content
+        List<EventInfos> events = List.of(); // test without events
 
         //run the dynamic simulation on a specific variant
         MvcResult result = mockMvc.perform(
-                        post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
-                                .param("variantId", VARIANT_1_ID)
-                                .param("mappingName", MAPPING_NAME)
-                                .contentType(APPLICATION_JSON)
-                                .header(HEADER_USER_ID, "testUserId")
-                                .content(objectMapper.writeValueAsString(parameters)))
+                post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
+                    .param("variantId", VARIANT_1_ID)
+                    .param("mappingName", MAPPING_NAME)
+                    .param("parametersUuid", PARAMETERS_UUID.toString())
+                    .contentType(APPLICATION_JSON)
+                    .header(HEADER_USER_ID, "testUserId")
+                    .content(objectMapper.writeValueAsString(events)))
                 .andExpect(status().isOk())
                 .andReturn();
         UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
@@ -431,17 +450,18 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     private UUID runAndCancel(CountDownLatch cancelLatch, int cancelDelay) throws Exception {
-        // prepare parameters
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
+        // prepare content
+        List<EventInfos> events = List.of(); // test without events
 
         //run the dynamic simulation on a specific variant
         MvcResult result = mockMvc.perform(
-                        post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
-                                .param("variantId", VARIANT_1_ID)
-                                .param("mappingName", MAPPING_NAME)
-                                .contentType(APPLICATION_JSON)
-                                .header(HEADER_USER_ID, "testUserId")
-                                .content(objectMapper.writeValueAsString(parameters)))
+                post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
+                    .param("variantId", VARIANT_1_ID)
+                    .param("mappingName", MAPPING_NAME)
+                    .param("parametersUuid", PARAMETERS_UUID.toString())
+                    .contentType(APPLICATION_JSON)
+                    .header(HEADER_USER_ID, "testUserId")
+                    .content(objectMapper.writeValueAsString(events)))
                 .andExpect(status().isOk())
                 .andReturn();
         UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);

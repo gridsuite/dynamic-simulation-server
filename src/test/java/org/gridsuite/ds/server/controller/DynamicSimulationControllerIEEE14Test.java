@@ -15,6 +15,7 @@ import com.powsybl.commons.datasource.ResourceSet;
 import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
 import com.powsybl.dynamicsimulation.DynamicSimulationResult;
 import com.powsybl.dynamicsimulation.json.DynamicSimulationResultDeserializer;
+import com.powsybl.dynawo.DynawoSimulationParameters.SolverType;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfigJsonUtils;
 import com.powsybl.iidm.network.Importers;
@@ -26,14 +27,16 @@ import com.powsybl.timeseries.TimeSeriesDataType;
 import com.powsybl.timeseries.TimeSeriesMetadata;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.ds.server.controller.utils.FileUtils;
-import org.gridsuite.ds.server.controller.utils.ParameterUtils;
+import org.gridsuite.ds.server.controller.utils.ParameterTestUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
+import org.gridsuite.ds.server.entities.parameters.DynamicSimulationParametersEntity;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
+import org.gridsuite.ds.server.service.parameters.ParameterUtils;
 import org.gridsuite.ds.server.utils.Utils;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -81,6 +84,8 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     private static final String NETWORK_UUID_NOT_FOUND_STRING = "22222222-0000-0000-0000-000000000000";
     private static final String VARIANT_1_ID = "variant_1";
     private static final String NETWORK_FILE = "IEEE14.iidm";
+
+    private static final UUID PARAMETERS_UUID = UUID.fromString("5170a122-ebe5-4fa2-9cd9-d8f76ce04db3");
 
     // TODO remove when DynamicSimulationResultDeserializer correct curves by LinkedHashMap
     private static final Comparator<TimeSeries<?, ?>> TIME_SERIES_COMPARATOR = Comparator.comparing(timeSeries -> timeSeries.getMetadata().getName());
@@ -178,26 +183,31 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     public void test01GivenCurvesAndEvents() throws Exception {
 
         // prepare parameters
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
-
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultParametersValues();
+        parameters.setStartTime(0d);
+        parameters.setStopTime(50d);
         // Test SIM solver (IDA solver will be ignored to test at moment due to the non-determinist on different OSs, Debian vs Ubuntu)
-        parameters.setSolverId("SIM");
+        parameters.setSolver(SolverType.SIM);
 
         // given curves
-        List<CurveInfos> curveInfosList = ParameterUtils.getCurveInfosList();
+        List<CurveInfos> curveInfosList = ParameterTestUtils.getCurveInfosList();
         parameters.setCurves(curveInfosList);
 
         // given events
-        List<EventInfos> eventInfosList = ParameterUtils.getEventInfosList();
-        parameters.setEvents(eventInfosList);
+        List<EventInfos> eventInfosList = ParameterTestUtils.getEventInfosList();
+
+        // mock repository for given parameters
+        DynamicSimulationParametersEntity entity = new DynamicSimulationParametersEntity(parameters);
+        given(dynamicSimulationParametersRepository.findById(PARAMETERS_UUID)).willReturn(Optional.of(entity));
 
         //run the dynamic simulation (on a specific variant with variantId=" + VARIANT_1_ID + ")
         MvcResult result = mockMvc.perform(
                 post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
                         .param("mappingName", MAPPING_NAME_01)
+                        .param("parametersUuid", PARAMETERS_UUID.toString())
                         .contentType(APPLICATION_JSON)
                         .header(HEADER_USER_ID, "testUserId")
-                        .content(objectMapper.writeValueAsString(parameters)))
+                        .content(objectMapper.writeValueAsString(eventInfosList)))
                                    .andExpect(status().isOk())
                                    .andReturn();
 

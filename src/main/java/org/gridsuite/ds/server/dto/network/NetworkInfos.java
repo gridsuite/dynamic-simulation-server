@@ -14,6 +14,7 @@ import org.gridsuite.ds.server.dto.XmlSerializableParameter;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+import java.util.UUID;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -46,7 +47,7 @@ public class NetworkInfos implements XmlSerializableParameter {
 
     public static final String NETWORK_ID = "NETWORK";
 
-    private String id = NETWORK_ID;
+    private UUID id;
 
     private double capacitorNoReclosingDelay;
 
@@ -91,7 +92,7 @@ public class NetworkInfos implements XmlSerializableParameter {
     @Override
     public void writeParameter(XMLStreamWriter writer) throws XMLStreamException {
         writer.writeStartElement(DYN_BASE_URI, "set");
-        writer.writeAttribute("id", id);
+        writer.writeAttribute("id", NETWORK_ID);
 
         XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, CAPACITOR_NO_RECLOSING_DELAY, Double.toString(capacitorNoReclosingDelay));
         XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, DANGLING_LINE_CURRENT_LIMIT_MAX_TIME_OPERATION, Double.toString(danglingLineCurrentLimitMaxTimeOperation));

@@ -33,12 +33,29 @@ public interface ParametersService {
     DynamicSimulationParameters getDynamicSimulationParameters(byte[] dynamicParams, String provider, DynamicSimulationParametersInfos inputParameters);
 
     DynamicSimulationRunContext createRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
-                                                 ReportInfos reportContext, String userId, DynamicSimulationParametersInfos parameters, boolean debug);
+                                                 ReportInfos reportContext, String userId, UUID parametersUuid, List<EventInfos> events, boolean debug);
 
     List<DynamicModelConfig> getDynamicModel(InputMapping inputMapping, Network network);
 
     List<DynamicModelConfig> getDynamicModel(String mappingName, UUID networkUuid, String variantId);
 
-    DynamicSimulationParametersValues getParametersValues(DynamicSimulationParametersInfos parameters, UUID networkUuid, String variantId);
+    DynamicSimulationParametersValues getParametersValues(UUID parametersUuid, UUID networkUuid, String variantId);
 
+    // --- Dynamic simulation parameters related CRUD methods --- //
+
+    List<DynamicSimulationParametersInfos> getAllParameters();
+
+    DynamicSimulationParametersInfos getParameters(UUID parametersUuid);
+
+    String getProvider(UUID parametersUuid);
+
+    UUID createParameters(DynamicSimulationParametersInfos parametersInfos);
+
+    UUID createDefaultParameters();
+
+    UUID duplicateParameters(UUID sourceParametersUuid);
+
+    void updateParameters(UUID parametersUuid, DynamicSimulationParametersInfos parametersInfos);
+
+    void deleteParameters(UUID parametersUuid);
 }

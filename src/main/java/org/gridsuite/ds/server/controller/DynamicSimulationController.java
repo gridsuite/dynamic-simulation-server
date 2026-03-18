@@ -14,8 +14,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.computation.dto.ReportInfos;
-import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
+import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.service.DynamicSimulationResultService;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
@@ -64,7 +64,8 @@ public class DynamicSimulationController {
                                           @RequestParam(name = "reportType", required = false, defaultValue = "DynamicSimulation") String reportType,
                                           @RequestParam(name = "provider", required = false) String provider,
                                           @RequestParam(name = "debug", required = false, defaultValue = "false") boolean debug,
-                                          @RequestBody DynamicSimulationParametersInfos parameters,
+                                          @RequestParam(name = "parametersUuid") UUID parametersUuid,
+                                          @RequestBody List<EventInfos> events,
                                           @RequestHeader(HEADER_USER_ID) String userId) {
 
         DynamicSimulationRunContext dynamicSimulationRunContext = parametersService.createRunContext(
@@ -75,7 +76,8 @@ public class DynamicSimulationController {
             mappingName,
             ReportInfos.builder().reportUuid(reportId).reporterId(reportName).computationType(reportType).build(),
             userId,
-            parameters,
+            parametersUuid,
+            events,
             debug);
 
         UUID resultUuid = dynamicSimulationService.runAndSaveResult(dynamicSimulationRunContext);

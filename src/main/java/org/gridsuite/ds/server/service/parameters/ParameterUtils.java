@@ -1,27 +1,21 @@
-/**
- * Copyright (c) 2022, RTE (http://www.rte-france.com)
+/*
+ * Copyright (c) 2026, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+package org.gridsuite.ds.server.service.parameters;
 
-package org.gridsuite.ds.server.controller.utils;
-
+import com.powsybl.dynamicsimulation.DynamicSimulationParameters;
+import com.powsybl.dynawo.DynawoSimulationParameters;
+import com.powsybl.dynawo.DynawoSimulationProvider;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
-import org.gridsuite.ds.server.dto.curve.CurveInfos;
-import org.gridsuite.ds.server.dto.event.EventInfos;
-import org.gridsuite.ds.server.dto.event.EventPropertyInfos;
 import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.dto.solver.IdaSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SimSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
-import org.gridsuite.ds.server.dto.solver.SolverTypeInfos;
-import org.gridsuite.ds.server.utils.EquipmentType;
-import org.gridsuite.ds.server.utils.PropertyType;
 
 import java.util.List;
-
-import static org.gridsuite.ds.server.service.parameters.impl.ParametersServiceImpl.FIELD_STATIC_ID;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -31,25 +25,31 @@ public final class ParameterUtils {
         throw new AssertionError("Utility class should not be instantiated");
     }
 
-    /**
-     * get default dynamic simulation parameters
-     * @return a default dynamic simulation parameters
-     */
-    public static DynamicSimulationParametersInfos getDefaultDynamicSimulationParameters() {
-        IdaSolverInfos idaSolver = getDefaultIdaSolver();
-        SimSolverInfos simSolver = getDefaultSimSolver();
+    public static DynamicSimulationParametersInfos getDefaultParametersValues() {
+        DynamicSimulationParameters defaultConfigParameters = DynamicSimulationParameters.load();
+
+        IdaSolverInfos idaSolver = getDefaultIdaSolverValues();
+        SimSolverInfos simSolver = getDefaultSimSolverValues();
         List<SolverInfos> solvers = List.of(idaSolver, simSolver);
 
-        NetworkInfos network = getDefaultNetwork();
-        return new DynamicSimulationParametersInfos(null, 0.0, 50.0, null, idaSolver.getId(), solvers, network, null, null);
+        NetworkInfos network = getDefaultNetworkValues();
+
+        return DynamicSimulationParametersInfos.builder()
+                .provider(DynawoSimulationProvider.NAME)
+                .startTime(defaultConfigParameters.getStartTime())
+                .stopTime(defaultConfigParameters.getStopTime())
+                .solver(DynawoSimulationParameters.SolverType.IDA)
+                .solvers(solvers)
+                .network(network)
+                .build();
     }
 
-    public static IdaSolverInfos getDefaultIdaSolver() {
+    public static IdaSolverInfos getDefaultIdaSolverValues() {
         IdaSolverInfos idaSolver = new IdaSolverInfos();
 
-        // these parameters are taken from solver.par file in dynamic simulation server
-        idaSolver.setId("IDA");
-        idaSolver.setType(SolverTypeInfos.IDA);
+        // we do not yet support getting values from DynawoSimulationParameters.load()
+        // due to the lack of deserialization from the solvers.par file to the dto
+        idaSolver.setType(DynawoSimulationParameters.SolverType.IDA);
         idaSolver.setOrder(2);
         idaSolver.setInitStep(1.e-7);
         idaSolver.setMinStep(1.e-7);
@@ -84,11 +84,12 @@ public final class ParameterUtils {
         return idaSolver;
     }
 
-    public static SimSolverInfos getDefaultSimSolver() {
+    public static SimSolverInfos getDefaultSimSolverValues() {
         SimSolverInfos simSolver = new SimSolverInfos();
 
-        simSolver.setId("SIM");
-        simSolver.setType(SolverTypeInfos.SIM);
+        // we do not yet support getting values from DynawoSimulationParameters.load()
+        // due to the lack of deserialization from the solvers.par file to the dto
+        simSolver.setType(DynawoSimulationParameters.SolverType.SIM);
         simSolver.setHMin(0.001);
         simSolver.setHMax(1);
         simSolver.setKReduceStep(0.5);
@@ -136,8 +137,11 @@ public final class ParameterUtils {
         return simSolver;
     }
 
-    public static NetworkInfos getDefaultNetwork() {
+    public static NetworkInfos getDefaultNetworkValues() {
         NetworkInfos network = new NetworkInfos();
+
+        // we do not yet support getting values from DynawoSimulationParameters.load()
+        // due to the lack of deserialization from the network.par file to the dto
         network.setCapacitorNoReclosingDelay(300);
         network.setDanglingLineCurrentLimitMaxTimeOperation(240);
         network.setLineCurrentLimitMaxTimeOperation(240);
@@ -160,39 +164,5 @@ public final class ParameterUtils {
         network.setTransformerTolV(0.015);
 
         return network;
-    }
-
-    public static List<CurveInfos> getCurveInfosList() {
-        return List.of(
-                new CurveInfos(EquipmentType.LOAD, "_LOAD___2_EC", "load_PPu"),
-                new CurveInfos(EquipmentType.LOAD, "_LOAD___2_EC", "load_QPu"),
-                new CurveInfos(EquipmentType.GENERATOR, "_GEN____3_SM", "generator_omegaPu"),
-                new CurveInfos(EquipmentType.GENERATOR, "_GEN____3_SM", "generator_PGen"),
-                new CurveInfos(EquipmentType.GENERATOR, "_GEN____3_SM", "generator_QGen"),
-                new CurveInfos(EquipmentType.GENERATOR, "_GEN____3_SM", "generator_UStatorPu"),
-                new CurveInfos(EquipmentType.GENERATOR, "_GEN____3_SM", "voltageRegulator_EfdPu"),
-                new CurveInfos(EquipmentType.STATIC_VAR_COMPENSATOR, "SVC2", "SVarC_injector_UPu"),
-                new CurveInfos(EquipmentType.STATIC_VAR_COMPENSATOR, "SVC2", "SVarC_injector_PInjPu"),
-                new CurveInfos(EquipmentType.STATIC_VAR_COMPENSATOR, "SVC2", "SVarC_injector_QInjPu"),
-                new CurveInfos(EquipmentType.STATIC_VAR_COMPENSATOR, "SVC2", "SVarC_injector_BPu"),
-                new CurveInfos(EquipmentType.STATIC_VAR_COMPENSATOR, "SVC2", "SVarC_modeHandling_mode_value")
-        );
-    }
-
-    public static List<EventInfos> getEventInfosList() {
-        return List.of(
-                new EventInfos(null, null, "_BUS____1-BUS____5-1_AC", null, "Disconnect", List.of(
-                        new EventPropertyInfos(null, FIELD_STATIC_ID, "_BUS____1-BUS____5-1_AC", PropertyType.STRING),
-                        new EventPropertyInfos(null, "startTime", "10", PropertyType.FLOAT),
-                        new EventPropertyInfos(null, "disconnectOnly", "TwoSides.TWO", PropertyType.ENUM)
-                )),
-                new EventInfos(null, null, "_BUS____1_TN", null, "FaultNode", List.of(
-                        new EventPropertyInfos(null, FIELD_STATIC_ID, "_BUS____1_TN", PropertyType.STRING),
-                        new EventPropertyInfos(null, "startTime", "20", PropertyType.FLOAT),
-                        new EventPropertyInfos(null, "faultTime", "2", PropertyType.FLOAT),
-                        new EventPropertyInfos(null, "rPu", "23", PropertyType.FLOAT),
-                        new EventPropertyInfos(null, "xPu", "32", PropertyType.FLOAT)
-                ))
-        );
     }
 }

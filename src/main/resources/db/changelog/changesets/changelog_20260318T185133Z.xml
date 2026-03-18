@@ -1,0 +1,136 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="phamquy (generated)" id="1773859913045-1">
+        <createTable tableName="curve">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="curvePK"/>
+            </column>
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="equipment_type" type="VARCHAR(255)"/>
+            <column name="variable_id" type="VARCHAR(255)"/>
+            <column name="dynamic_simulation_parameters_id" type="UUID"/>
+            <column name="pos" type="INT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1773859913045-2">
+        <createTable tableName="dynamic_simulation_parameters">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="dynamic_simulation_parametersPK"/>
+            </column>
+            <column name="mapping" type="VARCHAR(255)"/>
+            <column name="provider" type="VARCHAR(255)"/>
+            <column name="solver_id" type="VARCHAR(255)"/>
+            <column name="start_time" type="FLOAT(53)"/>
+            <column name="stop_time" type="FLOAT(53)"/>
+            <column name="network_parameters_id" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1773859913045-3">
+        <createTable tableName="network_parameters">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="network_parametersPK"/>
+            </column>
+            <column name="capacitor_no_reclosing_delay" type="FLOAT(53)"/>
+            <column name="dangling_line_current_limit_max_time_operation" type="FLOAT(53)"/>
+            <column name="line_current_limit_max_time_operation" type="FLOAT(53)"/>
+            <column name="load_alpha" type="FLOAT(53)"/>
+            <column name="load_alpha_long" type="FLOAT(53)"/>
+            <column name="load_beta" type="FLOAT(53)"/>
+            <column name="load_beta_long" type="FLOAT(53)"/>
+            <column name="load_is_controllable" type="BOOLEAN"/>
+            <column name="load_is_restorative" type="BOOLEAN"/>
+            <column name="load_tp" type="FLOAT(53)"/>
+            <column name="load_tq" type="FLOAT(53)"/>
+            <column name="load_zp_max" type="FLOAT(53)"/>
+            <column name="load_zq_max" type="FLOAT(53)"/>
+            <column name="reactance_no_reclosing_delay" type="FLOAT(53)"/>
+            <column name="transformer_current_limit_max_time_operation" type="FLOAT(53)"/>
+            <column name="transformer_t1st_ht" type="FLOAT(53)"/>
+            <column name="transformer_t1st_tht" type="FLOAT(53)"/>
+            <column name="transformer_t_next_ht" type="FLOAT(53)"/>
+            <column name="transformer_t_next_tht" type="FLOAT(53)"/>
+            <column name="transformer_tol_v" type="FLOAT(53)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1773859913045-4">
+        <createTable tableName="solver_parameters">
+            <column name="solver_type" type="VARCHAR(31)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="solver_parametersPK"/>
+            </column>
+            <column name="f_norm_tol_alg" type="FLOAT(53)"/>
+            <column name="f_norm_tol_alg_init" type="FLOAT(53)"/>
+            <column name="f_norm_tol_alg_j" type="FLOAT(53)"/>
+            <column name="initial_add_tol_alg" type="FLOAT(53)"/>
+            <column name="initial_add_tol_alg_init" type="FLOAT(53)"/>
+            <column name="initial_add_tol_alg_j" type="FLOAT(53)"/>
+            <column name="max_number_slow_step_increase" type="INT"/>
+            <column name="minimal_acceptable_step" type="FLOAT(53)"/>
+            <column name="msbset_alg" type="INT"/>
+            <column name="msbset_alg_init" type="INT"/>
+            <column name="msbset_alg_j" type="INT"/>
+            <column name="mx_iter_alg" type="INT"/>
+            <column name="mx_iter_alg_init" type="INT"/>
+            <column name="mx_iter_alg_j" type="INT"/>
+            <column name="mx_new_t_step_alg" type="FLOAT(53)"/>
+            <column name="mx_new_t_step_alg_init" type="FLOAT(53)"/>
+            <column name="mx_new_t_step_alg_j" type="FLOAT(53)"/>
+            <column name="print_fl_alg" type="INT"/>
+            <column name="print_fl_alg_init" type="INT"/>
+            <column name="print_fl_alg_j" type="INT"/>
+            <column name="sc_step_tol_alg" type="FLOAT(53)"/>
+            <column name="sc_step_tol_alg_init" type="FLOAT(53)"/>
+            <column name="sc_step_tol_alg_j" type="FLOAT(53)"/>
+            <column name="abs_accuracy" type="FLOAT(53)"/>
+            <column name="init_step" type="FLOAT(53)"/>
+            <column name="max_step" type="FLOAT(53)"/>
+            <column name="min_step" type="FLOAT(53)"/>
+            <column name="order_value" type="INT"/>
+            <column name="rel_accuracy" type="FLOAT(53)"/>
+            <column name="enable_silent_z" type="BOOLEAN"/>
+            <column name="f_norm_tol" type="FLOAT(53)"/>
+            <column name="h_max" type="FLOAT(53)"/>
+            <column name="h_min" type="FLOAT(53)"/>
+            <column name="initial_add_tol" type="FLOAT(53)"/>
+            <column name="k_reduce_step" type="FLOAT(53)"/>
+            <column name="linear_solver_name" type="VARCHAR(255)"/>
+            <column name="max_newton_try" type="INT"/>
+            <column name="min_mode_change_type_alg_restoration" type="VARCHAR(255)"/>
+            <column name="min_mode_change_type_alg_restoration_init" type="VARCHAR(255)"/>
+            <column name="msbset" type="INT"/>
+            <column name="mx_iter" type="INT"/>
+            <column name="mx_new_t_step" type="FLOAT(53)"/>
+            <column name="optimize_algebraic_residuals_evaluations" type="BOOLEAN"/>
+            <column name="optimize_reinit_algebraic_residuals_evaluations" type="BOOLEAN"/>
+            <column name="print_fl" type="INT"/>
+            <column name="sc_step_tol" type="FLOAT(53)"/>
+            <column name="skip_nr_if_initial_guess_ok" type="BOOLEAN"/>
+            <column name="dynamic_simulation_parameters_id" type="UUID"/>
+            <column name="pos" type="INT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1773859913045-5">
+        <addUniqueConstraint columnNames="network_parameters_id" constraintName="UC_DYNAMIC_SIMULATION_PARAMETERSNETWORK_PARAMETERS_ID_COL" tableName="dynamic_simulation_parameters"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1773859913045-6">
+        <createIndex indexName="idx_curve_dynamic_simulation_parameters_id" tableName="curve">
+            <column name="dynamic_simulation_parameters_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1773859913045-7">
+        <createIndex indexName="idx_solver_parameters_dynamic_simulation_parameters_id" tableName="solver_parameters">
+            <column name="dynamic_simulation_parameters_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1773859913045-8">
+        <addForeignKeyConstraint baseColumnNames="dynamic_simulation_parameters_id" baseTableName="curve" constraintName="curve_dynamic_simulation_parameters_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="dynamic_simulation_parameters" validate="true"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1773859913045-9">
+        <addForeignKeyConstraint baseColumnNames="network_parameters_id" baseTableName="dynamic_simulation_parameters" constraintName="dynamic_simulation_parameters_network_parameters_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="network_parameters" validate="true"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1773859913045-10">
+        <addForeignKeyConstraint baseColumnNames="dynamic_simulation_parameters_id" baseTableName="solver_parameters" constraintName="solver_parameters_dynamic_simulation_parameters_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="dynamic_simulation_parameters" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
