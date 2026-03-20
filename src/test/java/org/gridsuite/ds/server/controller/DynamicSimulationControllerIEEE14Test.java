@@ -186,7 +186,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultParametersValues();
         parameters.setStartTime(0d);
         parameters.setStopTime(50d);
-        // Test SIM solver (IDA solver will be ignored to test at moment due to the non-determinist on different OSs, Debian vs Ubuntu)
+        // Test SIM solver (IDA solver will be ignored to test at the moment due to the non-determinist on different OSs, Debian vs Ubuntu)
         parameters.setSolver(SolverType.SIM);
 
         // given curves
@@ -196,6 +196,9 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         // given events
         List<EventInfos> eventInfosList = ParameterTestUtils.getEventInfosList();
 
+        // run with mapping
+        parameters.setMapping(MAPPING_NAME_01);
+
         // mock repository for given parameters
         DynamicSimulationParametersEntity entity = new DynamicSimulationParametersEntity(parameters);
         given(dynamicSimulationParametersRepository.findById(PARAMETERS_UUID)).willReturn(Optional.of(entity));
@@ -203,7 +206,6 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         //run the dynamic simulation (on a specific variant with variantId=" + VARIANT_1_ID + ")
         MvcResult result = mockMvc.perform(
                 post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
-                        .param("mappingName", MAPPING_NAME_01)
                         .param("parametersUuid", PARAMETERS_UUID.toString())
                         .contentType(APPLICATION_JSON)
                         .header(HEADER_USER_ID, "testUserId")

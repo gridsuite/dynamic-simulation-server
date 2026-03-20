@@ -148,6 +148,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     private void initParametersRepositoryMock() {
         DynamicSimulationParametersInfos params = ParameterUtils.getDefaultParametersValues();
         params.setCurves(List.of());
+        params.setMapping(MAPPING_NAME);
         DynamicSimulationParametersEntity entity = new DynamicSimulationParametersEntity(params);
         given(dynamicSimulationParametersRepository.findById(PARAMETERS_UUID)).willReturn(Optional.of(entity));
     }
@@ -208,7 +209,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         MvcResult result = mockMvc.perform(
                 post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
                 .param("variantId", VARIANT_1_ID)
-                .param("mappingName", MAPPING_NAME)
                 .param("parametersUuid", PARAMETERS_UUID.toString())
                 .param(HEADER_DEBUG, "true")
                 .contentType(APPLICATION_JSON)
@@ -241,7 +241,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         //run the dynamic simulation on the implicit default variant
         result = mockMvc.perform(
                 post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
-                .param("mappingName", MAPPING_NAME)
                 .param("parametersUuid", PARAMETERS_UUID.toString())
                 .contentType(APPLICATION_JSON)
                 .header(HEADER_USER_ID, "testUserId")
@@ -370,7 +369,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         MvcResult result = mockMvc.perform(
                 post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
                     .param("variantId", VARIANT_1_ID)
-                    .param("mappingName", MAPPING_NAME)
                     .param("parametersUuid", PARAMETERS_UUID.toString())
                     .contentType(APPLICATION_JSON)
                     .header(HEADER_USER_ID, "testUserId")
@@ -457,7 +455,6 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         MvcResult result = mockMvc.perform(
                 post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
                     .param("variantId", VARIANT_1_ID)
-                    .param("mappingName", MAPPING_NAME)
                     .param("parametersUuid", PARAMETERS_UUID.toString())
                     .contentType(APPLICATION_JSON)
                     .header(HEADER_USER_ID, "testUserId")

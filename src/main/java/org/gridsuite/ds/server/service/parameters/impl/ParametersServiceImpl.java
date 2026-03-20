@@ -180,8 +180,9 @@ public class ParametersServiceImpl implements ParametersService {
     }
 
     @Override
-    public DynamicSimulationRunContext createRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
-                                                        ReportInfos reportInfos, String userId, UUID parametersUuid, List<EventInfos> events, boolean debug) {
+    public DynamicSimulationRunContext createRunContext(
+            UUID networkUuid, String variantId, String receiver, ReportInfos reportInfos,
+            String userId, UUID parametersUuid, List<EventInfos> events, boolean debug) {
 
         DynamicSimulationParametersInfos parametersInfos = doGetParameters(parametersUuid);
         DynamicSimulationRunContext runContext = DynamicSimulationRunContext.builder()
@@ -195,11 +196,7 @@ public class ParametersServiceImpl implements ParametersService {
                 .build();
 
         // set provider for run context
-        String providerToUse = provider;
-        if (providerToUse == null) {
-            providerToUse = Optional.ofNullable(runContext.getParameters().getProvider()).orElse(defaultProvider);
-        }
-
+        String providerToUse = Optional.ofNullable(runContext.getParameters().getProvider()).orElse(defaultProvider);
         runContext.setProvider(providerToUse);
 
         // check provider
@@ -209,10 +206,7 @@ public class ParametersServiceImpl implements ParametersService {
         }
 
         // set mapping for run context
-        String mappingToUse = mapping;
-        if (mappingToUse == null) {
-            mappingToUse = runContext.getParameters().getMapping();
-        }
+        String mappingToUse = runContext.getParameters().getMapping();
         runContext.setMapping(mappingToUse);
 
         // check mapping
