@@ -58,6 +58,11 @@ public class IdaSolverParametersEntity extends SolverParametersEntity {
     }
 
     @Override
+    public void update(SolverInfos solverInfos) {
+        assignAttributes((IdaSolverInfos) solverInfos);
+    }
+
+    @Override
     public SolverInfos toDto(boolean toDuplicate) {
         IdaSolverInfos dto = IdaSolverInfos.builder()
                 .order(order)

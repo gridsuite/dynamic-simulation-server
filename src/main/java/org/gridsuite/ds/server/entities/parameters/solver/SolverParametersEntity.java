@@ -140,9 +140,7 @@ public abstract class SolverParametersEntity {
         minimalAcceptableStep = solverInfos.getMinimalAcceptableStep();
     }
 
-    public void update(SolverInfos solverInfos) {
-        assignAttributes((AbstractSolverInfos) solverInfos);
-    }
+    public abstract void update(SolverInfos solverInfos);
 
     protected void fillDto(AbstractSolverInfos solverInfos, boolean toDuplicate) {
         solverInfos.setId(toDuplicate ? null : id);

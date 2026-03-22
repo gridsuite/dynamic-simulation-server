@@ -74,10 +74,11 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
 
         // specific headers for dynamic simulation
         runContext.setMapping(getNonNullHeader(headers, HEADER_MAPPING));
-        String eventsJson = getNonNullHeader(headers, HEADER_EVENTS);
+        // using Object then toString() to avoid casting exception since rabbitmq uses LongString instead of String
+        Object eventsJson = headers.get(HEADER_EVENTS);
         List<EventInfos> events;
         try {
-            events = objectMapper.readValue(eventsJson, new TypeReference<>() { });
+            events = objectMapper.readValue(eventsJson.toString(), new TypeReference<>() { });
         } catch (JsonProcessingException e) {
             throw new UncheckedIOException(e);
         }

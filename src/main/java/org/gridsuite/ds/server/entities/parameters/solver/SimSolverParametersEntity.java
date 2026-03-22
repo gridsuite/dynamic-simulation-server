@@ -106,6 +106,11 @@ public class SimSolverParametersEntity extends SolverParametersEntity {
     }
 
     @Override
+    public void update(SolverInfos solverInfos) {
+        assignAttributes((SimSolverInfos) solverInfos);
+    }
+
+    @Override
     public SolverInfos toDto(boolean toDuplicate) {
         SimSolverInfos dto = SimSolverInfos.builder()
                 .hMin(hMin)
