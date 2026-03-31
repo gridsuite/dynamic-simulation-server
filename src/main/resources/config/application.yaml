@@ -43,6 +43,9 @@ spring:
           consumeRun2-in-0:
             <<: *consumeRunRabbitConfig
 computation:
+  rabbit:
+    loadbalanced-group:
+      - dsGroup
   s3:
     enabled: true
 
