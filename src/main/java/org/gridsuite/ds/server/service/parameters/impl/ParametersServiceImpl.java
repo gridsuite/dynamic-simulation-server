@@ -292,6 +292,10 @@ public class ParametersServiceImpl implements ParametersService {
     }
 
     private DynamicSimulationParametersValues getParametersValues(DynamicSimulationParametersInfos parametersInfos, Network network) {
+        if (parametersInfos.getMapping() == null) {
+            throw new DynamicSimulationException(MAPPING_NOT_PROVIDED, "Dynamic simulation mapping not provided");
+        }
+
         // get parameters file from dynamic mapping server
         ParameterFile parameterFile = dynamicMappingClient.exportParameters(parametersInfos.getMapping());
 
