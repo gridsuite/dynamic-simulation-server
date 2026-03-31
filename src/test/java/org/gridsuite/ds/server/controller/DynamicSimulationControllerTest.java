@@ -325,11 +325,11 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
 
         assertThat(statusAfterInvalidate).isSameAs(DynamicSimulationStatus.NOT_DONE);
 
-        // set NOT_DONE for none existing result
+        // set NOT_DONE for none existing result => 200 (same as delete)
         mockMvc.perform(
                 put("/v1/results/invalidate-status")
                 .param("resultUuid", UUID.randomUUID().toString()))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
 
         //delete a result
         mockMvc.perform(
