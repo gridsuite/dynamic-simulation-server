@@ -10,6 +10,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import org.gridsuite.ds.server.CustomApplicationContextInitializer;
 import org.gridsuite.ds.server.DynamicSimulationApplication;
 import org.gridsuite.ds.server.controller.utils.TestUtils;
+import org.gridsuite.ds.server.repository.DynamicSimulationParametersRepository;
 import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
@@ -57,6 +58,9 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
 
     @MockitoBean
     protected NetworkStoreService networkStoreClient;
+
+    @MockitoBean
+    protected DynamicSimulationParametersRepository dynamicSimulationParametersRepository;
 
     @MockitoSpyBean
     protected DynamicSimulationWorkerService dynamicSimulationWorkerService;

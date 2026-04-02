@@ -9,16 +9,14 @@ package org.gridsuite.ds.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.powsybl.dynawo.DynawoSimulationParameters.SolverType;
+import lombok.*;
 import org.gridsuite.ds.server.dto.curve.CurveInfos;
-import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -27,17 +25,18 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
+@Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DynamicSimulationParametersInfos {
+    private UUID id;
     private String provider;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Double startTime;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Double stopTime;
     private String mapping;
-    private String solverId;
+    private SolverType solver;
     private List<SolverInfos> solvers;
     private NetworkInfos network;
     private List<CurveInfos> curves;
-    private List<EventInfos> events;
 }

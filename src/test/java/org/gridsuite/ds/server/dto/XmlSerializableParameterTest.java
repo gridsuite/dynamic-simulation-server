@@ -9,11 +9,11 @@ package org.gridsuite.ds.server.dto;
 
 import com.powsybl.commons.exceptions.UncheckedSaxException;
 import org.gridsuite.ds.server.DynamicSimulationApplication;
-import org.gridsuite.ds.server.controller.utils.ParameterUtils;
 import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.dto.solver.IdaSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SimSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
+import org.gridsuite.ds.server.service.parameters.ParameterUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -76,9 +76,9 @@ public class XmlSerializableParameterTest {
     @Test
     public void testWriteParameterGivenSolvers() throws IOException, XMLStreamException {
 
-        IdaSolverInfos idaSolver = ParameterUtils.getDefaultIdaSolver();
+        IdaSolverInfos idaSolver = ParameterUtils.getDefaultIdaSolverValues();
 
-        SimSolverInfos simSolver = ParameterUtils.getDefaultSimSolver();
+        SimSolverInfos simSolver = ParameterUtils.getDefaultSimSolverValues();
 
         SolverInfos[] solvers = {idaSolver, simSolver};
 
@@ -94,7 +94,7 @@ public class XmlSerializableParameterTest {
 
     @Test
     public void testWriteParameterGivenNetwork() throws IOException, XMLStreamException {
-        NetworkInfos network = ParameterUtils.getDefaultNetwork();
+        NetworkInfos network = ParameterUtils.getDefaultNetworkValues();
 
         // export network to par file
         String resultDir = getClass().getResource(DATA_XML + RESOURCE_PATH_DELIMITER + OUTPUT).getPath();

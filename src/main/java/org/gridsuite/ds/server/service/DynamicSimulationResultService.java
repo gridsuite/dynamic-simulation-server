@@ -5,7 +5,7 @@ import org.gridsuite.computation.error.ComputationException;
 import org.gridsuite.computation.service.AbstractComputationResultService;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
-import org.gridsuite.ds.server.model.ResultEntity;
+import org.gridsuite.ds.server.entities.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.slf4j.Logger;

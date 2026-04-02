@@ -15,6 +15,7 @@ import lombok.Setter;
 import org.gridsuite.computation.dto.ReportInfos;
 import org.gridsuite.computation.service.AbstractComputationRunContext;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
+import org.gridsuite.ds.server.dto.event.EventInfos;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.UUID;
 public class DynamicSimulationRunContext extends AbstractComputationRunContext<DynamicSimulationParametersInfos> {
 
     private String mapping;
+    private List<EventInfos> events;
 
     // --- Fields which are enriched in worker service --- //
 

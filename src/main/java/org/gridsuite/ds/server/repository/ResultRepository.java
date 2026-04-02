@@ -7,7 +7,7 @@
 package org.gridsuite.ds.server.repository;
 
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
-import org.gridsuite.ds.server.model.ResultEntity;
+import org.gridsuite.ds.server.entities.ResultEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
