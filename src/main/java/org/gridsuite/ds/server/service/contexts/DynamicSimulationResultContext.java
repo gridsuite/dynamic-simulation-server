@@ -7,14 +7,17 @@
 package org.gridsuite.ds.server.service.contexts;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gridsuite.computation.dto.ReportInfos;
 import org.gridsuite.computation.service.AbstractResultContext;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
+import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 
 import java.io.UncheckedIOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -28,6 +31,7 @@ import static org.gridsuite.computation.utils.MessageUtils.getNonNullHeader;
 public class DynamicSimulationResultContext extends AbstractResultContext<DynamicSimulationRunContext> {
 
     public static final String HEADER_MAPPING = "mapping";
+    public static final String HEADER_EVENTS = "events";
 
     public DynamicSimulationResultContext(UUID resultUuid, DynamicSimulationRunContext runContext) {
         super(resultUuid, runContext);
@@ -70,12 +74,28 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
 
         // specific headers for dynamic simulation
         runContext.setMapping(getNonNullHeader(headers, HEADER_MAPPING));
+        // using Object then toString() to avoid casting exception since rabbitmq uses LongString instead of String
+        Object eventsJson = headers.get(HEADER_EVENTS);
+        List<EventInfos> events;
+        try {
+            events = objectMapper.readValue(eventsJson.toString(), new TypeReference<>() { });
+        } catch (JsonProcessingException e) {
+            throw new UncheckedIOException(e);
+        }
+        runContext.setEvents(events);
 
         return new DynamicSimulationResultContext(resultUuid, runContext);
     }
 
     @Override
-    public Map<String, String> getSpecificMsgHeaders(ObjectMapper ignoredObjectMapper) {
-        return Map.of(HEADER_MAPPING, getRunContext().getMapping());
+    public Map<String, String> getSpecificMsgHeaders(ObjectMapper objectMapper) {
+        String eventsJson;
+        try {
+            eventsJson = objectMapper.writeValueAsString(getRunContext().getEvents());
+        } catch (JsonProcessingException e) {
+            throw new UncheckedIOException(e);
+        }
+        return Map.of(HEADER_MAPPING, getRunContext().getMapping(),
+                HEADER_EVENTS, eventsJson);
     }
 }

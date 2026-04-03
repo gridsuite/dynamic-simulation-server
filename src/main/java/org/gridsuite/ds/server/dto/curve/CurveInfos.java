@@ -8,11 +8,10 @@
 package org.gridsuite.ds.server.dto.curve;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.gridsuite.ds.server.utils.EquipmentType;
+
+import java.util.UUID;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -21,8 +20,10 @@ import org.gridsuite.ds.server.utils.EquipmentType;
 @AllArgsConstructor
 @Getter
 @Setter
+@Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CurveInfos {
+    private UUID id;
     private EquipmentType equipmentType;
     private String equipmentId;
     private String variableId;

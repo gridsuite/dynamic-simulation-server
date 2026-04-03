@@ -91,7 +91,7 @@ public class SimSolverInfos extends AbstractSolverInfos {
     @Override
     public void writeParameter(XMLStreamWriter writer) throws XMLStreamException {
         writer.writeStartElement(DYN_BASE_URI, "set");
-        writer.writeAttribute("id", getId());
+        writer.writeAttribute("id", getType().name());
 
         XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, H_MIN, Double.toString(hMin));
         XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, H_MAX, Double.toString(hMax));

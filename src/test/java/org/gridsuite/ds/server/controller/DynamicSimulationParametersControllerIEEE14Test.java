@@ -12,18 +12,21 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
 import com.powsybl.commons.datasource.ResourceSet;
+import com.powsybl.dynawo.DynawoSimulationParameters.SolverType;
 import com.powsybl.iidm.network.Importers;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import org.gridsuite.ds.server.DynamicSimulationApplication;
-import org.gridsuite.ds.server.controller.utils.ParameterUtils;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersValues;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
+import org.gridsuite.ds.server.entities.parameters.DynamicSimulationParametersEntity;
+import org.gridsuite.ds.server.repository.DynamicSimulationParametersRepository;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
+import org.gridsuite.ds.server.service.parameters.ParameterUtils;
 import org.gridsuite.ds.server.utils.assertions.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,7 +51,7 @@ import static org.gridsuite.ds.server.utils.Utils.RESOURCE_PATH_DELIMITER;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -72,11 +75,16 @@ public class DynamicSimulationParametersControllerIEEE14Test {
     private static final String VARIANT_1_ID = "variant_1";
     private static final String NETWORK_FILE = "IEEE14.iidm";
 
+    private static final UUID PARAMETERS_UUID = UUID.fromString("5a25abdc-c227-4321-9e79-b5347ba7c42e");
+
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockitoBean
+    protected DynamicSimulationParametersRepository dynamicSimulationParametersRepository;
 
     @MockitoBean
     protected DynamicMappingClient dynamicMappingClient;
@@ -129,18 +137,20 @@ public class DynamicSimulationParametersControllerIEEE14Test {
     @Test
     void testGetParametersValues() throws Exception {
         // --- Setup --- //
-        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultDynamicSimulationParameters();
-        parameters.setSolverId("SIM");
+        DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultParametersValues();
+        parameters.setSolver(SolverType.SIM);
         parameters.setMapping(MAPPING_NAME_01);
 
-        String parametersJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(parameters);
+        DynamicSimulationParametersEntity entity = new DynamicSimulationParametersEntity(parameters);
+
+        // mock repository for given parameters
+        given(dynamicSimulationParametersRepository.findById(PARAMETERS_UUID)).willReturn(java.util.Optional.of(entity));
 
         // --- Execute --- //
-        MvcResult result = mockMvc.perform(post("/v1/parameters/values")
+        MvcResult result = mockMvc.perform(get("/v1/parameters/" + PARAMETERS_UUID.toString() + "/values")
                 .param("networkUuid", NETWORK_UUID_STRING)
                 .param(VARIANT_ID_HEADER, VARIANT_1_ID)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(parametersJson))
+                .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andReturn();
 

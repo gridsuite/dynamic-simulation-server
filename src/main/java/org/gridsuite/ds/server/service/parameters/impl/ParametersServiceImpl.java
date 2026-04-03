@@ -28,6 +28,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.computation.dto.ReportInfos;
+import org.gridsuite.computation.error.ComputationException;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationParametersValues;
 import org.gridsuite.ds.server.dto.XmlSerializableParameter;
@@ -39,11 +40,14 @@ import org.gridsuite.ds.server.dto.dynamicmapping.automata.Automaton;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.network.NetworkInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
+import org.gridsuite.ds.server.entities.parameters.DynamicSimulationParametersEntity;
 import org.gridsuite.ds.server.error.DynamicSimulationException;
+import org.gridsuite.ds.server.repository.DynamicSimulationParametersRepository;
 import org.gridsuite.ds.server.service.client.FilterClient;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
 import org.gridsuite.ds.server.service.parameters.CurveGroovyGeneratorService;
+import org.gridsuite.ds.server.service.parameters.ParameterUtils;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.gridsuite.ds.server.utils.Utils;
 import org.gridsuite.filter.expertfilter.ExpertFilter;
@@ -57,6 +61,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.xml.stream.XMLStreamException;
@@ -66,6 +71,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.gridsuite.computation.error.ComputationBusinessErrorCode.PARAMETERS_NOT_FOUND;
+import static org.gridsuite.ds.server.dto.network.NetworkInfos.NETWORK_ID;
 import static org.gridsuite.ds.server.error.DynamicSimulationBusinessErrorCode.*;
 
 /**
@@ -76,7 +83,9 @@ public class ParametersServiceImpl implements ParametersService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ParametersServiceImpl.class);
     public static final String FIELD_STATIC_ID = "staticId";
+    public static final String MSG_PARAMETERS_UUID_NOT_FOUND = "Parameters uuid not found: ";
 
+    private final DynamicSimulationParametersRepository dynamicSimulationParametersRepository;
     private final NetworkStoreService networkStoreService;
     private final CurveGroovyGeneratorService curveGroovyGeneratorService;
     private final DynamicMappingClient dynamicMappingClient;
@@ -85,11 +94,13 @@ public class ParametersServiceImpl implements ParametersService {
     private final String defaultProvider;
 
     @Autowired
-    public ParametersServiceImpl(NetworkStoreService networkStoreService,
+    public ParametersServiceImpl(DynamicSimulationParametersRepository dynamicSimulationParametersRepository,
+                                 NetworkStoreService networkStoreService,
                                  CurveGroovyGeneratorService curveGroovyGeneratorService,
                                  DynamicMappingClient dynamicMappingClient,
                                  FilterClient filterClient,
                                  @Value("${dynamic-simulation.default-provider}") String defaultProvider) {
+        this.dynamicSimulationParametersRepository = dynamicSimulationParametersRepository;
         this.networkStoreService = networkStoreService;
         this.curveGroovyGeneratorService = curveGroovyGeneratorService;
         this.dynamicMappingClient = dynamicMappingClient;
@@ -126,12 +137,12 @@ public class ParametersServiceImpl implements ParametersService {
 
             // --- SOLVER PAR --- //
             // solver from input parameter
-            SolverInfos inputSolver = inputParameters.getSolvers().stream().filter(elem -> elem.getId().equals(inputParameters.getSolverId())).findFirst().orElse(null);
+            SolverInfos inputSolver = inputParameters.getSolvers().stream().filter(elem -> elem.getType() == inputParameters.getSolver()).findFirst().orElse(null);
             if (inputSolver != null) {
                 ByteArrayOutputStream os = new ByteArrayOutputStream();
                 XmlSerializableParameter.writeParameter(os, XmlSerializableParameter.PARAMETER_SET, inputSolver);
-                ParametersSet solverParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), inputSolver.getId());
-                dynawoSimulationParameters.setSolverType(inputSolver.getType().toSolverType());
+                ParametersSet solverParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), inputSolver.getType().name());
+                dynawoSimulationParameters.setSolverType(inputSolver.getType());
                 dynawoSimulationParameters.setSolverParameters(solverParameters);
             }
 
@@ -141,7 +152,7 @@ public class ParametersServiceImpl implements ParametersService {
             if (network != null) {
                 ByteArrayOutputStream os = new ByteArrayOutputStream();
                 XmlSerializableParameter.writeParameter(os, XmlSerializableParameter.PARAMETER_SET, network);
-                ParametersSet networkParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), network.getId());
+                ParametersSet networkParameters = ParametersXml.load(new ByteArrayInputStream(os.toByteArray()), NETWORK_ID);
                 dynawoSimulationParameters.setNetworkParameters(networkParameters);
             }
 
@@ -169,24 +180,23 @@ public class ParametersServiceImpl implements ParametersService {
     }
 
     @Override
-    public DynamicSimulationRunContext createRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
-                                                        ReportInfos reportInfos, String userId, DynamicSimulationParametersInfos parameters, boolean debug) {
+    public DynamicSimulationRunContext createRunContext(
+            UUID networkUuid, String variantId, String receiver, ReportInfos reportInfos,
+            String userId, UUID parametersUuid, List<EventInfos> events, boolean debug) {
+
+        DynamicSimulationParametersInfos parametersInfos = doGetParameters(parametersUuid);
         DynamicSimulationRunContext runContext = DynamicSimulationRunContext.builder()
                 .networkUuid(networkUuid)
                 .variantId(variantId)
                 .receiver(receiver)
                 .reportInfos(reportInfos)
                 .userId(userId)
-                .parameters(parameters)
+                .parameters(parametersInfos)
                 .debug(debug)
                 .build();
 
         // set provider for run context
-        String providerToUse = provider;
-        if (providerToUse == null) {
-            providerToUse = Optional.ofNullable(runContext.getParameters().getProvider()).orElse(defaultProvider);
-        }
-
+        String providerToUse = Optional.ofNullable(runContext.getParameters().getProvider()).orElse(defaultProvider);
         runContext.setProvider(providerToUse);
 
         // check provider
@@ -196,16 +206,16 @@ public class ParametersServiceImpl implements ParametersService {
         }
 
         // set mapping for run context
-        String mappingToUse = mapping;
-        if (mappingToUse == null) {
-            mappingToUse = runContext.getParameters().getMapping();
-        }
+        String mappingToUse = runContext.getParameters().getMapping();
         runContext.setMapping(mappingToUse);
 
         // check mapping
         if (runContext.getMapping() == null) {
             throw new DynamicSimulationException(MAPPING_NOT_PROVIDED, "Dynamic simulation mapping not provided");
         }
+
+        // set events for run context
+        runContext.setEvents(events);
 
         return runContext;
     }
@@ -282,6 +292,10 @@ public class ParametersServiceImpl implements ParametersService {
     }
 
     private DynamicSimulationParametersValues getParametersValues(DynamicSimulationParametersInfos parametersInfos, Network network) {
+        if (parametersInfos.getMapping() == null) {
+            throw new DynamicSimulationException(MAPPING_NOT_PROVIDED, "Dynamic simulation mapping not provided");
+        }
+
         // get parameters file from dynamic mapping server
         ParameterFile parameterFile = dynamicMappingClient.exportParameters(parametersInfos.getMapping());
 
@@ -317,9 +331,90 @@ public class ParametersServiceImpl implements ParametersService {
     }
 
     @Override
-    public DynamicSimulationParametersValues getParametersValues(DynamicSimulationParametersInfos parametersInfos, UUID networkUuid, String variantId) {
+    public DynamicSimulationParametersValues getParametersValues(UUID parametersUuid, UUID networkUuid, String variantId) {
         Network network = getNetwork(networkUuid, variantId);
+        DynamicSimulationParametersInfos parametersInfos = doGetParameters(parametersUuid);
 
         return getParametersValues(parametersInfos, network);
+    }
+
+    // --- Dynamic simulation parameters related CRUD methods --- //
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DynamicSimulationParametersInfos> getAllParameters() {
+        return dynamicSimulationParametersRepository.findAll().stream()
+                .map(paramsEntity -> paramsEntity.toDto(false))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DynamicSimulationParametersInfos getParameters(UUID parametersUuid) {
+        return doGetParameters(parametersUuid);
+    }
+
+    private DynamicSimulationParametersInfos doGetParameters(UUID parametersUuid) {
+        DynamicSimulationParametersEntity entity = dynamicSimulationParametersRepository.findById(parametersUuid)
+                .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
+        return entity.toDto(false);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getProvider(UUID parametersUuid) {
+        return dynamicSimulationParametersRepository.findProviderById(parametersUuid)
+                .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
+    }
+
+    @Override
+    @Transactional
+    public UUID createParameters(DynamicSimulationParametersInfos parametersInfos) {
+        return doCreateParameters(parametersInfos);
+    }
+
+    private UUID doCreateParameters(DynamicSimulationParametersInfos parametersInfos) {
+        return dynamicSimulationParametersRepository.save(new DynamicSimulationParametersEntity(parametersInfos)).getId();
+    }
+
+    @Override
+    @Transactional
+    public UUID createDefaultParameters() {
+        DynamicSimulationParametersInfos defaultParametersInfos = getDefaultParametersValues();
+        return doCreateParameters(defaultParametersInfos);
+    }
+
+    private DynamicSimulationParametersInfos getDefaultParametersValues() {
+        DynamicSimulationParametersInfos defaultConfigParameters = ParameterUtils.getDefaultParametersValues();
+        defaultConfigParameters.setProvider(defaultProvider);
+        return defaultConfigParameters;
+    }
+
+    @Override
+    @Transactional
+    public UUID duplicateParameters(UUID sourceParametersUuid) {
+        DynamicSimulationParametersEntity entity = dynamicSimulationParametersRepository.findById(sourceParametersUuid)
+                .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + sourceParametersUuid));
+        DynamicSimulationParametersInfos duplicatedParametersInfos = entity.toDto(true);
+        return doCreateParameters(duplicatedParametersInfos);
+    }
+
+    @Override
+    @Transactional
+    public void updateParameters(UUID parametersUuid, DynamicSimulationParametersInfos parametersInfos) {
+        DynamicSimulationParametersEntity entity = dynamicSimulationParametersRepository.findById(parametersUuid)
+                .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
+        if (parametersInfos == null) {
+            // if the parameter is null, it means it's a reset to defaultValues
+            entity.update(getDefaultParametersValues());
+        } else {
+            entity.update(parametersInfos);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deleteParameters(UUID parametersUuid) {
+        dynamicSimulationParametersRepository.deleteById(parametersUuid);
     }
 }

@@ -9,7 +9,10 @@ package org.gridsuite.ds.server.dto.solver;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.powsybl.dynawo.DynawoSimulationParameters.SolverType;
 import org.gridsuite.ds.server.dto.XmlSerializableParameter;
+
+import java.util.UUID;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -23,7 +26,7 @@ import org.gridsuite.ds.server.dto.XmlSerializableParameter;
     @JsonSubTypes.Type(value = IdaSolverInfos.class, name = "IDA"),
     @JsonSubTypes.Type(value = SimSolverInfos.class, name = "SIM")})
 public interface SolverInfos extends XmlSerializableParameter {
-    String getId();
+    UUID getId();
 
-    SolverTypeInfos getType();
+    SolverType getType();
 }

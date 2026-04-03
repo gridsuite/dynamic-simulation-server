@@ -179,7 +179,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         // at the moment T0 and T1 share the same dynamic model
         List<DynamicModelConfig> t0DynamicModel = parametersService.getDynamicModel(inputMapping, runContext.getNetwork());
         List<DynamicModelConfig> t1DynamicModel = parametersService.getDynamicModel(inputMapping, runContext.getNetwork());
-        List<EventModelConfig > eventModel = parametersService.getEventModel(parametersInfos.getEvents());
+        List<EventModelConfig > eventModel = parametersService.getEventModel(runContext.getEvents());
 
         // set start and stop times
         t0Parameters.setStartTime(parametersInfos.getStartTime());

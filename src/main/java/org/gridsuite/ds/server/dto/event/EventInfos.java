@@ -7,6 +7,7 @@
 
 package org.gridsuite.ds.server.dto.event;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,12 +28,16 @@ import java.util.UUID;
 public class EventInfos {
 
     @JsonProperty("uuid")
+    @JsonIgnore
     private UUID id;
 
+    @JsonIgnore
     private UUID nodeId;
 
+    @JsonIgnore
     private String equipmentId;
 
+    @JsonIgnore
     private String equipmentType;
 
     private String eventType;

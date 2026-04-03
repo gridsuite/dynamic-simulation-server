@@ -14,8 +14,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.computation.dto.ReportInfos;
-import org.gridsuite.ds.server.dto.DynamicSimulationParametersInfos;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
+import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.service.DynamicSimulationResultService;
 import org.gridsuite.ds.server.service.DynamicSimulationService;
 import org.gridsuite.ds.server.service.contexts.DynamicSimulationRunContext;
@@ -58,24 +58,22 @@ public class DynamicSimulationController {
     public ResponseEntity<UUID> run(@PathVariable("networkUuid") UUID networkUuid,
                                           @RequestParam(name = "variantId", required = false) String variantId,
                                           @RequestParam(name = "receiver", required = false) String receiver,
-                                          @RequestParam(name = "mappingName", required = false) String mappingName,
                                           @RequestParam(name = "reportUuid", required = false) UUID reportId,
                                           @RequestParam(name = "reporterId", required = false) String reportName,
                                           @RequestParam(name = "reportType", required = false, defaultValue = "DynamicSimulation") String reportType,
-                                          @RequestParam(name = "provider", required = false) String provider,
                                           @RequestParam(name = "debug", required = false, defaultValue = "false") boolean debug,
-                                          @RequestBody DynamicSimulationParametersInfos parameters,
+                                          @RequestParam(name = "parametersUuid") UUID parametersUuid,
+                                          @RequestBody List<EventInfos> events,
                                           @RequestHeader(HEADER_USER_ID) String userId) {
 
         DynamicSimulationRunContext dynamicSimulationRunContext = parametersService.createRunContext(
             networkUuid,
             variantId,
             receiver,
-            provider,
-            mappingName,
             ReportInfos.builder().reportUuid(reportId).reporterId(reportName).computationType(reportType).build(),
             userId,
-            parameters,
+            parametersUuid,
+            events,
             debug);
 
         UUID resultUuid = dynamicSimulationService.runAndSaveResult(dynamicSimulationRunContext);
@@ -149,12 +147,10 @@ public class DynamicSimulationController {
 
     @PutMapping(value = "/results/invalidate-status", produces = "application/json")
     @Operation(summary = "Invalidate the dynamic simulation status from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result uuids have been invalidated"),
-        @ApiResponse(responseCode = "404", description = "Dynamic simulation result has not been found")})
-    public ResponseEntity<List<UUID>> invalidateStatus(@Parameter(description = "Result UUIDs") @RequestParam("resultUuid") List<UUID> resultUuids) {
-        List<UUID> result = dynamicSimulationResultService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE);
-        return CollectionUtils.isEmpty(result) ? ResponseEntity.notFound().build() :
-                ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result);
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation result uuids have been invalidated")})
+    public ResponseEntity<Void> invalidateStatus(@Parameter(description = "Result UUIDs") @RequestParam("resultUuid") List<UUID> resultUuids) {
+        dynamicSimulationResultService.updateStatus(resultUuids, DynamicSimulationStatus.NOT_DONE);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping(value = "/results", produces = APPLICATION_JSON_VALUE)
