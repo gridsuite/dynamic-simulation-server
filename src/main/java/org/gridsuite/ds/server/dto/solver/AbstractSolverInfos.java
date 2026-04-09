@@ -8,6 +8,7 @@
 package org.gridsuite.ds.server.dto.solver;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.powsybl.dynawo.DynawoSimulationParameters.SolverType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,6 +17,7 @@ import org.gridsuite.ds.server.dto.XmlSerializableParameter;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+import java.util.UUID;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -50,8 +52,8 @@ public abstract class AbstractSolverInfos implements SolverInfos {
     public static final String MAXIMUM_NUMBER_SLOW_STEP_INCREASE = "maximumNumberSlowStepIncrease";
     public static final String MINIMAL_ACCEPTABLE_STEP = "minimalAcceptableStep";
 
-    private String id;
-    private SolverTypeInfos type;
+    private UUID id;
+    private SolverType type;
 
     // Important note: must using @JsonProperty to precise property's name when serialize/deserialize
     // fields which begin by a minuscule following by a majuscule, for example 'hMxxx', otherwise jackson

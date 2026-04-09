@@ -44,13 +44,13 @@
     <properties>
         <gridsuite-dependencies.version>49.1.0-SNAPSHOT</gridsuite-dependencies.version>
         <jib.from.image>powsybl/java-dynawo:3.1.0</jib.from.image>
-        <!-- FIXME to remove when upgrade powsybl-ws-dependencies to springboot 3.5.9 -->
-        <testcontainers.version>1.21.4</testcontainers.version>
         <h2database.version>1.4.200</h2database.version>
         <liquibase-hibernate-package>org.gridsuite.ds.server</liquibase-hibernate-package>
         <string-template.version>4.3.1</string-template.version>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:dynamic-simulation-server</sonar.projectKey>
+       <!-- FIXME: to be removed at next gridsuite-dependencies upgrade  -->
+        <gridsuite-computation.version>2.1.0</gridsuite-computation.version>
     </properties>
 
     <build>
@@ -90,11 +90,6 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>testcontainers</artifactId>
-                <version>${testcontainers.version}</version>
-            </dependency>
 
             <!-- imports -->
             <dependency>
@@ -114,6 +109,8 @@
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-computation</artifactId>
+           <!-- FIXME: to be removed at next gridsuite-dependencies upgrade  -->
+            <version>${gridsuite-computation.version}</version>
         </dependency>
         <dependency>
             <groupId>org.gridsuite</groupId>

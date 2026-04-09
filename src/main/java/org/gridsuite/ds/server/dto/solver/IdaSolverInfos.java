@@ -47,7 +47,7 @@ public class IdaSolverInfos extends AbstractSolverInfos {
     @Override
     public void writeParameter(XMLStreamWriter writer) throws XMLStreamException {
         writer.writeStartElement(DYN_BASE_URI, "set");
-        writer.writeAttribute("id", getId());
+        writer.writeAttribute("id", getType().name());
 
         XmlSerializableParameter.writeParameter(writer, ParameterType.INT, SOLVER_ORDER, Integer.toString(order));
         XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, INIT_STEP, Double.toString(initStep));

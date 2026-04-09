@@ -13,7 +13,7 @@ import com.powsybl.timeseries.StringTimeSeries;
 import org.gridsuite.computation.service.UuidGeneratorService;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
-import org.gridsuite.ds.server.model.ResultEntity;
+import org.gridsuite.ds.server.entities.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
 import org.junit.After;
