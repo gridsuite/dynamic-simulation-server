@@ -34,8 +34,8 @@ public class NetworkParametersEntity {
     @Column(name = "capacitor_no_reclosing_delay")
     private double capacitorNoReclosingDelay;
 
-    @Column(name = "dangling_line_current_limit_max_time_operation")
-    private double danglingLineCurrentLimitMaxTimeOperation;
+    @Column(name = "boundary_line_current_limit_max_time_operation")
+    private double boundaryLineCurrentLimitMaxTimeOperation;
 
     @Column(name = "line_current_limit_max_time_operation")
     private double lineCurrentLimitMaxTimeOperation;
@@ -100,7 +100,7 @@ public class NetworkParametersEntity {
             id = UUID.randomUUID();
         }
         capacitorNoReclosingDelay = networkInfos.getCapacitorNoReclosingDelay();
-        danglingLineCurrentLimitMaxTimeOperation = networkInfos.getDanglingLineCurrentLimitMaxTimeOperation();
+        boundaryLineCurrentLimitMaxTimeOperation = networkInfos.getBoundaryLineCurrentLimitMaxTimeOperation();
         lineCurrentLimitMaxTimeOperation = networkInfos.getLineCurrentLimitMaxTimeOperation();
         loadTp = networkInfos.getLoadTp();
         loadTq = networkInfos.getLoadTq();
@@ -129,7 +129,7 @@ public class NetworkParametersEntity {
         NetworkInfos networkInfos = new NetworkInfos();
         networkInfos.setId(toDuplicate ? null : id);
         networkInfos.setCapacitorNoReclosingDelay(capacitorNoReclosingDelay);
-        networkInfos.setDanglingLineCurrentLimitMaxTimeOperation(danglingLineCurrentLimitMaxTimeOperation);
+        networkInfos.setBoundaryLineCurrentLimitMaxTimeOperation(boundaryLineCurrentLimitMaxTimeOperation);
         networkInfos.setLineCurrentLimitMaxTimeOperation(lineCurrentLimitMaxTimeOperation);
         networkInfos.setLoadTp(loadTp);
         networkInfos.setLoadTq(loadTq);
