@@ -143,7 +143,7 @@ public final class ParameterUtils {
         // we do not yet support getting values from DynawoSimulationParameters.load()
         // due to the lack of deserialization from the network.par file to the dto
         network.setCapacitorNoReclosingDelay(300);
-        network.setDanglingLineCurrentLimitMaxTimeOperation(240);
+        network.setBoundaryLineCurrentLimitMaxTimeOperation(240);
         network.setLineCurrentLimitMaxTimeOperation(240);
         network.setLoadTp(90);
         network.setLoadTq(90);
