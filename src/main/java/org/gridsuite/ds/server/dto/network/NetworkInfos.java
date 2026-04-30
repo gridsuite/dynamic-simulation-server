@@ -25,7 +25,7 @@ import java.util.UUID;
 public class NetworkInfos implements XmlSerializableParameter {
 
     public static final String CAPACITOR_NO_RECLOSING_DELAY = "capacitor_no_reclosing_delay";
-    public static final String DANGLING_LINE_CURRENT_LIMIT_MAX_TIME_OPERATION = "dangling_line_currentLimit_maxTimeOperation";
+    public static final String BOUNDARY_LINE_CURRENT_LIMIT_MAX_TIME_OPERATION = "boundary_line_currentLimit_maxTimeOperation";
     public static final String LINE_CURRENT_LIMIT_MAX_TIME_OPERATION = "line_currentLimit_maxTimeOperation";
     public static final String LOAD_TP = "load_Tp";
     public static final String LOAD_TQ = "load_Tq";
@@ -51,7 +51,7 @@ public class NetworkInfos implements XmlSerializableParameter {
 
     private double capacitorNoReclosingDelay;
 
-    private double danglingLineCurrentLimitMaxTimeOperation;
+    private double boundaryLineCurrentLimitMaxTimeOperation;
 
     private double lineCurrentLimitMaxTimeOperation;
 
@@ -95,7 +95,7 @@ public class NetworkInfos implements XmlSerializableParameter {
         writer.writeAttribute("id", NETWORK_ID);
 
         XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, CAPACITOR_NO_RECLOSING_DELAY, Double.toString(capacitorNoReclosingDelay));
-        XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, DANGLING_LINE_CURRENT_LIMIT_MAX_TIME_OPERATION, Double.toString(danglingLineCurrentLimitMaxTimeOperation));
+        XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, BOUNDARY_LINE_CURRENT_LIMIT_MAX_TIME_OPERATION, Double.toString(boundaryLineCurrentLimitMaxTimeOperation));
         XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, LINE_CURRENT_LIMIT_MAX_TIME_OPERATION, Double.toString(lineCurrentLimitMaxTimeOperation));
         XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, LOAD_TP, Double.toString(loadTp));
         XmlSerializableParameter.writeParameter(writer, ParameterType.DOUBLE, LOAD_TQ, Double.toString(loadTq));

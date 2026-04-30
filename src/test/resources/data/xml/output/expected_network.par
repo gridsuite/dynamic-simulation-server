@@ -2,7 +2,7 @@
 <parametersSet xmlns="http://www.rte-france.com/dynawo">
     <set id="NETWORK">
         <par type="DOUBLE" name="capacitor_no_reclosing_delay" value="300.0"/>
-        <par type="DOUBLE" name="dangling_line_currentLimit_maxTimeOperation" value="240.0"/>
+        <par type="DOUBLE" name="boundary_line_currentLimit_maxTimeOperation" value="240.0"/>
         <par type="DOUBLE" name="line_currentLimit_maxTimeOperation" value="240.0"/>
         <par type="DOUBLE" name="load_Tp" value="90.0"/>
         <par type="DOUBLE" name="load_Tq" value="90.0"/>
