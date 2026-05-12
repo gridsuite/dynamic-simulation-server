@@ -6,6 +6,7 @@
  */
 package org.gridsuite.ds.server.repository;
 
+import org.apache.poi.ss.formula.functions.T;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.entities.ResultEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,6 +25,8 @@ import java.util.UUID;
 @Repository
 public interface ResultRepository extends JpaRepository<ResultEntity, UUID> {
     <T> Optional<T> findById(UUID id, Class<T> type);
+
+    List<ResultEntity> findByResultUuidIn(List<UUID> resultUuids);
 
     <T> List<T> findBy(Class<T> type);
 
