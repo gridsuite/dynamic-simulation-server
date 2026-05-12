@@ -26,8 +26,6 @@ import java.util.UUID;
 public interface ResultRepository extends JpaRepository<ResultEntity, UUID> {
     <T> Optional<T> findById(UUID id, Class<T> type);
 
-    List<ResultEntity> findByResultUuidIn(List<UUID> resultUuids);
-
     <T> List<T> findBy(Class<T> type);
 
     @Modifying

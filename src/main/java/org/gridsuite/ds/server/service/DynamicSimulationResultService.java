@@ -157,7 +157,7 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     @Transactional(readOnly = true)
     public Map<UUID, DynamicSimulationStatus> findStatuses(List<UUID> resultUuids) {
         Objects.requireNonNull(resultUuids);
-        List<ResultEntity> resultEntities = resultRepository.findByResultUuidIn(resultUuids);
+        List<ResultEntity> resultEntities = resultRepository.findAllById(resultUuids);
         return resultEntities.stream().collect(Collectors.toMap(ResultEntity::getId, ResultEntity::getStatus));
     }
 
