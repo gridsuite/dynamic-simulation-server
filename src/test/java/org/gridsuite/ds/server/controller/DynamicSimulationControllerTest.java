@@ -580,4 +580,135 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
     // --- END Test cancelling a running computation ---//
 
+    @Test
+    public void testStatuses() throws Exception {
+        // mock DynamicSimulationWorkerService with time-series and timeline
+        Map<String, DoubleTimeSeries> curves = new HashMap<>();
+        TimeSeriesIndex index = new IrregularTimeSeriesIndex(new long[]{32, 64, 128, 256});
+        curves.put("NETWORK__BUS____2-BUS____5-1_AC_iSide2", TimeSeries.createDouble("NETWORK__BUS____2-BUS____5-1_AC_iSide2", index, 333.847331, 333.847321, 333.847300, 333.847259));
+        curves.put("NETWORK__BUS____1_TN_Upu_value", TimeSeries.createDouble("NETWORK__BUS____1_TN_Upu_value", index, 1.059970, 1.059970, 1.059970, 1.059970));
+
+        List<TimelineEvent> timeLine = List.of(
+                new TimelineEvent(102479, "CLA_2_5 - CLA", "order to change topology"),
+                new TimelineEvent(102479, "_BUS____2-BUS____5-1_AC - LINE", "opening both sides")
+        );
+
+        Map<String, Double> finalStateValues = new HashMap<>();
+
+        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, finalStateValues, timeLine)))
+                .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any());
+
+        // prepare content
+        List<EventInfos> events = List.of();
+
+        // Run first dynamic simulation
+        MvcResult result1 = mockMvc.perform(
+                post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
+                    .param("variantId", VARIANT_1_ID)
+                    .param("parametersUuid", PARAMETERS_UUID.toString())
+                    .contentType(APPLICATION_JSON)
+                    .header(HEADER_USER_ID, "testUserId")
+                    .content(objectMapper.writeValueAsString(events)))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID runUuid1 = objectMapper.readValue(result1.getResponse().getContentAsString(), UUID.class);
+
+        // check notification of result
+        Message<byte[]> messageSwitch = output.receive(1000 * 10, dsResultDestination);
+        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid1.toString());
+
+        // Run second dynamic simulation
+        MvcResult result2 = mockMvc.perform(
+                post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
+                    .param("variantId", VARIANT_1_ID)
+                    .param("parametersUuid", PARAMETERS_UUID.toString())
+                    .contentType(APPLICATION_JSON)
+                    .header(HEADER_USER_ID, "testUserId")
+                    .content(objectMapper.writeValueAsString(events)))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID runUuid2 = objectMapper.readValue(result2.getResponse().getContentAsString(), UUID.class);
+
+        // check notification of result
+        messageSwitch = output.receive(1000 * 10, dsResultDestination);
+        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid2.toString());
+
+        // Run third dynamic simulation
+        MvcResult result3 = mockMvc.perform(
+                post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
+                    .param("variantId", VARIANT_1_ID)
+                    .param("parametersUuid", PARAMETERS_UUID.toString())
+                    .contentType(APPLICATION_JSON)
+                    .header(HEADER_USER_ID, "testUserId")
+                    .content(objectMapper.writeValueAsString(events)))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID runUuid3 = objectMapper.readValue(result3.getResponse().getContentAsString(), UUID.class);
+
+        // check notification of result
+        messageSwitch = output.receive(1000 * 10, dsResultDestination);
+        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid3.toString());
+
+        // Wait for all simulations to complete
+        await().pollDelay(500, TimeUnit.MILLISECONDS).until(() -> true);
+
+        // Get statuses of all results at once
+        List<UUID> resultUuids = List.of(runUuid1, runUuid2, runUuid3);
+        MvcResult statusesResult = mockMvc.perform(
+                post("/v1/results/statuses")
+                    .contentType(APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(resultUuids)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Parse the response map of statuses
+        @SuppressWarnings("unchecked")
+        Map<String, String> statusesMap = objectMapper.readValue(statusesResult.getResponse().getContentAsString(), Map.class);
+
+        // Verify that all three results are in the response
+        assertThat(statusesMap).hasSize(3);
+        assertThat(statusesMap.keySet()).containsExactlyInAnyOrder(
+                runUuid1.toString(),
+                runUuid2.toString(),
+                runUuid3.toString()
+        );
+
+        // Verify that all statuses are CONVERGED
+        assertThat(statusesMap.values()).allMatch(status -> status.equals(DynamicSimulationStatus.CONVERGED.name()));
+
+        // Test with non-existing UUID mixed with existing ones
+        UUID nonExistingUuid = UUID.randomUUID();
+        List<UUID> mixedUuids = List.of(runUuid1, nonExistingUuid, runUuid2);
+        MvcResult mixedStatusesResult = mockMvc.perform(
+                post("/v1/results/statuses")
+                    .contentType(APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(mixedUuids)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        @SuppressWarnings("unchecked")
+        Map<String, String> mixedStatusesMap = objectMapper.readValue(mixedStatusesResult.getResponse().getContentAsString(), Map.class);
+
+        // Should only contain existing results
+        assertThat(mixedStatusesMap).hasSize(2);
+        assertThat(mixedStatusesMap.keySet()).containsExactlyInAnyOrder(
+                runUuid1.toString(),
+                runUuid2.toString()
+        );
+
+        // Test with empty list
+        MvcResult emptyResult = mockMvc.perform(
+                post("/v1/results/statuses")
+                    .contentType(APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(List.of())))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        @SuppressWarnings("unchecked")
+        Map<String, String> emptyMap = objectMapper.readValue(emptyResult.getResponse().getContentAsString(), Map.class);
+
+        // Should return an empty map
+        assertThat(emptyMap).isEmpty();
+    }
+
 }
