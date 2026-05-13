@@ -6,7 +6,6 @@
  */
 package org.gridsuite.ds.server.repository;
 
-import org.apache.poi.ss.formula.functions.T;
 import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.entities.ResultEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
