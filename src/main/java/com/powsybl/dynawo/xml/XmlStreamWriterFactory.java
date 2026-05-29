@@ -17,7 +17,7 @@ import java.io.Writer;
 
 /**
  * TODO update next version powsybl-dynawo 2.7.0
- * @author Mathieu Bague <mathieu.bague@rte-france.com>
+ * @author Mathieu Bague <mathieu.bague at rte-france.com>
  */
 public final class XmlStreamWriterFactory {
 

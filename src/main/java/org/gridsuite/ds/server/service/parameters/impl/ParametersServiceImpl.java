@@ -221,6 +221,7 @@ public class ParametersServiceImpl implements ParametersService {
     }
 
     @Override
+    @SuppressWarnings("checkstyle:LambdaBodyLength")
     public List<DynamicModelConfig> getDynamicModel(InputMapping inputMapping, Network network) {
         if (inputMapping == null) {
             return Collections.emptyList();

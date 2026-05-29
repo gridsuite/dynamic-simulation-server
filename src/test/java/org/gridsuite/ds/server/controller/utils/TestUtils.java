@@ -25,6 +25,7 @@ public final class TestUtils {
         throw new AssertionError("Utility class should not be instantiated");
     }
 
+    @SuppressWarnings("checkstyle:IllegalCatch")
     public static void assertQueuesEmptyThenClear(List<String> destinations, OutputDestination output) throws InterruptedException {
         Thread.sleep(TIMEOUT);
         try {
