@@ -69,7 +69,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimulationControllerTest {
     // mapping names
-    public static final String MAPPING_NAME_01 = "_01";
+    public static final String MAPPING_01 = "_01";
+    public static final UUID MAPPING_ID_01 = UUID.fromString("09d0d631-1c44-4add-8d4a-b93f805bd665");
 
     // directories
     public static final String DATA_IEEE14_BASE_DIR = RESOURCE_PATH_DELIMITER + "data" + RESOURCE_PATH_DELIMITER + "ieee14";
@@ -120,7 +121,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     protected void initDynamicMappingServiceMock() {
         try {
             String inputDir = DATA_IEEE14_BASE_DIR +
-                              RESOURCE_PATH_DELIMITER + MAPPING_NAME_01 +
+                              RESOURCE_PATH_DELIMITER + MAPPING_01 +
                               RESOURCE_PATH_DELIMITER + INPUT;
 
             // load models.par
@@ -131,14 +132,14 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
             String parametersFile = new String(parametersFileBytes, StandardCharsets.UTF_8);
 
             ParameterFile parameterFile = new ParameterFile(
-                    MAPPING_NAME_01,
+                    MAPPING_ID_01,
                     parametersFile);
-            given(dynamicMappingClient.exportParameters(MAPPING_NAME_01)).willReturn(parameterFile);
+            given(dynamicMappingClient.exportParameters(MAPPING_ID_01)).willReturn(parameterFile);
 
             // load mapping.json
             String mappingPath = inputDir + RESOURCE_PATH_DELIMITER + MAPPING_FILE;
             InputMapping inputMapping = objectMapper.readValue(getClass().getResourceAsStream(mappingPath), InputMapping.class);
-            given(dynamicMappingClient.getMapping(MAPPING_NAME_01)).willReturn(inputMapping);
+            given(dynamicMappingClient.getMapping(MAPPING_ID_01)).willReturn(inputMapping);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -197,7 +198,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         List<EventInfos> eventInfosList = ParameterTestUtils.getEventInfosList();
 
         // run with mapping
-        parameters.setMapping(MAPPING_NAME_01);
+        parameters.setMappingId(MAPPING_ID_01);
 
         // mock repository for given parameters
         DynamicSimulationParametersEntity entity = new DynamicSimulationParametersEntity(parameters);
@@ -238,7 +239,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         // --- CHECK result at detail level --- //
         // prepare expected result to compare
         String outputDir = DATA_IEEE14_BASE_DIR +
-                           RESOURCE_PATH_DELIMITER + MAPPING_NAME_01 +
+                           RESOURCE_PATH_DELIMITER + MAPPING_01 +
                            RESOURCE_PATH_DELIMITER + OUTPUT;
         DynamicSimulationResult expectedResult = DynamicSimulationResultDeserializer.read(getClass().getResourceAsStream(outputDir + RESOURCE_PATH_DELIMITER + RESULT_SIM_JSON));
         List<TimeSeries<?, ?>> expectedTimeSeries = new ArrayList<>(expectedResult.getCurves().values());
@@ -323,7 +324,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         //export the dynamic model on a specific variant
         MvcResult result = mockMvc.perform(
                         get("/v1/networks/{networkUuid}/export-dynamic-model?variantId=" +
-                            VARIANT_1_ID + "&mappingName=" + MAPPING_NAME_01, NETWORK_UUID_STRING))
+                            VARIANT_1_ID + "&mappingId=" + MAPPING_ID_01, NETWORK_UUID_STRING))
                 .andExpect(status().isOk())
                 .andReturn();
         List<DynamicModelConfig> dynamicModelConfigList = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });

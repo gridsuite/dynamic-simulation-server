@@ -91,7 +91,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     @MockitoSpyBean
     private S3Client s3Client;
 
-    private static final String MAPPING_NAME = "IEEE14";
+    private static final UUID MAPPING_ID = UUID.fromString("e20f0694-fb04-431f-a077-de48d21ae523");
     private static final String NETWORK_UUID_STRING = "11111111-0000-0000-0000-000000000000";
     private static final String VARIANT_1_ID = "variant_1";
     private static final String TEST_FILE = "IEEE14.iidm";
@@ -115,11 +115,11 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     @Override
     protected void initDynamicMappingServiceMock() {
         ParameterFile parameterFile = new ParameterFile(
-                MAPPING_NAME,
+                MAPPING_ID,
                 "");
-        given(dynamicMappingClient.exportParameters(MAPPING_NAME)).willReturn(parameterFile);
+        given(dynamicMappingClient.exportParameters(MAPPING_ID)).willReturn(parameterFile);
 
-        given(dynamicMappingClient.getMapping(MAPPING_NAME)).willReturn(null);
+        given(dynamicMappingClient.getMapping(MAPPING_ID)).willReturn(null);
     }
 
     @Override
@@ -148,7 +148,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     private void initParametersRepositoryMock() {
         DynamicSimulationParametersInfos params = ParameterUtils.getDefaultParametersValues();
         params.setCurves(List.of());
-        params.setMapping(MAPPING_NAME);
+        params.setMappingId(MAPPING_ID);
         DynamicSimulationParametersEntity entity = new DynamicSimulationParametersEntity(params);
         given(dynamicSimulationParametersRepository.findById(PARAMETERS_UUID)).willReturn(Optional.of(entity));
     }

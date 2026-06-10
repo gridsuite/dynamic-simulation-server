@@ -192,8 +192,8 @@ public class DynamicSimulationController {
         @ApiResponse(responseCode = "204", description = "Dynamic simulation dynamic model is empty")})
     public ResponseEntity<List<DynamicModelConfig>> exportDynamicModel(@PathVariable("networkUuid") UUID networkUuid,
                                                                        @RequestParam(name = "variantId", required = false) String variantId,
-                                                                       @RequestParam(name = "mappingName") String mappingName) {
-        List<DynamicModelConfig> dynamicModelConfigList = parametersService.getDynamicModel(mappingName, networkUuid, variantId);
+                                                                       @RequestParam(name = "mappingId") UUID mappingId) {
+        List<DynamicModelConfig> dynamicModelConfigList = parametersService.getDynamicModel(mappingId, networkUuid, variantId);
         return CollectionUtils.isNotEmpty(dynamicModelConfigList) ?
                 ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(dynamicModelConfigList) :
                 ResponseEntity.noContent().build();

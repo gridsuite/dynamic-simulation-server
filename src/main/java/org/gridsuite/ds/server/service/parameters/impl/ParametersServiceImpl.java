@@ -206,11 +206,11 @@ public class ParametersServiceImpl implements ParametersService {
         }
 
         // set mapping for run context
-        String mappingToUse = runContext.getParameters().getMapping();
-        runContext.setMapping(mappingToUse);
+        UUID mappingToUse = runContext.getParameters().getMappingId();
+        runContext.setMappingId(mappingToUse);
 
         // check mapping
-        if (runContext.getMapping() == null) {
+        if (runContext.getMappingId() == null) {
             throw new DynamicSimulationException(MAPPING_NOT_PROVIDED, "Dynamic simulation mapping not provided");
         }
 
@@ -292,12 +292,12 @@ public class ParametersServiceImpl implements ParametersService {
     }
 
     private DynamicSimulationParametersValues getParametersValues(DynamicSimulationParametersInfos parametersInfos, Network network) {
-        if (parametersInfos.getMapping() == null) {
-            throw new DynamicSimulationException(MAPPING_NOT_PROVIDED, "Dynamic simulation mapping not provided");
+        if (parametersInfos.getMappingId() == null) {
+            throw new DynamicSimulationException(MAPPING_NOT_PROVIDED, "Dynamic simulation mapping id not provided");
         }
 
         // get parameters file from dynamic mapping server
-        ParameterFile parameterFile = dynamicMappingClient.exportParameters(parametersInfos.getMapping());
+        ParameterFile parameterFile = dynamicMappingClient.exportParameters(parametersInfos.getMappingId());
 
         // get dynawo simulation parameters
         String parameterFileContent = parameterFile.fileContent();
@@ -305,7 +305,7 @@ public class ParametersServiceImpl implements ParametersService {
                 parameterFileContent.getBytes(StandardCharsets.UTF_8), parametersInfos);
 
         // get mapping then generate dynamic model configs
-        InputMapping inputMapping = dynamicMappingClient.getMapping(parametersInfos.getMapping());
+        InputMapping inputMapping = dynamicMappingClient.getMapping(parametersInfos.getMappingId());
         List<DynamicModelConfig> dynamicModel = getDynamicModel(inputMapping, network);
 
         return new DynamicSimulationParametersValues(dynamicModel, dynawoSimulationParameters);
@@ -323,8 +323,8 @@ public class ParametersServiceImpl implements ParametersService {
     }
 
     @Override
-    public List<DynamicModelConfig> getDynamicModel(String mappingName, UUID networkUuid, String variantId) {
-        InputMapping inputMapping = dynamicMappingClient.getMapping(mappingName);
+    public List<DynamicModelConfig> getDynamicModel(UUID mappingId, UUID networkUuid, String variantId) {
+        InputMapping inputMapping = dynamicMappingClient.getMapping(mappingId);
         Network network = getNetwork(networkUuid, variantId);
 
         return getDynamicModel(inputMapping, network);

@@ -8,13 +8,15 @@ package org.gridsuite.ds.server.dto.dynamicmapping;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.util.UUID;
+
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @Schema(description = "Parameter sets in *.par format")
 public record ParameterFile(
-    @Schema(description = "Name of the parent mapping")
-    String mappingName,
+    @Schema(description = "Id of the parent mapping")
+    UUID mappingId,
 
     @Schema(description = "Parameter file content in *.par format")
     String fileContent

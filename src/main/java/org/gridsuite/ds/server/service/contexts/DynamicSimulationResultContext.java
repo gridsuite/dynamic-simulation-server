@@ -30,7 +30,7 @@ import static org.gridsuite.computation.utils.MessageUtils.getNonNullHeader;
  */
 public class DynamicSimulationResultContext extends AbstractResultContext<DynamicSimulationRunContext> {
 
-    public static final String HEADER_MAPPING = "mapping";
+    public static final String HEADER_MAPPING_ID = "mappingId";
     public static final String HEADER_EVENTS = "events";
 
     public DynamicSimulationResultContext(UUID resultUuid, DynamicSimulationRunContext runContext) {
@@ -73,7 +73,7 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
             .build();
 
         // specific headers for dynamic simulation
-        runContext.setMapping(getNonNullHeader(headers, HEADER_MAPPING));
+        runContext.setMappingId(UUID.fromString(getNonNullHeader(headers, HEADER_MAPPING_ID)));
         // using Object then toString() to avoid casting exception since rabbitmq uses LongString instead of String
         Object eventsJson = headers.get(HEADER_EVENTS);
         List<EventInfos> events;
@@ -95,7 +95,7 @@ public class DynamicSimulationResultContext extends AbstractResultContext<Dynami
         } catch (JsonProcessingException e) {
             throw new UncheckedIOException(e);
         }
-        return Map.of(HEADER_MAPPING, getRunContext().getMapping(),
+        return Map.of(HEADER_MAPPING_ID, getRunContext().getMappingId().toString(),
                 HEADER_EVENTS, eventsJson);
     }
 }

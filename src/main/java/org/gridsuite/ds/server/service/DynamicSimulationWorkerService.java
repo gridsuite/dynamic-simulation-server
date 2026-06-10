@@ -164,7 +164,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         DynamicSimulationParametersInfos parametersInfos = runContext.getParameters();
 
         // get parameters file from dynamic mapping server
-        ParameterFile parameterFile = dynamicMappingClient.exportParameters(runContext.getMapping());
+        ParameterFile parameterFile = dynamicMappingClient.exportParameters(runContext.getMappingId());
 
         // get all dynamic simulation parameters
         String parameterFileContent = parameterFile.fileContent();
@@ -175,7 +175,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
                 parameterFileContent.getBytes(StandardCharsets.UTF_8), runContext.getProvider(), parametersInfos);
 
         // get mapping then generate dynamic model configs
-        InputMapping inputMapping = dynamicMappingClient.getMapping(runContext.getMapping());
+        InputMapping inputMapping = dynamicMappingClient.getMapping(runContext.getMappingId());
         // at the moment T0 and T1 share the same dynamic model
         List<DynamicModelConfig> t0DynamicModel = parametersService.getDynamicModel(inputMapping, runContext.getNetwork());
         List<DynamicModelConfig> t1DynamicModel = parametersService.getDynamicModel(inputMapping, runContext.getNetwork());
@@ -224,7 +224,7 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
 
         DynamicSimulationParameters parameters = runContext.getT0DynamicSimulationParameters();
         LOGGER.info("Run dynamic simulation on network {} and variant {} with mapping {}, startTime {}, stopTime {},",
-                runContext.getNetworkUuid(), runContext.getVariantId(), runContext.getMapping(), parameters.getStartTime(), parameters.getStopTime());
+                runContext.getNetworkUuid(), runContext.getVariantId(), runContext.getMappingId(), parameters.getStartTime(), parameters.getStopTime());
 
         DynamicSimulation.Runner runner = DynamicSimulation.find(provider);
         return runner.runAsync(runContext.getNetwork(),

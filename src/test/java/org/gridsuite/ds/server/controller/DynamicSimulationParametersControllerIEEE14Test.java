@@ -62,7 +62,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextConfiguration(classes = {DynamicSimulationApplication.class})
 public class DynamicSimulationParametersControllerIEEE14Test {
     // mapping names
-    public static final String MAPPING_NAME_01 = "_01";
+    public static final String MAPPING_01 = "_01";
+    public static final UUID MAPPING_ID_01 = UUID.fromString("3fc82c18-2f7c-4c5d-8c4b-7461362ad5ed");
 
     // directories
     public static final String DATA_IEEE14_BASE_DIR = RESOURCE_PATH_DELIMITER + "data" + RESOURCE_PATH_DELIMITER + "ieee14";
@@ -104,7 +105,7 @@ public class DynamicSimulationParametersControllerIEEE14Test {
     private void initDynamicMappingServiceMock() {
         try {
             String inputDir = DATA_IEEE14_BASE_DIR +
-                              RESOURCE_PATH_DELIMITER + MAPPING_NAME_01 +
+                              RESOURCE_PATH_DELIMITER + MAPPING_01 +
                               RESOURCE_PATH_DELIMITER + INPUT;
 
             // load models.par
@@ -115,14 +116,14 @@ public class DynamicSimulationParametersControllerIEEE14Test {
             String parametersFile = new String(parametersFileBytes, StandardCharsets.UTF_8);
 
             ParameterFile parameterFile = new ParameterFile(
-                    MAPPING_NAME_01,
+                    MAPPING_ID_01,
                     parametersFile);
-            given(dynamicMappingClient.exportParameters(MAPPING_NAME_01)).willReturn(parameterFile);
+            given(dynamicMappingClient.exportParameters(MAPPING_ID_01)).willReturn(parameterFile);
 
             // load mapping.json
             String mappingPath = inputDir + RESOURCE_PATH_DELIMITER + MAPPING_FILE;
             InputMapping inputMapping = objectMapper.readValue(getClass().getResourceAsStream(mappingPath), InputMapping.class);
-            given(dynamicMappingClient.getMapping(MAPPING_NAME_01)).willReturn(inputMapping);
+            given(dynamicMappingClient.getMapping(MAPPING_ID_01)).willReturn(inputMapping);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -139,7 +140,7 @@ public class DynamicSimulationParametersControllerIEEE14Test {
         // --- Setup --- //
         DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultParametersValues();
         parameters.setSolver(SolverType.SIM);
-        parameters.setMapping(MAPPING_NAME_01);
+        parameters.setMappingId(MAPPING_ID_01);
 
         DynamicSimulationParametersEntity entity = new DynamicSimulationParametersEntity(parameters);
 
@@ -164,7 +165,7 @@ public class DynamicSimulationParametersControllerIEEE14Test {
         Assertions.assertThat(parametersValues.getDynawoParameters().getSolverParameters().getParameters()).isNotEmpty();
         Assertions.assertThat(parametersValues.getDynawoParameters().getNetworkParameters().getParameters()).isNotEmpty();
 
-        verify(dynamicMappingClient, times(1)).getMapping(MAPPING_NAME_01);
-        verify(dynamicMappingClient, times(1)).exportParameters(MAPPING_NAME_01);
+        verify(dynamicMappingClient, times(1)).getMapping(MAPPING_ID_01);
+        verify(dynamicMappingClient, times(1)).exportParameters(MAPPING_ID_01);
     }
 }

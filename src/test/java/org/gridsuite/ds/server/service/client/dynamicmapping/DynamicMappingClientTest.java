@@ -27,14 +27,13 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.gridsuite.ds.server.service.client.RestClient.URL_DELIMITER;
-import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.API_VERSION;
-import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.DYNAMIC_MAPPING_MAPPINGS_BASE_ENDPOINT;
-import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.DYNAMIC_MAPPING_PARAMETERS_EXPORT_ENDPOINT;
+import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.*;
 import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
 import static org.gridsuite.ds.server.utils.Utils.RESOURCE_PATH_DELIMITER;
 import static org.gridsuite.ds.server.utils.assertions.Assertions.assertThat;
@@ -45,7 +44,8 @@ import static org.gridsuite.ds.server.utils.assertions.Assertions.assertThat;
 public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
 
     // mapping names
-    public static final String MAPPING_NAME = "_01";
+    public static final String MAPPING_01 = "_01";
+    public static final UUID MAPPING_ID_01 = UUID.fromString("e300ecd2-2611-4fad-b1ad-306dee86cf86");
 
     // directories
     public static final String DATA_IEEE14_BASE_DIR = RESOURCE_PATH_DELIMITER + "data" + RESOURCE_PATH_DELIMITER + "ieee14";
@@ -84,11 +84,9 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
 
     @Test
     void testExportParameters() throws IOException {
-        String mappingName = MAPPING_NAME;
-
         String inputDir = DATA_IEEE14_BASE_DIR +
-                RESOURCE_PATH_DELIMITER + mappingName +
-                RESOURCE_PATH_DELIMITER + INPUT;
+                          RESOURCE_PATH_DELIMITER + MAPPING_01 +
+                          RESOURCE_PATH_DELIMITER + INPUT;
 
         // load models.par
         String parametersFilePath = inputDir + RESOURCE_PATH_DELIMITER + MODELS_PAR;
@@ -98,23 +96,23 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         String parametersFile = new String(parametersFileBytes, StandardCharsets.UTF_8);
 
         ParameterFile parameterFile = new ParameterFile(
-                mappingName,
+                MAPPING_ID_01,
                 parametersFile);
 
         ObjectWriter ow = objectMapper.writer().withDefaultPrettyPrinter();
         String parameterFileJson = ow.writeValueAsString(parameterFile);
 
-        // mock response for GET parameters/export?mappingName=<mappingName>
+        // mock response for GET parameters/export?mappingId=<mappingId>
         String baseUrl = getExportParametersBaseUrl();
 
         wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl))
-                .withQueryParam("mappingName", equalTo(mappingName))
+                .withQueryParam("mappingId", equalTo(MAPPING_ID_01.toString()))
                 .willReturn(WireMock.ok()
                         .withBody(parameterFileJson)
                         .withHeader("Content-Type", "application/json; charset=utf-8")
                 ));
 
-        ParameterFile createdParameterFile = dynamicMappingClient.exportParameters(MAPPING_NAME);
+        ParameterFile createdParameterFile = dynamicMappingClient.exportParameters(MAPPING_ID_01);
 
         // check result
         // load models.par
@@ -123,44 +121,42 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
 
     @Test
     void testExportParametersFromMappingNameGivenNotFound() {
-        // mock response for GET parameters/export?mappingName=<mappingName>
+        // mock response for GET parameters/export?mappingId=<mappingId>
         String baseUrl = getExportParametersBaseUrl();
 
         wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl))
-                .withQueryParam("mappingName", equalTo(MAPPING_NAME))
+                .withQueryParam("mappingId", equalTo(MAPPING_ID_01.toString()))
                 .willReturn(WireMock.notFound()
                 ));
 
         // test service
-        HttpClientErrorException dynamicSimulationException = catchThrowableOfType(HttpClientErrorException.class, () -> dynamicMappingClient.exportParameters(MAPPING_NAME));
+        HttpClientErrorException dynamicSimulationException = catchThrowableOfType(HttpClientErrorException.class, () -> dynamicMappingClient.exportParameters(MAPPING_ID_01));
         // check result
         Assertions.assertThat(dynamicSimulationException.getMessage()).contains(NOT_FOUND_ERROR_MESSAGE);
     }
 
     @Test
     void testExportParametersFromMappingNameGivenException() {
-        // mock response for test case GET parameters/export?mappingName=<mappingName>
+        // mock response for test case GET parameters/export?mappingId=<mappingId>
         String baseUrl = getExportParametersBaseUrl();
 
         wireMockServer.stubFor(WireMock.get(WireMock.urlPathTemplate(baseUrl))
-                .withQueryParam("mappingName", equalTo(MAPPING_NAME))
+                .withQueryParam("mappingId", equalTo(MAPPING_ID_01.toString()))
                 .willReturn(WireMock.serverError()
                         .withBody(ERROR_MESSAGE)
                 ));
 
         // test service
-        HttpServerErrorException dynamicSimulationException = catchThrowableOfType(HttpServerErrorException.class, () -> dynamicMappingClient.exportParameters(MAPPING_NAME));
+        HttpServerErrorException dynamicSimulationException = catchThrowableOfType(HttpServerErrorException.class, () -> dynamicMappingClient.exportParameters(MAPPING_ID_01));
         // check result
         assertThat(dynamicSimulationException.getMessage()).contains(ERROR_MESSAGE);
     }
 
     @Test
     void testGetMapping() throws IOException {
-        String mappingName = MAPPING_NAME;
-
         String inputDir = DATA_IEEE14_BASE_DIR +
-                RESOURCE_PATH_DELIMITER + mappingName +
-                RESOURCE_PATH_DELIMITER + INPUT;
+                          RESOURCE_PATH_DELIMITER + MAPPING_01 +
+                          RESOURCE_PATH_DELIMITER + INPUT;
 
         // load mapping.json to a string
         String mappingFilePath = inputDir + RESOURCE_PATH_DELIMITER + MAPPING_JSON;
@@ -169,16 +165,16 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         mappingFileBytes = StreamUtils.copyToByteArray(mappingFileIS);
         String mappingFileJson = new String(mappingFileBytes, StandardCharsets.UTF_8);
 
-        // mock response for GET mappings/<mappingName>
+        // mock response for GET mappings/<mappingId>
         String baseUrl = getGetMappingBaseUrl();
 
-        wireMockServer.stubFor(WireMock.get(WireMock.urlEqualTo(baseUrl + URL_DELIMITER + mappingName))
+        wireMockServer.stubFor(WireMock.get(WireMock.urlEqualTo(baseUrl + URL_DELIMITER + MAPPING_ID_01))
                 .willReturn(WireMock.ok()
                         .withBody(mappingFileJson)
                         .withHeader("Content-Type", "application/json; charset=utf-8")
                 ));
 
-        InputMapping resultMapping = dynamicMappingClient.getMapping(MAPPING_NAME);
+        InputMapping resultMapping = dynamicMappingClient.getMapping(MAPPING_ID_01);
 
         // check result
         // load mapping.json
@@ -188,30 +184,30 @@ public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
 
     @Test
     void testGetMappingFromMappingNameGivenNotFound() {
-        // mock response for GET mappings/<mappingName>
+        // mock response for GET mappings/<mappingId>
         String baseUrl = getGetMappingBaseUrl();
 
-        wireMockServer.stubFor(WireMock.get(WireMock.urlEqualTo(baseUrl + URL_DELIMITER + MAPPING_NAME))
+        wireMockServer.stubFor(WireMock.get(WireMock.urlEqualTo(baseUrl + URL_DELIMITER + MAPPING_ID_01))
                 .willReturn(WireMock.notFound()
                 ));
 
         // test service
-        HttpClientErrorException httpClientErrorException = catchThrowableOfType(HttpClientErrorException.class, () -> dynamicMappingClient.getMapping(MAPPING_NAME));
+        HttpClientErrorException httpClientErrorException = catchThrowableOfType(HttpClientErrorException.class, () -> dynamicMappingClient.getMapping(MAPPING_ID_01));
         Assertions.assertThat(httpClientErrorException.getMessage()).contains(NOT_FOUND_ERROR_MESSAGE);
     }
 
     @Test
     void testGetMappingFromMappingNameGivenException() {
-        // mock response for test case GET mappings/<mappingName>
+        // mock response for test case GET mappings/<mappingId>
         String baseUrl = getGetMappingBaseUrl();
 
-        wireMockServer.stubFor(WireMock.get(WireMock.urlEqualTo(baseUrl + URL_DELIMITER + MAPPING_NAME))
+        wireMockServer.stubFor(WireMock.get(WireMock.urlEqualTo(baseUrl + URL_DELIMITER + MAPPING_ID_01))
                 .willReturn(WireMock.serverError()
                         .withBody(ERROR_MESSAGE)
                 ));
 
         // test service
-        HttpServerErrorException dynamicSimulationException = catchThrowableOfType(HttpServerErrorException.class, () -> dynamicMappingClient.getMapping(MAPPING_NAME));
+        HttpServerErrorException dynamicSimulationException = catchThrowableOfType(HttpServerErrorException.class, () -> dynamicMappingClient.getMapping(MAPPING_ID_01));
         // check result
         assertThat(dynamicSimulationException.getMessage()).contains(ERROR_MESSAGE);
     }

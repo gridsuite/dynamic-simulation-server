@@ -9,6 +9,8 @@ package org.gridsuite.ds.server.service.client.dynamicmapping;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
 import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 
+import java.util.UUID;
+
 import static org.gridsuite.ds.server.service.client.RestClient.URL_DELIMITER;
 
 /**
@@ -20,7 +22,7 @@ public interface DynamicMappingClient {
     String DYNAMIC_MAPPING_PARAMETERS_EXPORT_ENDPOINT = DYNAMIC_MAPPING_PARAMETERS_BASE_ENDPOINT + URL_DELIMITER + "export";
     String DYNAMIC_MAPPING_MAPPINGS_BASE_ENDPOINT = "mappings";
 
-    ParameterFile exportParameters(String mappingName);
+    ParameterFile exportParameters(UUID mappingId);
 
-    InputMapping getMapping(String mappingName);
+    InputMapping getMapping(UUID mappingId);
 }
