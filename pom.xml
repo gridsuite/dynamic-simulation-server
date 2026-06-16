@@ -49,6 +49,8 @@
         <string-template.version>4.3.1</string-template.version>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:dynamic-simulation-server</sonar.projectKey>
+        <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
+        <gridsuite-computation.version>2.3.0-SNAPSHOT</gridsuite-computation.version>
     </properties>
 
     <build>
@@ -107,6 +109,7 @@
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-computation</artifactId>
+            <version>${gridsuite-computation.version}</version>
         </dependency>
         <dependency>
             <groupId>org.gridsuite</groupId>

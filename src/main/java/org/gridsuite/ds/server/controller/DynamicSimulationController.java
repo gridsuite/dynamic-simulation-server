@@ -26,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.computation.service.NotificationService.HEADER_USER_ID;
@@ -110,6 +111,13 @@ public class DynamicSimulationController {
     public ResponseEntity<DynamicSimulationStatus> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         DynamicSimulationStatus result = dynamicSimulationResultService.findStatus(resultUuid);
         return ResponseEntity.ok().body(result);
+    }
+
+    @PostMapping(value = "/results/statuses", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get dynamic simulation statuses from the database")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The dynamic simulation statuses")})
+    public ResponseEntity<Map<UUID, DynamicSimulationStatus>> getStatuses(@Parameter(description = "Result uuids") @RequestBody List<UUID> resultUuids) {
+        return ResponseEntity.ok().body(dynamicSimulationResultService.findStatuses(resultUuids));
     }
 
     @GetMapping(value = "/results/{resultUuid}/output-state", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
