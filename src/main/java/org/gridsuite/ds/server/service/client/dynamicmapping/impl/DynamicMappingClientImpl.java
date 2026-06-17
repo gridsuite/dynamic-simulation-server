@@ -38,7 +38,7 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
     public ParameterFile exportParameters(@NonNull UUID mappingId) {
         String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_PARAMETERS_EXPORT_ENDPOINT);
 
-        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl);
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(endPointUrl);
         uriComponentsBuilder.queryParam("mappingId", mappingId);
         var uriComponents = uriComponentsBuilder.build();
 
@@ -50,7 +50,7 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
     public InputMapping getMapping(@NonNull UUID mappingId) {
         String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_MAPPINGS_BASE_ENDPOINT);
 
-        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl + URL_DELIMITER + "{mappingId}");
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(endPointUrl + URL_DELIMITER + "{mappingId}");
 
         UriComponents uriComponents = uriComponentsBuilder.buildAndExpand(mappingId);
 
