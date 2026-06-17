@@ -19,8 +19,6 @@ import java.util.UUID;
 public record InputMapping(
     @Schema(description = "Id")
     UUID id,
-    @Schema(description = "Name")
-    String name,
     @Schema(description = "Rules")
     List<Rule> rules,
     @Schema(description = "Automata")
