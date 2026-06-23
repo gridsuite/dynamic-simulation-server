@@ -70,6 +70,7 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.gridsuite.computation.error.ComputationBusinessErrorCode.PARAMETERS_NOT_FOUND;
 import static org.gridsuite.ds.server.dto.network.NetworkInfos.NETWORK_ID;
@@ -247,36 +248,7 @@ public class ParametersServiceImpl implements ParametersService {
             // accumulate matched equipment ids to compute otherwise case (last rule without filters)
             Set<String> matchedEquipmentIdsOfCurrentType = new TreeSet<>();
 
-            dynamicModel.addAll(rules.stream().flatMap(rule -> {
-                ExpertFilter filter = rule.filter();
-
-                // otherwise case, create an expert filter with AND operator and empty rules to get all equipments of the same type
-                if (filter == null) {
-                    filter = ExpertFilter.builder()
-                            .equipmentType(equipmentType)
-                            .rules(CombinatorExpertRule.builder().combinator(CombinatorType.AND).rules(List.of()).build())
-                            .build();
-                }
-
-                List<Identifiable<?>> matchedEquipmentsOfCurrentRule = FiltersUtils.getIdentifiables(filter, network, filterClient::getFilters);
-
-                // eliminate already matched equipments to avoid duplication
-                if (!matchedEquipmentIdsOfCurrentType.isEmpty()) {
-                    matchedEquipmentsOfCurrentRule = matchedEquipmentsOfCurrentRule.stream().filter(elem -> !matchedEquipmentIdsOfCurrentType.contains(elem.getId())).toList();
-                }
-
-                matchedEquipmentIdsOfCurrentType.addAll(matchedEquipmentsOfCurrentRule.stream().map(Identifiable::getId).toList());
-
-                return matchedEquipmentsOfCurrentRule.stream().map(equipment -> new DynamicModelConfig(
-                        rule.mappedModel(),
-                        rule.setGroup(),
-                        SetGroupType.valueOf(rule.groupType().name()),
-                        List.of(new PropertyBuilder()
-                                .name(FIELD_STATIC_ID)
-                                .value(equipment.getId())
-                                .type(PropertyType.STRING)
-                                .build())));
-            }).toList());
+            dynamicModel.addAll(rules.stream().flatMap(rule -> getDynamicModelConfigStream(network, equipmentType, rule, matchedEquipmentIdsOfCurrentType)).toList());
         });
 
         // transform automatons to DynamicModelConfigs
@@ -289,6 +261,37 @@ public class ParametersServiceImpl implements ParametersService {
         ).toList());
 
         return dynamicModel;
+    }
+
+    private Stream<DynamicModelConfig> getDynamicModelConfigStream(Network network, EquipmentType equipmentType, Rule rule, Set<String> matchedEquipmentIdsOfCurrentType) {
+        ExpertFilter filter = rule.filter();
+
+        // otherwise case, create an expert filter with AND operator and empty rules to get all equipments of the same type
+        if (filter == null) {
+            filter = ExpertFilter.builder()
+                    .equipmentType(equipmentType)
+                    .rules(CombinatorExpertRule.builder().combinator(CombinatorType.AND).rules(List.of()).build())
+                    .build();
+        }
+
+        List<Identifiable<?>> matchedEquipmentsOfCurrentRule = FiltersUtils.getIdentifiables(filter, network, filterClient::getFilters);
+
+        // eliminate already matched equipments to avoid duplication
+        if (!matchedEquipmentIdsOfCurrentType.isEmpty()) {
+            matchedEquipmentsOfCurrentRule = matchedEquipmentsOfCurrentRule.stream().filter(elem -> !matchedEquipmentIdsOfCurrentType.contains(elem.getId())).toList();
+        }
+
+        matchedEquipmentIdsOfCurrentType.addAll(matchedEquipmentsOfCurrentRule.stream().map(Identifiable::getId).toList());
+
+        return matchedEquipmentsOfCurrentRule.stream().map(equipment -> new DynamicModelConfig(
+                rule.mappedModel(),
+                rule.setGroup(),
+                SetGroupType.valueOf(rule.groupType().name()),
+                List.of(new PropertyBuilder()
+                        .name(FIELD_STATIC_ID)
+                        .value(equipment.getId())
+                        .type(PropertyType.STRING)
+                        .build())));
     }
 
     private DynamicSimulationParametersValues getParametersValues(DynamicSimulationParametersInfos parametersInfos, Network network) {
