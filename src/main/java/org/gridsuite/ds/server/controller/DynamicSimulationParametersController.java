@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */

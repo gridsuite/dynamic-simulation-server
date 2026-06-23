@@ -22,7 +22,8 @@ import java.util.UUID;
         property = "type",
         include = JsonTypeInfo.As.EXISTING_PROPERTY,
         visible = true
-)@JsonSubTypes({
+)
+@JsonSubTypes({
     @JsonSubTypes.Type(value = IdaSolverInfos.class, name = "IDA"),
     @JsonSubTypes.Type(value = SimSolverInfos.class, name = "SIM")})
 public interface SolverInfos extends XmlSerializableParameter {

@@ -29,7 +29,7 @@ public final class TestUtils {
         Thread.sleep(TIMEOUT);
         try {
             destinations.forEach(destination -> assertNull("Should not be any messages in queue " + destination + " : ", output.receive(0, destination)));
-        } catch (NullPointerException e) {
+        } catch (Exception e) {
             // Ignoring
         } finally {
             output.clear(); // purge in order to not fail the other tests
