@@ -37,7 +37,7 @@ public interface ParametersService {
 
     List<DynamicModelConfig> getDynamicModel(InputMapping inputMapping, Network network);
 
-    List<DynamicModelConfig> getDynamicModel(String mappingName, UUID networkUuid, String variantId);
+    List<DynamicModelConfig> getDynamicModel(UUID mappingId, UUID networkUuid, String variantId);
 
     DynamicSimulationParametersValues getParametersValues(UUID parametersUuid, UUID networkUuid, String variantId);
 

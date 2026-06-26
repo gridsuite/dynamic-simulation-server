@@ -19,6 +19,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.UUID;
+
 import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
 
 /**
@@ -34,11 +36,11 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
     }
 
     @Override
-    public ParameterFile exportParameters(@NonNull String mappingName) {
+    public ParameterFile exportParameters(@NonNull UUID mappingId) {
         String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_PARAMETERS_EXPORT_ENDPOINT);
 
-        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl);
-        uriComponentsBuilder.queryParam("mappingName", mappingName);
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(endPointUrl);
+        uriComponentsBuilder.queryParam("mappingId", mappingId);
         var uriComponents = uriComponentsBuilder.build();
 
         // call dynamic mapping Rest API
@@ -46,12 +48,12 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
     }
 
     @Override
-    public InputMapping getMapping(@NonNull String mappingName) {
+    public InputMapping getMapping(@NonNull UUID mappingId) {
         String endPointUrl = buildEndPointUrl(getBaseUri(), API_VERSION, DYNAMIC_MAPPING_MAPPINGS_BASE_ENDPOINT);
 
-        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(endPointUrl + URL_DELIMITER + "{mappingName}");
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(endPointUrl + URL_DELIMITER + "{mappingId}");
 
-        UriComponents uriComponents = uriComponentsBuilder.buildAndExpand(mappingName);
+        UriComponents uriComponents = uriComponentsBuilder.buildAndExpand(mappingId);
 
         // call dynamic mapping Rest API
         return getRestTemplate().getForObject(uriComponents.toUriString(), InputMapping.class);

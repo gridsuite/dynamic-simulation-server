@@ -10,14 +10,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import org.gridsuite.ds.server.dto.dynamicmapping.automata.Automaton;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @Schema(description = "Mapping")
 public record InputMapping(
-    @Schema(description = "Name")
-    String name,
+    @Schema(description = "Id")
+    UUID id,
     @Schema(description = "Rules")
     List<Rule> rules,
     @Schema(description = "Automata")

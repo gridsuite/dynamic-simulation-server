@@ -28,7 +28,7 @@ import java.util.UUID;
 @Setter
 public class DynamicSimulationRunContext extends AbstractComputationRunContext<DynamicSimulationParametersInfos> {
 
-    private String mapping;
+    private UUID mappingId;
     private List<EventInfos> events;
 
     // --- Fields which are enriched in worker service --- //
@@ -46,10 +46,10 @@ public class DynamicSimulationRunContext extends AbstractComputationRunContext<D
     private DynamicSimulationParameters t1DynamicSimulationParameters;
 
     @Builder
-    public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, String mapping,
+    public DynamicSimulationRunContext(UUID networkUuid, String variantId, String receiver, String provider, UUID mappingId,
                                        ReportInfos reportInfos, String userId, DynamicSimulationParametersInfos parameters, Boolean debug) {
         super(networkUuid, variantId, receiver, reportInfos, userId, provider, parameters, debug);
-        this.mapping = mapping;
+        this.mappingId = mappingId;
     }
 }
 
