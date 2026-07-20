@@ -14,13 +14,11 @@ import org.gridsuite.ds.server.dto.solver.IdaSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SimSolverInfos;
 import org.gridsuite.ds.server.dto.solver.SolverInfos;
 import org.gridsuite.ds.server.service.parameters.ParameterUtils;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -42,10 +40,9 @@ import static org.gridsuite.ds.server.utils.Utils.RESOURCE_PATH_DELIMITER;
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest
 @ContextHierarchy({@ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class})})
-public class XmlSerializableParameterTest {
+class XmlSerializableParameterTest {
 
     public static final String DATA_XML = RESOURCE_PATH_DELIMITER + "data" + RESOURCE_PATH_DELIMITER + "xml";
     public static final String PAR_SCHEMA = "parameters.xsd";
@@ -74,7 +71,7 @@ public class XmlSerializableParameterTest {
     }
 
     @Test
-    public void testWriteParameterGivenSolvers() throws IOException, XMLStreamException {
+    void testWriteParameterGivenSolvers() throws IOException, XMLStreamException {
 
         IdaSolverInfos idaSolver = ParameterUtils.getDefaultIdaSolverValues();
 
@@ -93,7 +90,7 @@ public class XmlSerializableParameterTest {
     }
 
     @Test
-    public void testWriteParameterGivenNetwork() throws IOException, XMLStreamException {
+    void testWriteParameterGivenNetwork() throws IOException, XMLStreamException {
         NetworkInfos network = ParameterUtils.getDefaultNetworkValues();
 
         // export network to par file

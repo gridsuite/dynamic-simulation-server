@@ -16,16 +16,14 @@ import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.entities.ResultEntity;
 import org.gridsuite.ds.server.repository.ResultRepository;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,9 +37,8 @@ import static org.mockito.Mockito.when;
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest
-public class DynamicSimulationResultServiceTest {
+class DynamicSimulationResultServiceTest {
 
     static final Logger LOGGER = LoggerFactory.getLogger(DynamicSimulationResultServiceTest.class);
 
@@ -60,18 +57,18 @@ public class DynamicSimulationResultServiceTest {
     @Autowired
     DynamicSimulationResultService dynamicSimulationResultService;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         when(timeSeriesClient.sendTimeSeries(anyList())).thenReturn(new TimeSeriesGroupInfos(UUID.randomUUID()));
     }
 
-    @After
-    public void cleanDB() {
+    @AfterEach
+    void cleanDB() {
         resultRepository.deleteAll();
     }
 
     @Test
-    public void testCrud() {
+    void testCrud() {
         // --- insert an entity in the db --- //
         UUID entityUuid = uuidGeneratorService.generate();
         dynamicSimulationResultService.insertStatus(List.of(entityUuid), DynamicSimulationStatus.CONVERGED);

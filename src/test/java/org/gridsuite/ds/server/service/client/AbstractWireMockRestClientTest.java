@@ -31,7 +31,7 @@ public abstract class AbstractWireMockRestClientTest {
             {"message": "%s"}
         """.formatted(ERROR_MESSAGE);
 
-    public final Logger getLogger() {
+    final Logger getLogger() {
         return LoggerFactory.getLogger(this.getClass());
     }
 
