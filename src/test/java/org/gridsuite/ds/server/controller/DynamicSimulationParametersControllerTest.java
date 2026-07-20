@@ -126,8 +126,7 @@ class DynamicSimulationParametersControllerTest {
         DynamicSimulationParametersInfos originalInfos = newParametersInfos();
         UUID originalUuid = parametersRepository.save(new DynamicSimulationParametersEntity(originalInfos)).getId();
 
-        MvcResult result = mockMvc.perform(post("/v1/parameters")
-                        .param("duplicateFrom", originalUuid.toString()))
+        MvcResult result = mockMvc.perform(post("/v1/parameters/{uuid}/duplicate", originalUuid))
                 .andExpect(status().isOk())
                 .andReturn();
 
