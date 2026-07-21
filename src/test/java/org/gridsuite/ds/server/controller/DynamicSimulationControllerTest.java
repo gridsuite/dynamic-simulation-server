@@ -30,8 +30,9 @@ import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.entities.parameters.DynamicSimulationParametersEntity;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.gridsuite.ds.server.service.parameters.ParameterUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,7 +76,7 @@ import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
-public class DynamicSimulationControllerTest extends AbstractDynamicSimulationControllerTest {
+class DynamicSimulationControllerTest extends AbstractDynamicSimulationControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
@@ -153,15 +154,16 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
         given(dynamicSimulationParametersRepository.findById(PARAMETERS_UUID)).willReturn(Optional.of(entity));
     }
 
-    @Before
+    @BeforeEach
     @Override
-    public void setUp() throws IOException {
+    void setUp() throws IOException {
         super.setUp();
         initParametersRepositoryMock();
     }
 
+    @AfterEach
     @Override
-    public void tearDown() throws Exception {
+    void tearDown() throws Exception {
         super.tearDown();
 
         // delete all results
@@ -171,7 +173,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     @Test
-    public void testGivenTimeSeriesAndTimeLine() throws Exception {
+    void testGivenTimeSeriesAndTimeLine() throws Exception {
 
         // mock DynamicSimulationWorkerService with time-series and timeline
         Map<String, DoubleTimeSeries> curves = new HashMap<>();
@@ -353,7 +355,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     @Test
-    public void testGivenEmptyTimeSeriesAndTimeLine() throws Exception {
+    void testGivenEmptyTimeSeriesAndTimeLine() throws Exception {
         // mock DynamicSimulationWorkerService without time-series and timeline
         Map<String, DoubleTimeSeries> curves = new HashMap<>();
         List<TimelineEvent> timeLine = List.of();
@@ -481,7 +483,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     @Test
-    public void testStopOnTime() throws Exception {
+    void testStopOnTime() throws Exception {
         CountDownLatch cancelLatch = new CountDownLatch(1);
         // Emit messages in separate threads, like in production.
         mockSendRunMessage(() -> {
@@ -513,7 +515,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     @Test
-    public void testStopEarly() throws Exception {
+    void testStopEarly() throws Exception {
         CountDownLatch cancelLatch = new CountDownLatch(1);
         // Emit messages in separate threads, like in production.
         mockSendRunMessage(() -> CompletableFuture.supplyAsync(() ->
@@ -548,7 +550,7 @@ public class DynamicSimulationControllerTest extends AbstractDynamicSimulationCo
     }
 
     @Test
-    public void testStopLately() throws Exception {
+    void testStopLately() throws Exception {
         CountDownLatch cancelLatch = new CountDownLatch(1);
         // Emit messages in separate threads, like in production.
         mockSendRunMessage(() -> {

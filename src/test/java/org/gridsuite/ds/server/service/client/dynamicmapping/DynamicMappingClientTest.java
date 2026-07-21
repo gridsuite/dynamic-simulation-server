@@ -41,7 +41,7 @@ import static org.gridsuite.ds.server.utils.assertions.Assertions.assertThat;
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
+class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
 
     // mapping names
     public static final String MAPPING_01 = "_01";
