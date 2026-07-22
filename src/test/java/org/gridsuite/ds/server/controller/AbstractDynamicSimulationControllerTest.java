@@ -14,9 +14,8 @@ import org.gridsuite.ds.server.repository.DynamicSimulationParametersRepository;
 import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClient;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,8 +25,6 @@ import org.springframework.cloud.stream.binder.test.TestChannelBinderConfigurati
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
-import org.springframework.test.context.junit4.SpringRunner;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -36,12 +33,11 @@ import static org.mockito.Mockito.when;
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-@RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class},
         initializers = CustomApplicationContextInitializer.class)
-public abstract class AbstractDynamicSimulationControllerTest extends AbstractDynawoTest {
+abstract class AbstractDynamicSimulationControllerTest extends AbstractDynawoTest {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -65,9 +61,9 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
     @MockitoSpyBean
     protected DynamicSimulationWorkerService dynamicSimulationWorkerService;
 
-    @Before
+    @BeforeEach
     @Override
-    public void setUp() throws IOException {
+    void setUp() throws IOException {
         super.setUp();
 
         // NetworkStoreService mock
@@ -83,9 +79,9 @@ public abstract class AbstractDynamicSimulationControllerTest extends AbstractDy
         initDynamicSimulationWorkerServiceSpy();
     }
 
-    @After
+    @AfterEach
     @Override
-    public void tearDown() throws Exception {
+    void tearDown() throws Exception {
         super.tearDown();
 
         OutputDestination output = getOutputDestination();

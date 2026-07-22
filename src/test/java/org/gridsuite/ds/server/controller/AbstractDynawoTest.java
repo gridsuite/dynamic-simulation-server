@@ -10,10 +10,9 @@ package org.gridsuite.ds.server.controller;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.computation.local.test.ComputationDockerConfig;
 import com.powsybl.computation.local.test.DockerLocalComputationManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -21,31 +20,27 @@ import java.nio.file.Path;
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public abstract class AbstractDynawoTest {
+abstract class AbstractDynawoTest {
     private static final String JAVA_DYNAWO_VERSION = "3.1.0";
 
     private static final String DOCKER_IMAGE_ID = "powsybl/java-dynawo:" + JAVA_DYNAWO_VERSION;
 
-    // TODO wait junit5 to use @TempDir
-    //@TempDir
-    //public final Path localDir;
+    @TempDir
+    Path tempDir;
 
     protected ComputationManager computationManager;
 
-    @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
-
-    @Before
-    public void setUp() throws IOException {
+    @BeforeEach
+    void setUp() throws IOException {
         Path dockerDir = Path.of("/home/powsybl");
         ComputationDockerConfig config = new ComputationDockerConfig()
                 .setDockerImageId(DOCKER_IMAGE_ID);
-        Path localDir = tempFolder.getRoot().toPath();
-        computationManager = new DockerLocalComputationManager(localDir, dockerDir, config);
+        computationManager = new DockerLocalComputationManager(tempDir, dockerDir, config);
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
+        // Exception may be thrown by child classes overriding this method
         computationManager.close();
     }
 }

@@ -38,7 +38,8 @@ import org.gridsuite.ds.server.entities.parameters.DynamicSimulationParametersEn
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.gridsuite.ds.server.service.parameters.ParameterUtils;
 import org.gridsuite.ds.server.utils.Utils;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
@@ -67,7 +68,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimulationControllerTest {
+class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimulationControllerTest {
     // mapping names
     public static final String MAPPING_01 = "_01";
     public static final UUID MAPPING_ID_01 = UUID.fromString("09d0d631-1c44-4add-8d4a-b93f805bd665");
@@ -167,8 +168,9 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
         ).when(timeSeriesClient).sendTimeSeries(any());
     }
 
+    @AfterEach
     @Override
-    public void tearDown() throws Exception {
+    void tearDown() throws Exception {
         super.tearDown();
 
         // delete all results
@@ -181,7 +183,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     }
 
     @Test
-    public void test01GivenCurvesAndEvents() throws Exception {
+    void test01GivenCurvesAndEvents() throws Exception {
 
         // prepare parameters
         DynamicSimulationParametersInfos parameters = ParameterUtils.getDefaultParametersValues();
@@ -320,7 +322,7 @@ public class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimula
     }
 
     @Test
-    public void testExportDynamicModel() throws Exception {
+    void testExportDynamicModel() throws Exception {
         //export the dynamic model on a specific variant
         MvcResult result = mockMvc.perform(
                         get("/v1/networks/{networkUuid}/export-dynamic-model?variantId=" +

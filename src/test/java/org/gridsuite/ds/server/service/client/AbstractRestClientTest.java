@@ -12,9 +12,8 @@ import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockWebServer;
 import org.gridsuite.ds.server.DynamicSimulationApplication;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +24,6 @@ import org.springframework.http.codec.json.Jackson2JsonDecoder;
 import org.springframework.http.codec.json.Jackson2JsonEncoder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -35,10 +33,9 @@ import java.io.UncheckedIOException;
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest
 @ContextHierarchy({@ContextConfiguration(classes = {DynamicSimulationApplication.class, TestChannelBinderConfiguration.class})})
-public abstract class AbstractRestClientTest {
+abstract class AbstractRestClientTest {
 
     protected WebClient.Builder webClientBuilder;
 
@@ -51,7 +48,7 @@ public abstract class AbstractRestClientTest {
 
     protected abstract Dispatcher getDispatcher();
 
-    public ObjectMapper getObjectMapper() {
+    ObjectMapper getObjectMapper() {
         return objectMapper;
     }
 
@@ -75,8 +72,8 @@ public abstract class AbstractRestClientTest {
         return baseUrl.toString();
     }
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         webClientBuilder = WebClient.builder();
         ExchangeStrategies strategies = ExchangeStrategies
                 .builder()
@@ -88,8 +85,8 @@ public abstract class AbstractRestClientTest {
         webClientBuilder.exchangeStrategies(strategies);
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         try {
             server.shutdown();
         } catch (Exception e) {
