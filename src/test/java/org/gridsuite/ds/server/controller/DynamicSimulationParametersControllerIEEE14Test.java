@@ -60,7 +60,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest
 @ContextConfiguration(classes = {DynamicSimulationApplication.class})
-public class DynamicSimulationParametersControllerIEEE14Test {
+class DynamicSimulationParametersControllerIEEE14Test {
     // mapping names
     public static final String MAPPING_01 = "_01";
     public static final UUID MAPPING_ID_01 = UUID.fromString("3fc82c18-2f7c-4c5d-8c4b-7461362ad5ed");
