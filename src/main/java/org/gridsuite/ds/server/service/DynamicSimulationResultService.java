@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.computation.error.ComputationBusinessErrorCode.RESULT_NOT_FOUND;
 
@@ -150,6 +151,14 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
         return resultRepository.findById(resultUuid, ResultEntity.BasicFields.class)
                 .map(ResultEntity.BasicFields::getStatus)
                 .orElse(null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, DynamicSimulationStatus> findStatuses(List<UUID> resultUuids) {
+        Objects.requireNonNull(resultUuids);
+        List<ResultEntity> resultEntities = resultRepository.findAllById(resultUuids);
+        return resultEntities.stream().collect(Collectors.toMap(ResultEntity::getId, ResultEntity::getStatus));
     }
 
     @Override
