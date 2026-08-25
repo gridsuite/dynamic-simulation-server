@@ -21,7 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import java.util.*;
 
@@ -43,7 +43,7 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
     private TimeSeriesClient timeSeriesClient;
 
     @Autowired
-    RestTemplate restTemplate;
+    RestClient restClient;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -68,7 +68,7 @@ public class TimeSeriesClientTest extends AbstractWireMockRestClientTest {
         timeSeriesClient = new TimeSeriesClientImpl(
                 // use new WireMockServer(TIME_SERIES_PORT) to test with local server if needed
                 initMockWebServer(new WireMockServer(wireMockConfig().dynamicPort())),
-                restTemplate,
+                restClient,
                 objectMapper);
     }
 

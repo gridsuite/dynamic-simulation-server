@@ -11,7 +11,7 @@ import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 
 import java.util.UUID;
 
-import static org.gridsuite.ds.server.service.client.RestClient.URL_DELIMITER;
+import static org.gridsuite.ds.server.service.client.RestClientI.URL_DELIMITER;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>

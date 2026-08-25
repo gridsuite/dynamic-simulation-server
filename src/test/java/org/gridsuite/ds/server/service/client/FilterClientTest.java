@@ -25,7 +25,7 @@ import org.gridsuite.filter.utils.expertfilter.OperatorType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import java.util.List;
 import java.util.UUID;
@@ -41,7 +41,7 @@ class FilterClientTest extends AbstractWireMockRestClientTest {
     private FilterClient filterClient;
 
     @Autowired
-    RestTemplate restTemplate;
+    RestClient restClient;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -52,7 +52,7 @@ class FilterClientTest extends AbstractWireMockRestClientTest {
         filterClient = new FilterClient(
             // use new WireMockServer(ACTIONS_PORT) to test with local server if needed
             initMockWebServer(new WireMockServer(wireMockConfig().dynamicPort())),
-            restTemplate,
+            restClient,
             objectMapper
         );
     }

@@ -15,7 +15,7 @@ import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClien
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -30,9 +30,9 @@ import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPoin
 public class DynamicMappingClientImpl extends AbstractRestClient implements DynamicMappingClient {
 
     @Autowired
-    public DynamicMappingClientImpl(@Value("${gridsuite.services.dynamic-mapping-server.base-uri:http://dynamic-mapping-server/}") String baseUri, RestTemplate restTemplate,
+    public DynamicMappingClientImpl(@Value("${gridsuite.services.dynamic-mapping-server.base-uri:http://dynamic-mapping-server/}") String baseUri, RestClient restClient,
             ObjectMapper objectMapper) {
-        super(baseUri, restTemplate, objectMapper);
+        super(baseUri, restClient, objectMapper);
     }
 
     @Override
@@ -44,7 +44,7 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
         var uriComponents = uriComponentsBuilder.build();
 
         // call dynamic mapping Rest API
-        return getRestTemplate().getForObject(uriComponents.toUriString(), ParameterFile.class);
+        return getRestClient().get().uri(uriComponents.toUriString()).retrieve().body(ParameterFile.class);
     }
 
     @Override
@@ -56,7 +56,7 @@ public class DynamicMappingClientImpl extends AbstractRestClient implements Dyna
         UriComponents uriComponents = uriComponentsBuilder.buildAndExpand(mappingId);
 
         // call dynamic mapping Rest API
-        return getRestTemplate().getForObject(uriComponents.toUriString(), InputMapping.class);
+        return getRestClient().get().uri(uriComponents.toUriString()).retrieve().body(InputMapping.class);
     }
 
 }
