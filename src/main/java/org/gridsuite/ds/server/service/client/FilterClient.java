@@ -11,9 +11,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.filter.AbstractFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Collections;
@@ -33,9 +32,9 @@ public class FilterClient extends AbstractRestClient {
     public static final String FILTERS_GET_ENDPOINT = FILTERS_BASE_ENDPOINT + URL_DELIMITER + "metadata";
 
     protected FilterClient(
-            @Value("${gridsuite.services.filter-server.base-uri:http://filter-server/}") String baseUri,
-            RestTemplate restTemplate, ObjectMapper objectMapper) {
-        super(baseUri, restTemplate, objectMapper);
+        @Value("${gridsuite.services.filter-server.base-uri:http://filter-server/}") String baseUri,
+        RestClient restClient, ObjectMapper objectMapper) {
+        super(baseUri, restClient, objectMapper);
     }
 
     public List<AbstractFilter> getFilters(List<UUID> filterUuids) {
@@ -49,11 +48,10 @@ public class FilterClient extends AbstractRestClient {
         uriComponentsBuilder.queryParam("ids", filterUuids);
 
         // call filter server Rest API
-        return getRestTemplate().exchange(
-                uriComponentsBuilder.build().toUriString(),
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<List<AbstractFilter>>() {
-                }).getBody();
+        return getRestClient().get()
+                .uri(uriComponentsBuilder.build().toUriString())
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<AbstractFilter>>() {
+                });
     }
 }

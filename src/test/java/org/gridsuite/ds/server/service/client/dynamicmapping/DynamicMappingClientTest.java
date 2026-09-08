@@ -22,7 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +32,7 @@ import java.util.UUID;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
-import static org.gridsuite.ds.server.service.client.RestClient.URL_DELIMITER;
+import static org.gridsuite.ds.server.service.client.RestClientI.URL_DELIMITER;
 import static org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient.*;
 import static org.gridsuite.ds.server.service.client.utils.UrlUtils.buildEndPointUrl;
 import static org.gridsuite.ds.server.utils.Utils.RESOURCE_PATH_DELIMITER;
@@ -56,7 +56,7 @@ class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
     private DynamicMappingClient dynamicMappingClient;
 
     @Autowired
-    RestTemplate restTemplate;
+    RestClient restClient;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -78,7 +78,7 @@ class DynamicMappingClientTest extends AbstractWireMockRestClientTest {
         dynamicMappingClient = new DynamicMappingClientImpl(
                 // use new WireMockServer(DYNAMIC_MAPPING_PORT) to test with local server if needed
                 initMockWebServer(new WireMockServer(wireMockConfig().dynamicPort())),
-                restTemplate,
+                restClient,
                 objectMapper);
     }
 

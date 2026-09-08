@@ -18,7 +18,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
@@ -34,8 +34,8 @@ public class TimeSeriesClientImpl extends AbstractRestClient implements TimeSeri
 
     @Autowired
     public TimeSeriesClientImpl(@Value("${gridsuite.services.timeseries-server.base-uri:http://timeseries-server/}") String baseUri,
-                                RestTemplate restTemplate, ObjectMapper objectMapper) {
-        super(baseUri, restTemplate, objectMapper);
+                                RestClient restClient, ObjectMapper objectMapper) {
+        super(baseUri, restClient, objectMapper);
     }
 
     @Override
@@ -55,7 +55,12 @@ public class TimeSeriesClientImpl extends AbstractRestClient implements TimeSeri
         // call time-series Rest API
         HttpEntity<List<TimeSeries<?, ?>>> httpEntity = new HttpEntity<>(timeSeriesList, headers);
 
-        return getRestTemplate().postForObject(uriComponents.toUriString(), httpEntity, TimeSeriesGroupInfos.class);
+        return getRestClient().post()
+                .uri(uriComponents.toUriString())
+                .headers(httpHeaders -> httpHeaders.addAll(headers))
+                .body(httpEntity.getBody())
+                .retrieve()
+                .body(TimeSeriesGroupInfos.class);
     }
 
     @Override
@@ -70,6 +75,6 @@ public class TimeSeriesClientImpl extends AbstractRestClient implements TimeSeri
         var uriComponents = uriComponentsBuilder.buildAndExpand(groupUuid);
 
         // call time-series Rest API
-        getRestTemplate().delete(uriComponents.toUriString());
+        getRestClient().delete().uri(uriComponents.toUriString()).retrieve().toBodilessEntity();
     }
 }
