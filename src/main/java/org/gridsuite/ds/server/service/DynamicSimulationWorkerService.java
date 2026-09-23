@@ -361,6 +361,4 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
     protected void setRunningStatus(UUID resultUuid) {
         resultService.insertStatus(List.of(resultUuid), DynamicSimulationStatus.RUNNING);
     }
-
-
 }

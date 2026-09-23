@@ -446,7 +446,7 @@ class DynamicSimulationControllerTest extends AbstractDynamicSimulationControlle
 
         DynamicSimulationStatus status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
 
-        assertThat(status).isSameAs(DynamicSimulationStatus.RUNNING);
+        assertThat(status).isSameAs(DynamicSimulationStatus.PRELOADING);
     }
 
     private UUID runAndCancel(CountDownLatch cancelLatch, int cancelDelay) throws Exception {
