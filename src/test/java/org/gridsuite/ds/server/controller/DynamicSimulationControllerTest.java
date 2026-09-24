@@ -437,7 +437,7 @@ class DynamicSimulationControllerTest extends AbstractDynamicSimulationControlle
                 .andExpect(resultMatcher);
     }
 
-    private void assertRunningStatus(UUID runUuid) throws Exception {
+    private void assertPreloadingStatus(UUID runUuid) throws Exception {
         //get the calculation status
         MvcResult result = mockMvc.perform(
                         get("/v1/results/{resultUuid}/status", runUuid))
@@ -465,7 +465,7 @@ class DynamicSimulationControllerTest extends AbstractDynamicSimulationControlle
                 .andReturn();
         UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
-        assertRunningStatus(runUuid);
+        assertPreloadingStatus(runUuid);
 
         // stop dynamic simulation, need a timeout to avoid test hangs if an exception occurs before latch countdown
         boolean completed = cancelLatch.await(5, TimeUnit.SECONDS);
