@@ -66,6 +66,8 @@ import static org.gridsuite.computation.service.NotificationService.*;
 import static org.gridsuite.ds.server.controller.utils.TestUtils.assertType;
 import static org.gridsuite.ds.server.service.DynamicSimulationService.COMPUTATION_TYPE;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -404,6 +406,89 @@ class DynamicSimulationControllerTest extends AbstractDynamicSimulationControlle
 
     }
 
+    @Test
+    public void testStatus() throws Exception {
+        Map<String, DoubleTimeSeries> curves = new HashMap<>();
+        List<TimelineEvent> timeLine = List.of();
+        Map<String, Double> finalStateValues = new HashMap<>();
+
+        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, finalStateValues, timeLine)))
+                .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any());
+
+        List<EventInfos> events = List.of();
+
+        MvcResult result = mockMvc.perform(
+                post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
+                    .param("variantId", VARIANT_1_ID)
+                    .param("parametersUuid", PARAMETERS_UUID.toString())
+                    .contentType(APPLICATION_JSON)
+                    .header(HEADER_USER_ID, "testUserId")
+                    .content(objectMapper.writeValueAsString(events)))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
+
+        Message<byte[]> messageSwitch = output.receive(1000, dsResultDestination);
+        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
+
+        MvcResult statusResult = mockMvc.perform(
+                get("/v1/results/{resultUuid}/status", runUuid))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        DynamicSimulationStatus status = objectMapper.readValue(statusResult.getResponse().getContentAsString(), DynamicSimulationStatus.class);
+        assertThat(status).isSameAs(DynamicSimulationStatus.CONVERGED);
+
+        MvcResult missingStatusResult = mockMvc.perform(
+                get("/v1/results/{resultUuid}/status", UUID.randomUUID()))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(missingStatusResult.getResponse().getContentAsString()).isEmpty();
+    }
+
+    @Test
+    public void testStatuses() throws Exception {
+        Map<String, DoubleTimeSeries> curves = new HashMap<>();
+        List<TimelineEvent> timeLine = List.of();
+        Map<String, Double> finalStateValues = new HashMap<>();
+
+        doReturn(CompletableFuture.completedFuture(new DynamicSimulationResultImpl(DynamicSimulationResult.Status.SUCCESS, "", curves, finalStateValues, timeLine)))
+                .when(dynamicSimulationWorkerService).getCompletableFuture(any(), any(), any());
+
+        List<EventInfos> events = List.of();
+
+        MvcResult result = mockMvc.perform(
+                post("/v1/networks/{networkUuid}/run", NETWORK_UUID_STRING)
+                    .param("variantId", VARIANT_1_ID)
+                    .param("parametersUuid", PARAMETERS_UUID.toString())
+                    .contentType(APPLICATION_JSON)
+                    .header(HEADER_USER_ID, "testUserId")
+                    .content(objectMapper.writeValueAsString(events)))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
+
+        Message<byte[]> messageSwitch = output.receive(1000, dsResultDestination);
+        assertThat(messageSwitch.getHeaders()).containsEntry(HEADER_RESULT_UUID, runUuid.toString());
+
+        UUID unknownResultUuid = UUID.randomUUID();
+        MvcResult statusesResult = mockMvc.perform(
+                post("/v1/results/statuses")
+                    .contentType(APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(List.of(runUuid, unknownResultUuid)))
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Map<UUID, DynamicSimulationStatus> statuses = objectMapper.readValue(
+                statusesResult.getResponse().getContentAsString(),
+                objectMapper.getTypeFactory().constructMapType(Map.class, UUID.class, DynamicSimulationStatus.class));
+
+        assertThat(statuses).hasSize(1);
+        assertThat(statuses).containsKey(runUuid);
+        assertThat(statuses.get(runUuid)).isSameAs(DynamicSimulationStatus.CONVERGED);
+    }
+
     // --- BEGIN Test cancelling a running computation ---//
     private void mockSendRunMessage(Supplier<CompletableFuture<?>> runAsyncMock) {
         // In test environment, the test binder calls consumers directly in the caller thread, i.e. the controller thread.
@@ -581,5 +666,4 @@ class DynamicSimulationControllerTest extends AbstractDynamicSimulationControlle
         assertResultStatus(runUuid, status().isOk());
     }
     // --- END Test cancelling a running computation ---//
-
 }
