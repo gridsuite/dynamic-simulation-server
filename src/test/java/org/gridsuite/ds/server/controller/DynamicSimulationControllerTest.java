@@ -28,6 +28,7 @@ import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.entities.parameters.DynamicSimulationParametersEntity;
+import org.gridsuite.ds.server.service.DynamicSimulationResultService;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.gridsuite.ds.server.service.parameters.ParameterUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -98,6 +99,8 @@ class DynamicSimulationControllerTest extends AbstractDynamicSimulationControlle
     private static final String TEST_FILE = "IEEE14.iidm";
 
     private static final UUID PARAMETERS_UUID = UUID.fromString("cff95818-bf3f-418f-8f65-ee12c00e90af");
+    @MockitoSpyBean
+    private DynamicSimulationResultService dynamicSimulationResultService;
 
     @Override
     public OutputDestination getOutputDestination() {
