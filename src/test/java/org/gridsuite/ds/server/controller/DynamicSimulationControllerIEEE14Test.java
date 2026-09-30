@@ -44,7 +44,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.messaging.Message;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.util.StreamUtils;
 
@@ -95,13 +94,7 @@ class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimulationCon
     private final Map<UUID, List<TimeSeries<?, ?>>> timeSeriesMockBd = new HashMap<>();
 
     @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
     private OutputDestination output;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Override
     public OutputDestination getOutputDestination() {
