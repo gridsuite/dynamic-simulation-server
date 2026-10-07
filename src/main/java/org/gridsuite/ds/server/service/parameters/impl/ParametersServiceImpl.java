@@ -407,12 +407,16 @@ public class ParametersServiceImpl implements ParametersService {
     public void updateParameters(UUID parametersUuid, DynamicSimulationParametersInfos parametersInfos) {
         DynamicSimulationParametersEntity entity = dynamicSimulationParametersRepository.findById(parametersUuid)
                 .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
-        if (parametersInfos == null) {
-            // if the parameter is null, it means it's a reset to defaultValues
-            entity.update(getDefaultParametersValues());
-        } else {
-            entity.update(parametersInfos);
-        }
+
+        entity.update(parametersInfos);
+    }
+
+    @Override
+    @Transactional
+    public void resetParameters(UUID parametersUuid) {
+        DynamicSimulationParametersEntity entity = dynamicSimulationParametersRepository.findById(parametersUuid)
+                .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
+        entity.update(getDefaultParametersValues());
     }
 
     @Override
