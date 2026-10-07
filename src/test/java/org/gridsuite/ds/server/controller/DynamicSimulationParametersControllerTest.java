@@ -207,6 +207,32 @@ class DynamicSimulationParametersControllerTest {
     }
 
     @Test
+    void testResetParameters() throws Exception {
+        DynamicSimulationParametersInfos modifiedInfos = newParametersInfosWithCurves();
+        modifiedInfos.setProvider("OtherProvider");
+        modifiedInfos.setStartTime(10d);
+        modifiedInfos.setStopTime(100d);
+        modifiedInfos.getNetwork().setCapacitorNoReclosingDelay(400);
+        UUID parametersUuid = parametersRepository.save(new DynamicSimulationParametersEntity(modifiedInfos)).getId();
+
+        mockMvc.perform(put("/v1/parameters/{uuid}/reset", parametersUuid))
+                .andExpect(status().isOk());
+
+        Optional<DynamicSimulationParametersEntity> entityOpt = parametersRepository.findById(parametersUuid);
+        assertThat(entityOpt).isPresent();
+
+        DynamicSimulationParametersInfos defaultParametersInfos = newParametersInfos();
+        defaultParametersInfos.setProvider("Dynawo");
+        assertThat(entityOpt.get().toDto(true)).usingRecursiveComparison().isEqualTo(defaultParametersInfos);
+    }
+
+    @Test
+    void testResetParametersNotFound() throws Exception {
+        mockMvc.perform(put("/v1/parameters/{uuid}/reset", UUID.randomUUID()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void testDeleteParameters() throws Exception {
         DynamicSimulationParametersInfos infos = newParametersInfos();
         UUID parametersUuid = parametersRepository.save(new DynamicSimulationParametersEntity(infos)).getId();
