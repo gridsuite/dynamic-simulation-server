@@ -2,6 +2,10 @@ spring:
   application:
     name: dynamic-simulation-server
 
+  http:
+    converters:
+      preferred-json-mapper: jackson2
+
   cloud:
     function:
       definition: consumeRun1;consumeRun2;consumeCancel
