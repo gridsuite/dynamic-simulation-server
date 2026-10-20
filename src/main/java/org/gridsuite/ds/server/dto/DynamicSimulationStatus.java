@@ -11,6 +11,7 @@ package org.gridsuite.ds.server.dto;
  */
 public enum DynamicSimulationStatus {
     NOT_DONE,
+    PRELOADING,
     RUNNING,
     CONVERGED,
     DIVERGED

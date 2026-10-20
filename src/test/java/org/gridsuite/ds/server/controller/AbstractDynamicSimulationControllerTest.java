@@ -6,10 +6,12 @@
  */
 package org.gridsuite.ds.server.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.network.store.client.NetworkStoreService;
 import org.gridsuite.ds.server.CustomApplicationContextInitializer;
 import org.gridsuite.ds.server.DynamicSimulationApplication;
 import org.gridsuite.ds.server.controller.utils.TestUtils;
+import org.gridsuite.ds.server.dto.DynamicSimulationStatus;
 import org.gridsuite.ds.server.repository.DynamicSimulationParametersRepository;
 import org.gridsuite.ds.server.service.DynamicSimulationWorkerService;
 import org.gridsuite.ds.server.service.client.dynamicmapping.DynamicMappingClient;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
@@ -25,10 +28,17 @@ import org.springframework.cloud.stream.binder.test.TestChannelBinderConfigurati
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -45,6 +55,12 @@ abstract class AbstractDynamicSimulationControllerTest extends AbstractDynawoTes
     protected final String dsResultDestination = "ds.result.destination";
     protected final String dsStoppedDestination = "ds.stopped.destination";
     protected final String dsCancelFailedDestination = "ds.cancelfailed.destination";
+
+    @Autowired
+    protected MockMvc mockMvc;
+
+    @Autowired
+    protected ObjectMapper objectMapper;
 
     @MockitoBean
     protected DynamicMappingClient dynamicMappingClient;
@@ -87,11 +103,7 @@ abstract class AbstractDynamicSimulationControllerTest extends AbstractDynawoTes
         OutputDestination output = getOutputDestination();
         List<String> destinations = List.of(dsDebugDestination, dsResultDestination, dsStoppedDestination, dsCancelFailedDestination);
 
-        try {
-            TestUtils.assertQueuesEmptyThenClear(destinations, output);
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Error while checking message queues empty", e);
-        }
+        TestUtils.assertQueuesEmptyThenClear(destinations, output);
     }
 
     protected abstract OutputDestination getOutputDestination();
@@ -105,6 +117,21 @@ abstract class AbstractDynamicSimulationControllerTest extends AbstractDynawoTes
     private void initDynamicSimulationWorkerServiceSpy() {
         // setup spy bean
         when(dynamicSimulationWorkerService.getComputationManager()).thenReturn(computationManager);
+    }
+
+    // --- utility methods --- //
+    protected void assertResultStatus(UUID runUuid, DynamicSimulationStatus expectedStatus) throws Exception {
+
+        MvcResult result = mockMvc.perform(
+                        get("/v1/results/{resultUuid}/status", runUuid))
+                .andExpect(status().isOk()).andReturn();
+
+        DynamicSimulationStatus status = null;
+        if (!result.getResponse().getContentAsString().isEmpty()) {
+            status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
+        }
+
+        assertThat(status).isSameAs(expectedStatus);
     }
 
 }
