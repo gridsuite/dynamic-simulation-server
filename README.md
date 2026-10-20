@@ -87,7 +87,7 @@ Dynamic simulation parameters include:
 - **Network parameters** (capacitor no-reclosing delay, static var compensator behavior, etc.).
 - **Mapping** reference, used to resolve the dynamic model of the network.
 - Start/stop times.
-
+- Metric curves observed on selected equipments
 Parameter sets can be created, duplicated, updated, retrieved and deleted through the REST API.
 
 ---
