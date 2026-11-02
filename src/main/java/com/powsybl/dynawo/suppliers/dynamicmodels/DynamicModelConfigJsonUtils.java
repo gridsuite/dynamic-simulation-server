@@ -27,7 +27,7 @@ public final class DynamicModelConfigJsonUtils {
 
         SimpleModule module = new SimpleModule("dynamic-model-configs");
         module.addSerializer(new DynamicModelConfigsJsonSerializer());
-        module.addDeserializer(List.class, new DynamicModelConfigsJsonDeserializer());
+        module.addDeserializer(List.class, new DynamicModelConfigListJsonDeserializer());
 
         mapper.registerModule(module);
         return mapper;
