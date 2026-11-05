@@ -154,9 +154,9 @@ public class DynamicSimulationController {
     }
 
     @DeleteMapping(value = "/results", produces = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Delete dynamic simulation results from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Dynamic simulation results have been deleted")})
-    public ResponseEntity<Void> deleteResults(@Parameter(description = "Results UUID") @RequestParam(value = "resultsUuids", required = false) List<UUID> resultsUuids) {
+    @Operation(summary = "Delete the given dynamic simulation results from the database")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The given dynamic simulation results have been deleted")})
+    public ResponseEntity<Void> deleteResults(@Parameter(description = "Results UUID") @RequestParam(value = "resultsUuids") List<UUID> resultsUuids) {
         dynamicSimulationService.deleteResults(resultsUuids);
         return ResponseEntity.ok().build();
     }

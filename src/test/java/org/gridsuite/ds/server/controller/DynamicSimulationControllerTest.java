@@ -163,7 +163,7 @@ class DynamicSimulationControllerTest extends AbstractDynamicSimulationControlle
 
         // delete all results
         mockMvc.perform(
-                        delete("/v1/results"))
+                        delete("/v1/supervision/results"))
                 .andExpect(status().isOk());
     }
 
@@ -328,6 +328,10 @@ class DynamicSimulationControllerTest extends AbstractDynamicSimulationControlle
                 .param("resultUuid", UUID.randomUUID().toString()))
                 .andExpect(status().isOk());
 
+        mockMvc.perform(delete("/v1/results")).andExpect(status().isBadRequest());
+        mockMvc.perform(delete("/v1/results").queryParam("resultsUuids", "")).andExpect(status().isOk());
+        assertResultStatus(runUuid, DynamicSimulationStatus.NOT_DONE);
+
         //delete a result
         mockMvc.perform(
                 delete("/v1/results").queryParam("resultsUuids", runUuid.toString()))
@@ -345,7 +349,7 @@ class DynamicSimulationControllerTest extends AbstractDynamicSimulationControlle
 
         //delete all results and except ok
         mockMvc.perform(
-                delete("/v1/results"))
+                delete("/v1/supervision/results"))
                 .andExpect(status().isOk());
     }
 
