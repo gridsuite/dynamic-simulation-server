@@ -168,7 +168,7 @@ class DynamicSimulationControllerIEEE14Test extends AbstractDynamicSimulationCon
 
         // delete all results
         mockMvc.perform(
-                delete("/v1/results"))
+                delete("/v1/supervision/results"))
             .andExpect(status().isOk());
 
         // clean fake time-series db
