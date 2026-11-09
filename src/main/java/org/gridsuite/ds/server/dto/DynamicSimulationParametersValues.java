@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.powsybl.dynawo.DynawoSimulationParameters;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfig;
-import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfigsJsonDeserializer;
+import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfigListJsonDeserializer;
 import com.powsybl.dynawo.suppliers.dynamicmodels.DynamicModelConfigsJsonSerializer;
 import lombok.*;
 
@@ -29,7 +29,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DynamicSimulationParametersValues {
     @JsonSerialize(using = DynamicModelConfigsJsonSerializer.class)
-    @JsonDeserialize(using = DynamicModelConfigsJsonDeserializer.class)
+    @JsonDeserialize(using = DynamicModelConfigListJsonDeserializer.class)
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     List<DynamicModelConfig> dynamicModel;
 
