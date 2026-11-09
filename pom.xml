@@ -92,6 +92,11 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
+            <dependency>
+                <groupId>org.gridsuite</groupId>
+                <artifactId>gridsuite-computation</artifactId>
+                <version>2.7.0</version>
+            </dependency>
 
             <!-- imports -->
             <dependency>

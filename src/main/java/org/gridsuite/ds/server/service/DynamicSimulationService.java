@@ -43,7 +43,7 @@ public class DynamicSimulationService extends AbstractComputationService<Dynamic
     public UUID runAndSaveResult(DynamicSimulationRunContext runContext) {
         // insert a new result entity with running status
         UUID resultUuid = uuidGeneratorService.generate();
-        resultService.insertStatus(List.of(resultUuid), DynamicSimulationStatus.RUNNING);
+        resultService.insertStatus(List.of(resultUuid), DynamicSimulationStatus.PRELOADING);
 
         // emit a message to launch the simulation by the worker service
         Message<String> message = new DynamicSimulationResultContext(resultUuid, runContext).toMessage(objectMapper);

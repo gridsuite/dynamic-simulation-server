@@ -357,4 +357,13 @@ public class DynamicSimulationWorkerService extends AbstractWorkerService<Dynami
         return workDir;
     }
 
+    @Override
+    protected void setRunningStatus(UUID resultUuid) {
+        resultService.insertStatus(List.of(resultUuid), DynamicSimulationStatus.RUNNING);
+    }
+
+    @Override
+    protected boolean canBeCancelled(UUID resultUuid) {
+        return resultService.findStatus(resultUuid) == DynamicSimulationStatus.RUNNING;
+    }
 }

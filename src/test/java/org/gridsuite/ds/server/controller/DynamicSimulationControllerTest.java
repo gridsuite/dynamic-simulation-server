@@ -6,7 +6,6 @@
  */
 package org.gridsuite.ds.server.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.commons.datasource.ResourceDataSource;
 import com.powsybl.commons.datasource.ResourceSet;
@@ -28,6 +27,7 @@ import org.gridsuite.ds.server.dto.dynamicmapping.ParameterFile;
 import org.gridsuite.ds.server.dto.event.EventInfos;
 import org.gridsuite.ds.server.dto.timeseries.TimeSeriesGroupInfos;
 import org.gridsuite.ds.server.entities.parameters.DynamicSimulationParametersEntity;
+import org.gridsuite.ds.server.service.DynamicSimulationResultService;
 import org.gridsuite.ds.server.service.client.timeseries.TimeSeriesClientTest;
 import org.gridsuite.ds.server.service.parameters.ParameterUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -39,9 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.messaging.Message;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultMatcher;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.http.AbortableInputStream;
@@ -77,11 +75,6 @@ import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 class DynamicSimulationControllerTest extends AbstractDynamicSimulationControllerTest {
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    ObjectMapper objectMapper;
 
     @Autowired
     private OutputDestination output;
@@ -98,6 +91,8 @@ class DynamicSimulationControllerTest extends AbstractDynamicSimulationControlle
     private static final String TEST_FILE = "IEEE14.iidm";
 
     private static final UUID PARAMETERS_UUID = UUID.fromString("cff95818-bf3f-418f-8f65-ee12c00e90af");
+    @MockitoSpyBean
+    private DynamicSimulationResultService dynamicSimulationResultService;
 
     @Override
     public OutputDestination getOutputDestination() {
@@ -431,13 +426,7 @@ class DynamicSimulationControllerTest extends AbstractDynamicSimulationControlle
         .when(notificationService).sendRunMessage(any());
     }
 
-    private void assertResultStatus(UUID runUuid, ResultMatcher resultMatcher) throws Exception {
-        mockMvc.perform(
-                        get("/v1/results/{resultUuid}/status", runUuid))
-                .andExpect(resultMatcher);
-    }
-
-    private void assertRunningStatus(UUID runUuid) throws Exception {
+    private void assertPreloadingStatus(UUID runUuid) throws Exception {
         //get the calculation status
         MvcResult result = mockMvc.perform(
                         get("/v1/results/{resultUuid}/status", runUuid))
@@ -446,7 +435,7 @@ class DynamicSimulationControllerTest extends AbstractDynamicSimulationControlle
 
         DynamicSimulationStatus status = objectMapper.readValue(result.getResponse().getContentAsString(), DynamicSimulationStatus.class);
 
-        assertThat(status).isSameAs(DynamicSimulationStatus.RUNNING);
+        assertThat(status).isSameAs(DynamicSimulationStatus.PRELOADING);
     }
 
     private UUID runAndCancel(CountDownLatch cancelLatch, int cancelDelay) throws Exception {
@@ -465,7 +454,7 @@ class DynamicSimulationControllerTest extends AbstractDynamicSimulationControlle
                 .andReturn();
         UUID runUuid = objectMapper.readValue(result.getResponse().getContentAsString(), UUID.class);
 
-        assertRunningStatus(runUuid);
+        assertPreloadingStatus(runUuid);
 
         // stop dynamic simulation, need a timeout to avoid test hangs if an exception occurs before latch countdown
         boolean completed = cancelLatch.await(5, TimeUnit.SECONDS);
@@ -506,12 +495,8 @@ class DynamicSimulationControllerTest extends AbstractDynamicSimulationControlle
         assertThat(message.getHeaders())
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
                 .containsEntry(HEADER_MESSAGE, getCancelMessage(COMPUTATION_TYPE));
-        // result has been deleted by cancel so empty
-        MvcResult mvcResult = mockMvc.perform(
-                        get("/v1/results/{resultUuid}/status", runUuid))
-                .andExpect(status().isOk())
-                .andReturn();
-        assertThat(mvcResult.getResponse().getContentAsString()).isEmpty();
+        // result has been deleted by cancel so not found
+        assertResultStatus(runUuid, null);
     }
 
     @Test
@@ -530,7 +515,7 @@ class DynamicSimulationControllerTest extends AbstractDynamicSimulationControlle
             cancelLatch.countDown();
 
             // fake a long process 1s before run computation
-            await().pollDelay(1000, TimeUnit.MILLISECONDS).until(() -> true);
+            await().pollDelay(500, TimeUnit.MILLISECONDS).until(() -> true);
 
             return object;
         })
@@ -545,8 +530,15 @@ class DynamicSimulationControllerTest extends AbstractDynamicSimulationControlle
         assertThat(message.getHeaders())
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
                 .containsEntry(HEADER_MESSAGE, getCancelFailedMessage(COMPUTATION_TYPE));
-        // cancel failed so result still exist
-        assertResultStatus(runUuid, status().isOk());
+
+        // the computation continues to run in the background
+        // Must have a result message in the result queue when computation finished
+        message = output.receive(1000, dsResultDestination);
+        assertThat(message.getHeaders())
+                .containsEntry(HEADER_RESULT_UUID, runUuid.toString());
+
+        // end computation status must be CONVERGED
+        assertResultStatus(runUuid, DynamicSimulationStatus.CONVERGED);
     }
 
     @Test
@@ -577,8 +569,9 @@ class DynamicSimulationControllerTest extends AbstractDynamicSimulationControlle
         assertThat(message.getHeaders())
                 .containsEntry(HEADER_RESULT_UUID, runUuid.toString())
                 .containsEntry(HEADER_MESSAGE, getCancelFailedMessage(COMPUTATION_TYPE));
-        // cancel failed so results are not deleted
-        assertResultStatus(runUuid, status().isOk());
+
+        // end computation status must be CONVERGED
+        assertResultStatus(runUuid, DynamicSimulationStatus.CONVERGED);
     }
     // --- END Test cancelling a running computation ---//
 
