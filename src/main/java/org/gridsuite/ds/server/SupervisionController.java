@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.gridsuite.ds.server.service.DynamicSimulationService;
 import org.gridsuite.ds.server.service.SupervisionService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,11 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Dynamic simulation server - Supervision")
 public class SupervisionController {
     private final SupervisionService supervisionService;
-    private final DynamicSimulationService dynamicSimulationService;
 
-    public SupervisionController(SupervisionService supervisionService, DynamicSimulationService dynamicSimulationService) {
+    public SupervisionController(SupervisionService supervisionService) {
         this.supervisionService = supervisionService;
-        this.dynamicSimulationService = dynamicSimulationService;
     }
 
     @GetMapping(value = "/results-count")
@@ -45,7 +42,7 @@ public class SupervisionController {
     @Operation(summary = "Delete all dynamic simulation results from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All dynamic simulation results have been deleted")})
     public ResponseEntity<Void> deleteAllResults() {
-        dynamicSimulationService.deleteAllResults();
+        supervisionService.deleteAllResults();
         return ResponseEntity.ok().build();
     }
 }
