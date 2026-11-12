@@ -50,10 +50,9 @@ import org.gridsuite.ds.server.service.parameters.CurveGroovyGeneratorService;
 import org.gridsuite.ds.server.service.parameters.ParameterUtils;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.gridsuite.ds.server.utils.Utils;
-import org.gridsuite.filter.expertfilter.ExpertFilter;
-import org.gridsuite.filter.expertfilter.expertrule.CombinatorExpertRule;
+import org.gridsuite.filter.dto.expertfilter.ExpertFilter;
+import org.gridsuite.filter.dto.expertfilter.expertrule.CombinatorExpertRule;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.filter.utils.FiltersUtils;
 import org.gridsuite.filter.utils.expertfilter.CombinatorType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -274,7 +273,7 @@ public class ParametersServiceImpl implements ParametersService {
                     .build();
         }
 
-        List<Identifiable<?>> matchedEquipmentsOfCurrentRule = FiltersUtils.getIdentifiables(filter, network, filterClient::getFilters);
+        List<Identifiable<?>> matchedEquipmentsOfCurrentRule = filter.toFilter(filterClient::getFilters).evaluate(network);
 
         // eliminate already matched equipments to avoid duplication
         if (!matchedEquipmentIdsOfCurrentType.isEmpty()) {
