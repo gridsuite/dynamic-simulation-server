@@ -50,8 +50,8 @@ import org.gridsuite.ds.server.service.parameters.CurveGroovyGeneratorService;
 import org.gridsuite.ds.server.service.parameters.ParameterUtils;
 import org.gridsuite.ds.server.service.parameters.ParametersService;
 import org.gridsuite.ds.server.utils.Utils;
-import org.gridsuite.filter.expertfilter.ExpertFilter;
-import org.gridsuite.filter.expertfilter.expertrule.CombinatorExpertRule;
+import org.gridsuite.filter.dto.expertfilter.ExpertFilter;
+import org.gridsuite.filter.dto.expertfilter.expertrule.CombinatorExpertRule;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.filter.utils.expertfilter.CombinatorType;
 import org.slf4j.Logger;
@@ -406,12 +406,16 @@ public class ParametersServiceImpl implements ParametersService {
     public void updateParameters(UUID parametersUuid, DynamicSimulationParametersInfos parametersInfos) {
         DynamicSimulationParametersEntity entity = dynamicSimulationParametersRepository.findById(parametersUuid)
                 .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
-        if (parametersInfos == null) {
-            // if the parameter is null, it means it's a reset to defaultValues
-            entity.update(getDefaultParametersValues());
-        } else {
-            entity.update(parametersInfos);
-        }
+
+        entity.update(parametersInfos);
+    }
+
+    @Override
+    @Transactional
+    public void resetParameters(UUID parametersUuid) {
+        DynamicSimulationParametersEntity entity = dynamicSimulationParametersRepository.findById(parametersUuid)
+                .orElseThrow(() -> new ComputationException(PARAMETERS_NOT_FOUND, MSG_PARAMETERS_UUID_NOT_FOUND + parametersUuid));
+        entity.update(getDefaultParametersValues());
     }
 
     @Override

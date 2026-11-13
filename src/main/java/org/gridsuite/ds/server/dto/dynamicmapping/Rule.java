@@ -8,7 +8,7 @@ package org.gridsuite.ds.server.dto.dynamicmapping;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.gridsuite.ds.server.utils.SetGroupType;
-import org.gridsuite.filter.expertfilter.ExpertFilter;
+import org.gridsuite.filter.dto.expertfilter.ExpertFilter;
 import org.gridsuite.filter.utils.EquipmentType;
 
 /**
@@ -33,4 +33,3 @@ public record Rule(
 ) {
 
 }
-
