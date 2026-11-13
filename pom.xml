@@ -96,10 +96,17 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
+            <!-- FIXME: to be removed at next gridsuite-dependencies upgrade  -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
                 <artifactId>gridsuite-computation</artifactId>
                 <version>${gridsuite-computation.version}</version>
+            </dependency>
+            <!-- FIXME: to be removed at next gridsuite-dependencies upgrade  -->
+            <dependency>
+                <groupId>org.gridsuite</groupId>
+                <artifactId>gridsuite-filter</artifactId>
+                <version>${gridsuite-filter.version}</version>
             </dependency>
 
             <!-- imports -->
