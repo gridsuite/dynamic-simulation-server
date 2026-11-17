@@ -8,7 +8,7 @@ package org.gridsuite.ds.server.utils.assertions;
 
 import org.assertj.core.util.CheckReturnValue;
 import org.gridsuite.ds.server.dto.dynamicmapping.InputMapping;
-import org.gridsuite.filter.AbstractFilter;
+import org.gridsuite.filter.dto.AbstractFilter;
 
 /**
  *  @author Tristan Chuine <tristan.chuine at rte-france.com>
