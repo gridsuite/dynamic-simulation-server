@@ -128,7 +128,6 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
         resultRepository.deleteById(resultUuid);
     }
 
-    @Override
     @Transactional
     public void deleteAll() {
         List<ResultEntity.BasicFields> resultEntities = resultRepository.findBy(ResultEntity.BasicFields.class);

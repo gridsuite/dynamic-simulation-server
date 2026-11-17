@@ -81,8 +81,17 @@ public class DynamicSimulationParametersController {
     @ApiResponse(responseCode = "200", description = "parameters were updated")
     public ResponseEntity<Void> updateParameters(
             @Parameter(description = "parameters UUID") @PathVariable("uuid") UUID parametersUuid,
-            @RequestBody(required = false) DynamicSimulationParametersInfos parametersInfos) {
+            @RequestBody DynamicSimulationParametersInfos parametersInfos) {
         parametersService.updateParameters(parametersUuid, parametersInfos);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping(value = "/{uuid}/reset")
+    @Operation(summary = "Reset parameters to default values")
+    @ApiResponse(responseCode = "200", description = "parameters were reset")
+    public ResponseEntity<Void> resetParameters(
+            @Parameter(description = "parameters UUID") @PathVariable("uuid") UUID parametersUuid) {
+        parametersService.resetParameters(parametersUuid);
         return ResponseEntity.ok().build();
     }
 

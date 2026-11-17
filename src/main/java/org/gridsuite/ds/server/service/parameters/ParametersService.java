@@ -57,5 +57,7 @@ public interface ParametersService {
 
     void updateParameters(UUID parametersUuid, DynamicSimulationParametersInfos parametersInfos);
 
+    void resetParameters(UUID parametersUuid);
+
     void deleteParameters(UUID parametersUuid);
 }
