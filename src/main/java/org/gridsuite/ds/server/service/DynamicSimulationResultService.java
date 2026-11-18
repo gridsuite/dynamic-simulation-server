@@ -129,21 +129,6 @@ public class DynamicSimulationResultService extends AbstractComputationResultSer
     }
 
     @Override
-    @Transactional
-    public void deleteAll() {
-        List<ResultEntity.BasicFields> resultEntities = resultRepository.findBy(ResultEntity.BasicFields.class);
-
-        // call time series client to delete time-series and timeline
-        for (ResultEntity.BasicFields resultEntity : resultEntities) {
-            timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeSeriesId());
-            timeSeriesClient.deleteTimeSeriesGroup(resultEntity.getTimeLineId());
-        }
-
-        // then delete all results in local db
-        resultRepository.deleteAll();
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public DynamicSimulationStatus findStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
