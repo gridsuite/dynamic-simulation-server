@@ -43,6 +43,9 @@ class DynamicSimulationResultServiceTest {
     static final Logger LOGGER = LoggerFactory.getLogger(DynamicSimulationResultServiceTest.class);
 
     @Autowired
+    private SupervisionService supervisionService;
+
+    @Autowired
     ResultRepository resultRepository;
 
     @Autowired
@@ -154,7 +157,7 @@ class DynamicSimulationResultServiceTest {
                 new ResultEntity(uuidGeneratorService.generate(), null, null, DynamicSimulationStatus.RUNNING, null, null, null, null)
         )).stream().map(ResultEntity::getId).toList();
 
-        dynamicSimulationResultService.deleteAll();
+        supervisionService.deleteAllResults();
         assertThat(resultRepository.findAll()).isEmpty();
     }
 }
